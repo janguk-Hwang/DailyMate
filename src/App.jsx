@@ -210,6 +210,12 @@ export default function App() {
       return
     }
 
+    const target = allMonthTodos.find((t) => t.id === id)
+    const titleText = target?.title || target?.text || '해당 일정'
+    if (!window.confirm(`'${titleText}' 일정을 정말 삭제하시겠습니까?`)) {
+      return
+    }
+
     try {
       await deleteSchedule(id)
       setAllMonthTodos((prev) => prev.filter((t) => t.id !== id))
@@ -225,9 +231,10 @@ export default function App() {
     }
 
     try {
-      await updateSchedule(id, { title })
+      const updated = await updateSchedule(id, { title })
+      const updatedTitle = updated.title || title
       setAllMonthTodos((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, title } : t))
+        prev.map((t) => (t.id === id ? { ...t, title: updatedTitle, text: updatedTitle } : t))
       )
     } catch (e) {
       alert(e.message || '일정 수정 실패')

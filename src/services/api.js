@@ -179,7 +179,10 @@ export async function updateSchedule(id, updates) {
     removeToken()
     throw new Error('AUTH_REQUIRED')
   }
-  if (!res.ok) throw new Error('Failed to update schedule')
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.details || err.error || `HTTP ${res.status}: 일정 수정 실패`)
+  }
   return res.json()
 }
 
@@ -192,7 +195,10 @@ export async function deleteSchedule(id) {
     removeToken()
     throw new Error('AUTH_REQUIRED')
   }
-  if (!res.ok) throw new Error('Failed to delete schedule')
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.details || err.error || `HTTP ${res.status}: 일정 삭제 실패`)
+  }
   return res.json()
 }
 
@@ -205,7 +211,10 @@ export async function clearCompletedForDate(date) {
     removeToken()
     throw new Error('AUTH_REQUIRED')
   }
-  if (!res.ok) throw new Error('Failed to clear completed schedules')
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.details || err.error || `HTTP ${res.status}: 완료 일정 삭제 실패`)
+  }
   return res.json()
 }
 

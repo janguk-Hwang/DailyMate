@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CheckCircle2, Circle, Trash2, Pencil, Check, X, GripVertical } from 'lucide-react'
 
 export default function TodoItem({
@@ -17,6 +17,17 @@ export default function TodoItem({
 }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(todo.text)
+
+  useEffect(() => {
+    if (!isEditing) {
+      setEditText(todo.text)
+    }
+  }, [todo.text, isEditing])
+
+  const handleStartEdit = () => {
+    setEditText(todo.text)
+    setIsEditing(true)
+  }
 
   const handleSave = () => {
     const trimmed = editText.trim()
@@ -156,7 +167,7 @@ export default function TodoItem({
         <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex-shrink-0">
           <button
             type="button"
-            onClick={() => setIsEditing(true)}
+            onClick={handleStartEdit}
             className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer active:scale-90"
             title="수정"
           >

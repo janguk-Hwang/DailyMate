@@ -227,6 +227,16 @@ app.put('/api/schedules/:id', authMiddleware, async (req, res) => {
   }
 
   try {
+    // 1. Check if schedule exists for this user (or unassigned sample schedule)
+    const [existing] = await pool.query(
+      'SELECT * FROM schedules WHERE id = ? AND (user_id = ? OR user_id IS NULL)',
+      [id, userId]
+    )
+
+    if (existing.length === 0) {
+      return res.status(404).json({ error: '일정을 찾을 수 없거나 수정 권한이 없습니다.' })
+    }
+
     const updates = []
     const params = []
 
@@ -247,23 +257,18 @@ app.put('/api/schedules/:id', authMiddleware, async (req, res) => {
       params.push(date)
     }
 
-    if (updates.length === 0) {
-      return res.status(400).json({ error: '수정할 항목이 전달되지 않았습니다.' })
-    }
-
-    params.push(id)
+    // Always ensure user_id is assigned to current user
+    updates.push('user_id = ?')
     params.push(userId)
 
-    const [updateResult] = await pool.query(
-      `UPDATE schedules SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+    params.push(id)
+
+    await pool.query(
+      `UPDATE schedules SET ${updates.join(', ')} WHERE id = ?`,
       params
     )
 
-    if (updateResult.affectedRows === 0) {
-      return res.status(404).json({ error: '일정을 찾을 수 없거나 수정 권한이 없습니다.' })
-    }
-
-    const [rows] = await pool.query('SELECT * FROM schedules WHERE id = ? AND user_id = ?', [id, userId])
+    const [rows] = await pool.query('SELECT * FROM schedules WHERE id = ?', [id])
     res.json({
       ...rows[0],
       completed: Boolean(rows[0].completed),
@@ -288,7 +293,10 @@ app.delete('/api/schedules/:id', authMiddleware, async (req, res) => {
   }
 
   try {
-    const [result] = await pool.query('DELETE FROM schedules WHERE id = ? AND user_id = ?', [id, userId])
+    const [result] = await pool.query(
+      'DELETE FROM schedules WHERE id = ? AND (user_id = ? OR user_id IS NULL)',
+      [id, userId]
+    )
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: '일정을 찾을 수 없거나 삭제 권한이 없습니다.' })
     }
