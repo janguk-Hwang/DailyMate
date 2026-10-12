@@ -7,14 +7,21 @@ const router = express.Router()
 const JWT_SECRET = process.env.JWT_SECRET || 'todo_calendar_jwt_secret_key_2026'
 
 const getRedirectBase = (req) => {
-  // If behind proxy or custom host
-  const host = req.get('host')
-  const protocol = req.protocol
-  return `${protocol}://${host}`
+  if (process.env.REDIRECT_BASE_URL) {
+    return process.env.REDIRECT_BASE_URL.replace(/\/$/, '')
+  }
+  const proto = req.get('x-forwarded-proto') || req.protocol
+  const host = req.get('x-forwarded-host') || req.get('host')
+  return `${proto}://${host}`
 }
 
 const getClientUrl = (req) => {
-  return process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`
+  if (process.env.CLIENT_URL) {
+    return process.env.CLIENT_URL.replace(/\/$/, '')
+  }
+  const proto = req.get('x-forwarded-proto') || req.protocol
+  const host = req.get('x-forwarded-host') || req.get('host')
+  return `${proto}://${host}`
 }
 
 async function findOrCreateSocialUser(provider, providerId, name, email) {

@@ -16,6 +16,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') })
 const app = express()
 const PORT = process.env.PORT || 3001
 
+app.set('trust proxy', 1)
 app.use(cors())
 app.use(express.json())
 
