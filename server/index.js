@@ -4,6 +4,9 @@ import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { initDatabase, getSafePool, getDbStatus } from './db.js'
+import authRouter from './routes/auth.js'
+import oauthRouter from './routes/oauth.js'
+import { authMiddleware } from './middleware/auth.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -37,13 +40,20 @@ app.post('/api/reconnect', async (req, res) => {
   })
 })
 
-// Get schedules
-app.get('/api/schedules', async (req, res) => {
+// Authentication Routes
+app.use('/api/auth', authRouter)
+app.use('/api/auth', oauthRouter)
+
+// ---------------- Protected Schedule Routes (User Scoped) ----------------
+
+// Get schedules for current user
+app.get('/api/schedules', authMiddleware, async (req, res) => {
   const { date, month } = req.query
+  const userId = req.user.id
   const pool = await getSafePool()
 
   if (!pool) {
-    const errorDetails = getDbStatus().error || 'MySQL 연결 정보(MYSQL_URL)가 설정되지 않았습니다.'
+    const errorDetails = getDbStatus().error || 'MySQL 연결 정보가 올바르지 않습니다.'
     return res.status(503).json({
       error: '데이터베이스에 연결되지 않았습니다.',
       details: errorDetails,
@@ -51,14 +61,14 @@ app.get('/api/schedules', async (req, res) => {
   }
 
   try {
-    let query = 'SELECT * FROM schedules'
-    let params = []
+    let query = 'SELECT * FROM schedules WHERE user_id = ?'
+    let params = [userId]
 
     if (date) {
-      query += ' WHERE date = ? ORDER BY id DESC'
+      query += ' AND date = ? ORDER BY id DESC'
       params.push(date)
     } else if (month) {
-      query += ' WHERE date LIKE ? ORDER BY date ASC, id DESC'
+      query += ' AND date LIKE ? ORDER BY date ASC, id DESC'
       params.push(`${month}%`)
     } else {
       query += ' ORDER BY date DESC, id DESC'
@@ -74,17 +84,19 @@ app.get('/api/schedules', async (req, res) => {
     if (err.code === 'ER_NO_SUCH_TABLE') {
       return res.json([])
     }
+    console.error('[Get Schedules Error]:', err)
     res.status(500).json({ error: err.message })
   }
 })
 
-// Create schedule
-app.post('/api/schedules', async (req, res) => {
+// Create schedule for current user
+app.post('/api/schedules', authMiddleware, async (req, res) => {
   const { title, date, priority = 'medium' } = req.body
+  const userId = req.user.id
   const pool = await getSafePool()
 
   if (!pool) {
-    const errorDetails = getDbStatus().error || 'MySQL 연결 정보(MYSQL_URL)가 설정되지 않았습니다.'
+    const errorDetails = getDbStatus().error || 'MySQL 연결 정보가 올바르지 않습니다.'
     return res.status(503).json({
       error: `데이터베이스에 연결되지 않았습니다: ${errorDetails}`,
     })
@@ -96,11 +108,12 @@ app.post('/api/schedules', async (req, res) => {
 
   try {
     const [result] = await pool.query(
-      'INSERT INTO schedules (title, date, completed, priority) VALUES (?, ?, false, ?)',
-      [title.trim(), date, priority]
+      'INSERT INTO schedules (user_id, title, date, completed, priority) VALUES (?, ?, ?, false, ?)',
+      [userId, title.trim(), date, priority]
     )
     res.status(201).json({
       id: result.insertId,
+      user_id: userId,
       title: title.trim(),
       date,
       completed: false,
@@ -108,40 +121,14 @@ app.post('/api/schedules', async (req, res) => {
     })
   } catch (err) {
     console.error('[Create Schedule Error]:', err)
-    if (err.code === 'ER_NO_SUCH_TABLE') {
-      try {
-        await pool.query(`
-          CREATE TABLE IF NOT EXISTS schedules (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            date VARCHAR(10) NOT NULL,
-            completed BOOLEAN DEFAULT FALSE,
-            priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-        `)
-        const [retryResult] = await pool.query(
-          'INSERT INTO schedules (title, date, completed, priority) VALUES (?, ?, false, ?)',
-          [title.trim(), date, priority]
-        )
-        return res.status(201).json({
-          id: retryResult.insertId,
-          title: title.trim(),
-          date,
-          completed: false,
-          priority,
-        })
-      } catch (retryErr) {
-        return res.status(500).json({ error: `일정 저장 실패: ${retryErr.message}` })
-      }
-    }
     res.status(500).json({ error: `일정 저장 실패: ${err.message}` })
   }
 })
 
-// Update schedule
-app.put('/api/schedules/:id', async (req, res) => {
+// Update schedule for current user
+app.put('/api/schedules/:id', authMiddleware, async (req, res) => {
   const { id } = req.params
+  const userId = req.user.id
   const { title, completed, priority, date } = req.body
   const pool = await getSafePool()
 
@@ -174,32 +161,36 @@ app.put('/api/schedules/:id', async (req, res) => {
     }
 
     if (updates.length === 0) {
-      return res.status(400).json({ error: 'No fields to update' })
+      return res.status(400).json({ error: '수정할 항목이 전달되지 않았습니다.' })
     }
 
     params.push(id)
-    await pool.query(
-      `UPDATE schedules SET ${updates.join(', ')} WHERE id = ?`,
+    params.push(userId)
+
+    const [updateResult] = await pool.query(
+      `UPDATE schedules SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
       params
     )
 
-    const [rows] = await pool.query('SELECT * FROM schedules WHERE id = ?', [id])
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'Schedule not found' })
+    if (updateResult.affectedRows === 0) {
+      return res.status(404).json({ error: '일정을 찾을 수 없거나 수정 권한이 없습니다.' })
     }
 
+    const [rows] = await pool.query('SELECT * FROM schedules WHERE id = ? AND user_id = ?', [id, userId])
     res.json({
       ...rows[0],
       completed: Boolean(rows[0].completed),
     })
   } catch (err) {
+    console.error('[Update Schedule Error]:', err)
     res.status(500).json({ error: err.message })
   }
 })
 
-// Delete schedule
-app.delete('/api/schedules/:id', async (req, res) => {
+// Delete schedule for current user
+app.delete('/api/schedules/:id', authMiddleware, async (req, res) => {
   const { id } = req.params
+  const userId = req.user.id
   const pool = await getSafePool()
 
   if (!pool) {
@@ -210,19 +201,21 @@ app.delete('/api/schedules/:id', async (req, res) => {
   }
 
   try {
-    const [result] = await pool.query('DELETE FROM schedules WHERE id = ?', [id])
+    const [result] = await pool.query('DELETE FROM schedules WHERE id = ? AND user_id = ?', [id, userId])
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Schedule not found' })
+      return res.status(404).json({ error: '일정을 찾을 수 없거나 삭제 권한이 없습니다.' })
     }
     res.json({ success: true, message: 'Deleted successfully' })
   } catch (err) {
+    console.error('[Delete Schedule Error]:', err)
     res.status(500).json({ error: err.message })
   }
 })
 
-// Delete completed for a date
-app.delete('/api/schedules/completed/:date', async (req, res) => {
+// Delete completed schedules for a date for current user
+app.delete('/api/schedules/completed/:date', authMiddleware, async (req, res) => {
   const { date } = req.params
+  const userId = req.user.id
   const pool = await getSafePool()
 
   if (!pool) {
@@ -233,11 +226,13 @@ app.delete('/api/schedules/completed/:date', async (req, res) => {
   }
 
   try {
-    await pool.query('DELETE FROM schedules WHERE date = ? AND completed = 1', [
+    await pool.query('DELETE FROM schedules WHERE date = ? AND completed = 1 AND user_id = ?', [
       date,
+      userId,
     ])
     res.json({ success: true, message: 'Cleared completed schedules' })
   } catch (err) {
+    console.error('[Clear Completed Error]:', err)
     res.status(500).json({ error: err.message })
   }
 })

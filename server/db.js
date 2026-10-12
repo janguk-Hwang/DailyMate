@@ -79,10 +79,40 @@ export async function initDatabase() {
     await testConn.query('SET NAMES utf8mb4')
     testConn.release()
 
-    // Create table if not exists
+    // Create users table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(50) UNIQUE NULL,
+        password_hash VARCHAR(255) NULL,
+        phone_number VARCHAR(20) NULL,
+        phone_verified BOOLEAN DEFAULT FALSE,
+        provider ENUM('local', 'google', 'kakao', 'naver') NOT NULL DEFAULT 'local',
+        provider_id VARCHAR(100) NULL,
+        name VARCHAR(100) NOT NULL,
+        email VARCHAR(100) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_provider (provider, provider_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `)
+
+    // Create phone_verifications table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS phone_verifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        phone_number VARCHAR(20) NOT NULL,
+        code VARCHAR(6) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        verified BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `)
+
+    // Create schedules table if not exists
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS schedules (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NULL,
         title VARCHAR(255) NOT NULL,
         date VARCHAR(10) NOT NULL,
         completed BOOLEAN DEFAULT FALSE,
@@ -91,6 +121,16 @@ export async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `
     await pool.query(createTableQuery)
+
+    // Ensure user_id column exists on existing schedules table
+    try {
+      const [cols] = await pool.query(`SHOW COLUMNS FROM schedules LIKE 'user_id'`)
+      if (cols.length === 0) {
+        await pool.query(`ALTER TABLE schedules ADD COLUMN user_id INT NULL AFTER id`)
+      }
+    } catch (colErr) {
+      console.warn('[Check Column Notice]:', colErr.message)
+    }
 
     // 4. Check if empty, insert initial sample schedules
     const [rows] = await pool.query('SELECT COUNT(*) as count FROM schedules')

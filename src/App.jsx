@@ -1,16 +1,20 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { AlertCircle, CheckCheck } from 'lucide-react'
+import { AlertCircle, CheckCheck, Lock, Sparkles, LogIn } from 'lucide-react'
 import Header from './components/Header'
 import CalendarView from './components/CalendarView'
 import TodoInput from './components/TodoInput'
 import TodoFilter from './components/TodoFilter'
 import TodoItem from './components/TodoItem'
+import AuthModal from './components/AuthModal'
 import {
   getMonthSchedules,
   createSchedule,
   updateSchedule,
   deleteSchedule,
   clearCompletedForDate,
+  getCurrentUser,
+  setToken,
+  removeToken,
 } from './services/api'
 
 const getToday = () => {
@@ -26,20 +30,89 @@ export default function App() {
   const [search, setSearch] = useState('')
   const [dbError, setDbError] = useState(null)
 
+  // Auth States
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authModalMode, setAuthModalMode] = useState('login')
+  const [oauthError, setOauthError] = useState(null)
+
+  // 1. Initial OAuth URL check and Auto Login Check
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search)
+        const tokenFromUrl = urlParams.get('token')
+        const errorFromUrl = urlParams.get('auth_error')
+
+        if (tokenFromUrl) {
+          setToken(tokenFromUrl)
+          window.history.replaceState({}, document.title, window.location.pathname)
+        }
+
+        if (errorFromUrl) {
+          setOauthError(decodeURIComponent(errorFromUrl))
+          window.history.replaceState({}, document.title, window.location.pathname)
+        }
+
+        const currentUser = await getCurrentUser()
+        setUser(currentUser)
+      } catch (err) {
+        console.error('[Check Auth Failed]:', err)
+        setUser(null)
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
+
+  // 2. Load Schedules (only if user is logged in)
   const loadSchedules = useCallback(async (ym) => {
+    if (!user) {
+      setAllMonthTodos([])
+      return
+    }
+
     try {
       const data = await getMonthSchedules(ym)
       setAllMonthTodos(data)
       setDbError(null)
     } catch (e) {
       console.error(e)
-      setDbError(e.message)
+      if (e.message === 'AUTH_REQUIRED') {
+        setUser(null)
+        setAllMonthTodos([])
+      } else {
+        setDbError(e.message)
+      }
     }
-  }, [])
+  }, [user])
 
   useEffect(() => {
-    loadSchedules(currentYearMonth)
-  }, [currentYearMonth, loadSchedules])
+    if (user) {
+      loadSchedules(currentYearMonth)
+    } else {
+      setAllMonthTodos([])
+    }
+  }, [user, currentYearMonth, loadSchedules])
+
+  const handleOpenAuth = (mode = 'login') => {
+    setAuthModalMode(mode)
+    setAuthModalOpen(true)
+  }
+
+  const handleAuthSuccess = (authenticatedUser) => {
+    setUser(authenticatedUser)
+    setAuthModalOpen(false)
+  }
+
+  const handleLogout = () => {
+    removeToken()
+    setUser(null)
+    setAllMonthTodos([])
+  }
 
   const monthlyCounts = useMemo(() => {
     const map = {}
@@ -57,15 +130,29 @@ export default function App() {
   )
 
   const handleAddTodo = async (title, priority) => {
+    if (!user) {
+      handleOpenAuth('login')
+      return
+    }
+
     try {
       const created = await createSchedule({ title, date: selectedDate, priority })
       setAllMonthTodos((prev) => [created, ...prev])
     } catch (e) {
-      alert(e.message || '일정 등록 실패')
+      if (e.message === 'AUTH_REQUIRED') {
+        handleOpenAuth('login')
+      } else {
+        alert(e.message || '일정 등록 실패')
+      }
     }
   }
 
   const handleToggle = async (id) => {
+    if (!user) {
+      handleOpenAuth('login')
+      return
+    }
+
     const target = allMonthTodos.find((t) => t.id === id)
     if (!target) return
     const nextCompleted = !target.completed
@@ -82,6 +169,11 @@ export default function App() {
   }
 
   const handleDelete = async (id) => {
+    if (!user) {
+      handleOpenAuth('login')
+      return
+    }
+
     try {
       await deleteSchedule(id)
       setAllMonthTodos((prev) => prev.filter((t) => t.id !== id))
@@ -91,6 +183,11 @@ export default function App() {
   }
 
   const handleEdit = async (id, title) => {
+    if (!user) {
+      handleOpenAuth('login')
+      return
+    }
+
     try {
       await updateSchedule(id, { title })
       setAllMonthTodos((prev) =>
@@ -102,6 +199,11 @@ export default function App() {
   }
 
   const handleClearCompleted = async () => {
+    if (!user) {
+      handleOpenAuth('login')
+      return
+    }
+
     if (!window.confirm(`${selectedDate}의 완료된 일정을 모두 삭제하시겠습니까?`)) return
     try {
       await clearCompletedForDate(selectedDate)
@@ -127,6 +229,21 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 py-10 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto">
+        {/* OAuth Error Alert */}
+        {oauthError && (
+          <div className="bg-rose-50 border border-rose-300 text-rose-800 text-xs px-4 py-3 rounded-2xl mb-4 flex items-center justify-between shadow-sm">
+            <span className="font-medium">⚠️ {oauthError}</span>
+            <button
+              type="button"
+              onClick={() => setOauthError(null)}
+              className="text-rose-600 hover:text-rose-800 font-bold ml-3 cursor-pointer"
+            >
+              닫기
+            </button>
+          </div>
+        )}
+
+        {/* Database Connection Error */}
         {dbError && (
           <div className="bg-amber-50 border border-amber-300 text-amber-900 text-xs px-4 py-3 rounded-2xl mb-4 flex items-center justify-between shadow-sm">
             <span className="font-medium">⚠️ {dbError}</span>
@@ -140,6 +257,7 @@ export default function App() {
           </div>
         )}
 
+        {/* Calendar View */}
         <CalendarView
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
@@ -148,15 +266,49 @@ export default function App() {
           monthlyScheduleCounts={monthlyCounts}
         />
 
+        {/* Header with Auth Status */}
         <Header
           selectedDate={selectedDate}
           totalCount={totalCount}
           completedCount={completedCount}
           progressPercent={progressPercent}
+          user={user}
+          onOpenAuth={handleOpenAuth}
+          onLogout={handleLogout}
         />
 
+        {/* Not Logged In Callout */}
+        {!user && !authLoading && (
+          <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-2xl p-5 mb-6 shadow-md shadow-indigo-200/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3 text-left">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <Lock className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm tracking-tight flex items-center gap-1.5">
+                  <span>나만의 비공개 캘린더</span>
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
+                </h3>
+                <p className="text-xs text-indigo-100 mt-0.5">
+                  로그인하시면 나만 볼 수 있는 개인 일정을 안전하게 등록하고 관리할 수 있습니다.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleOpenAuth('login')}
+              className="px-4 py-2.5 bg-white text-indigo-600 hover:bg-indigo-50 font-semibold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>로그인하고 시작하기</span>
+            </button>
+          </div>
+        )}
+
+        {/* Schedule Input */}
         <TodoInput onAdd={handleAddTodo} selectedDate={selectedDate} />
 
+        {/* Filters */}
         <TodoFilter
           filter={filter}
           onFilterChange={setFilter}
@@ -165,8 +317,29 @@ export default function App() {
           counts={{ total: totalCount, active: activeCount, completed: completedCount }}
         />
 
+        {/* Schedules List */}
         <main className="space-y-2.5">
-          {filteredTodos.length === 0 ? (
+          {!user ? (
+            <div className="bg-white/70 border border-dashed border-slate-200 rounded-2xl p-10 text-center">
+              <div className="mx-auto w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mb-3">
+                <Lock className="w-6 h-6" />
+              </div>
+              <p className="text-slate-700 font-bold text-sm mb-1">
+                개인 일정이 보호되고 있습니다
+              </p>
+              <p className="text-slate-500 text-xs mb-4">
+                소셜 로그인 또는 일반 회원가입 후 나만의 일정을 추가해보세요.
+              </p>
+              <button
+                type="button"
+                onClick={() => handleOpenAuth('login')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>지금 로그인하기</span>
+              </button>
+            </div>
+          ) : filteredTodos.length === 0 ? (
             <div className="bg-white/60 border border-dashed border-slate-200 rounded-2xl p-10 text-center">
               <div className="mx-auto w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
                 <AlertCircle className="w-6 h-6" />
@@ -196,7 +369,8 @@ export default function App() {
           )}
         </main>
 
-        {completedCount > 0 && (
+        {/* Clear Completed */}
+        {user && completedCount > 0 && (
           <footer className="mt-6 flex justify-end">
             <button
               type="button"
@@ -208,8 +382,15 @@ export default function App() {
             </button>
           </footer>
         )}
+
+        {/* Auth Modal (Login / Sign Up / Social) */}
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onAuthSuccess={handleAuthSuccess}
+          initialMode={authModalMode}
+        />
       </div>
     </div>
   )
 }
-
