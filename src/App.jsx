@@ -24,13 +24,16 @@ export default function App() {
   const [allMonthTodos, setAllMonthTodos] = useState([])
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [dbError, setDbError] = useState(null)
 
   const loadSchedules = useCallback(async (ym) => {
     try {
       const data = await getMonthSchedules(ym)
       setAllMonthTodos(data)
+      setDbError(null)
     } catch (e) {
       console.error(e)
+      setDbError(e.message)
     }
   }, [])
 
@@ -124,6 +127,19 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 py-10 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto">
+        {dbError && (
+          <div className="bg-amber-50 border border-amber-300 text-amber-900 text-xs px-4 py-3 rounded-2xl mb-4 flex items-center justify-between shadow-sm">
+            <span className="font-medium">⚠️ {dbError}</span>
+            <button
+              type="button"
+              onClick={() => loadSchedules(currentYearMonth)}
+              className="text-indigo-600 hover:text-indigo-800 underline font-bold ml-3 flex-shrink-0 cursor-pointer"
+            >
+              다시 시도
+            </button>
+          </div>
+        )}
+
         <CalendarView
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}

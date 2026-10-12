@@ -116,11 +116,19 @@ export async function initDatabase() {
     const errorMsg = err.code ? `[${err.code}] ${err.message}` : (err.message || String(err))
     dbStatus = { connected: false, error: errorMsg }
     console.error(`[MySQL Connection Failed]: ${errorMsg}`)
+    pool = null
     return false
   }
 }
 
 export function getPool() {
+  return pool
+}
+
+export async function getSafePool() {
+  if (!pool) {
+    await initDatabase()
+  }
   return pool
 }
 

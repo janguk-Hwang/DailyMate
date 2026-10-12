@@ -3,7 +3,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { initDatabase, getPool, getDbStatus } from './db.js'
+import { initDatabase, getSafePool, getDbStatus } from './db.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -17,11 +17,13 @@ app.use(cors())
 app.use(express.json())
 
 // Health check / DB Status
-app.get('/api/status', (req, res) => {
+app.get('/api/status', async (req, res) => {
+  const pool = await getSafePool()
   const status = getDbStatus()
   res.json({
     server: 'running',
     database: status,
+    hasPool: Boolean(pool),
     timestamp: new Date().toISOString(),
   })
 })
@@ -38,12 +40,13 @@ app.post('/api/reconnect', async (req, res) => {
 // Get schedules
 app.get('/api/schedules', async (req, res) => {
   const { date, month } = req.query
-  const pool = getPool()
+  const pool = await getSafePool()
 
   if (!pool) {
+    const errorDetails = getDbStatus().error || 'MySQL 연결 정보(MYSQL_URL)가 설정되지 않았습니다.'
     return res.status(503).json({
-      error: 'Database not connected',
-      details: getDbStatus().error,
+      error: '데이터베이스에 연결되지 않았습니다.',
+      details: errorDetails,
     })
   }
 
@@ -78,7 +81,7 @@ app.get('/api/schedules', async (req, res) => {
 // Create schedule
 app.post('/api/schedules', async (req, res) => {
   const { title, date, priority = 'medium' } = req.body
-  const pool = getPool()
+  const pool = await getSafePool()
 
   if (!pool) {
     const errorDetails = getDbStatus().error || 'MySQL 연결 정보(MYSQL_URL)가 설정되지 않았습니다.'
@@ -140,7 +143,7 @@ app.post('/api/schedules', async (req, res) => {
 app.put('/api/schedules/:id', async (req, res) => {
   const { id } = req.params
   const { title, completed, priority, date } = req.body
-  const pool = getPool()
+  const pool = await getSafePool()
 
   if (!pool) {
     return res.status(503).json({
@@ -197,7 +200,7 @@ app.put('/api/schedules/:id', async (req, res) => {
 // Delete schedule
 app.delete('/api/schedules/:id', async (req, res) => {
   const { id } = req.params
-  const pool = getPool()
+  const pool = await getSafePool()
 
   if (!pool) {
     return res.status(503).json({
@@ -220,7 +223,7 @@ app.delete('/api/schedules/:id', async (req, res) => {
 // Delete completed for a date
 app.delete('/api/schedules/completed/:date', async (req, res) => {
   const { date } = req.params
-  const pool = getPool()
+  const pool = await getSafePool()
 
   if (!pool) {
     return res.status(503).json({

@@ -15,7 +15,10 @@ export async function reconnectDb() {
 
 export async function getMonthSchedules(month) {
   const res = await fetch(`/api/schedules?month=${month}`)
-  if (!res.ok) throw new Error('Failed to fetch schedules')
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.details || data.error || `HTTP ${res.status}: 일정 목록 조회 실패`)
+  }
   return res.json()
 }
 
@@ -26,8 +29,8 @@ export async function createSchedule(data) {
     body: JSON.stringify(data),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err.error || 'Failed to create schedule')
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.details || err.error || `HTTP ${res.status}: 일정 등록 실패`)
   }
   return res.json()
 }
