@@ -140,11 +140,11 @@ export default function TodoFilter({
               )}
             </button>
 
-            {/* 드래그로 순서 변경 시 표시되는 직접 순서 알림 뱃지 (클릭 버튼 아님) */}
+            {/* 드래그로 순서 변경 시 표시되는 사용자 지정 순서 알림 뱃지 (클릭 버튼 아님) */}
             {sortBy === 'custom' && (
-              <span className="px-2 py-0.5 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/80 rounded-md flex items-center gap-1 whitespace-nowrap">
+              <span className="px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/80 rounded-md flex items-center gap-1 whitespace-nowrap">
                 <GripVertical className="w-3 h-3 text-indigo-500" />
-                <span>직접 순서 적용됨</span>
+                <span>사용자 지정 순서</span>
               </span>
             )}
           </div>
@@ -152,7 +152,7 @@ export default function TodoFilter({
 
         <div className="text-[11px] text-slate-400 flex items-center gap-1 hidden sm:flex">
           <GripVertical className="w-3.5 h-3.5 text-slate-400" />
-          <span>일정을 드래그하여 순서를 직접 바꿀 수 있습니다</span>
+          <span>일정을 드래그하여 원하는 순서로 배치할 수 있습니다</span>
         </div>
       </div>
     </section>
