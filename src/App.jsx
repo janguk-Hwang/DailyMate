@@ -534,21 +534,22 @@ export default function App() {
           )}
         </main>
 
+        {/* Clear Completed Action (마지막 일정 바로 아래 배치) */}
+        {user && completedCount > 0 && (
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              onClick={handleClearCompleted}
+              className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-xl border border-slate-200/60 transition-colors cursor-pointer bg-white/60 shadow-2xs"
+            >
+              <CheckCheck className="w-3.5 h-3.5 text-slate-400" />
+              <span>완료 항목 삭제 ({completedCount})</span>
+            </button>
+          </div>
+        )}
+
         {/* Footer Area with Copyright */}
         <footer className="mt-8 pt-6 border-t border-slate-200/80 text-center space-y-3 pb-6">
-          {user && completedCount > 0 && (
-            <div className="flex justify-end mb-2">
-              <button
-                type="button"
-                onClick={handleClearCompleted}
-                className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-              >
-                <CheckCheck className="w-3.5 h-3.5" />
-                <span>완료 항목 삭제 ({completedCount})</span>
-              </button>
-            </div>
-          )}
-
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
             <div className="flex items-center gap-2">
               <span className="font-bold text-slate-600">To-Do 캘린더</span>
