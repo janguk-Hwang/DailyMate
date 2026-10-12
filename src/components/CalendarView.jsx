@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react'
 
 export default function CalendarView({
@@ -8,6 +9,16 @@ export default function CalendarView({
   monthlyScheduleCounts = {},
 }) {
   const [year, month] = currentYearMonth.split('-').map(Number)
+
+  // Drag / Swipe States
+  const [dragStartX, setDragStartX] = useState(null)
+  const [dragStartY, setDragStartY] = useState(null)
+  const [dragOffset, setDragOffset] = useState(0)
+  const [isSwiping, setIsSwiping] = useState(false)
+  const minSwipeThreshold = 45
+
+  const prevMonthNum = month === 1 ? 12 : month - 1
+  const nextMonthNum = month === 12 ? 1 : month + 1
 
   const handlePrevMonth = () => {
     let y = year, m = month - 1
@@ -26,6 +37,77 @@ export default function CalendarView({
     const dStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     onChangeYearMonth(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
     onSelectDate(dStr)
+  }
+
+  // Touch Swipe Handlers (Mobile / Tablet)
+  const handleTouchStart = (e) => {
+    setDragStartX(e.targetTouches[0].clientX)
+    setDragStartY(e.targetTouches[0].clientY)
+    setDragOffset(0)
+    setIsSwiping(true)
+  }
+
+  const handleTouchMove = (e) => {
+    if (dragStartX === null) return
+    const currentX = e.targetTouches[0].clientX
+    const currentY = e.targetTouches[0].clientY
+    const diffX = currentX - dragStartX
+    const diffY = currentY - (dragStartY || currentY)
+
+    // Detect predominantly horizontal movement
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      setDragOffset(diffX)
+    }
+  }
+
+  const handleTouchEnd = () => {
+    if (Math.abs(dragOffset) >= minSwipeThreshold) {
+      if (dragOffset > 0) {
+        handlePrevMonth()
+      } else {
+        handleNextMonth()
+      }
+    }
+    setDragStartX(null)
+    setDragStartY(null)
+    setDragOffset(0)
+    setIsSwiping(false)
+  }
+
+  // Mouse Drag Handlers (Desktop)
+  const handleMouseDown = (e) => {
+    if (e.button !== 0) return
+    setDragStartX(e.clientX)
+    setDragStartY(e.clientY)
+    setDragOffset(0)
+    setIsSwiping(true)
+  }
+
+  const handleMouseMove = (e) => {
+    if (!isSwiping || dragStartX === null) return
+    const diffX = e.clientX - dragStartX
+    setDragOffset(diffX)
+  }
+
+  const handleMouseUp = () => {
+    if (!isSwiping) return
+    if (Math.abs(dragOffset) >= minSwipeThreshold) {
+      if (dragOffset > 0) {
+        handlePrevMonth()
+      } else {
+        handleNextMonth()
+      }
+    }
+    setDragStartX(null)
+    setDragStartY(null)
+    setDragOffset(0)
+    setIsSwiping(false)
+  }
+
+  const handleDateClick = (dateStr) => {
+    // Ignore click if user was swiping/dragging horizontally
+    if (Math.abs(dragOffset) > 8) return
+    onSelectDate(dateStr)
   }
 
   const firstDay = new Date(year, month - 1, 1).getDay()
@@ -54,6 +136,7 @@ export default function CalendarView({
 
   return (
     <div className="bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/80 mb-4 sm:mb-6">
+      {/* Month Header */}
       <div className="flex items-center justify-between mb-3.5 sm:mb-4">
         <div className="flex items-center gap-2">
           <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
@@ -90,82 +173,134 @@ export default function CalendarView({
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
-        {weekdays.map((wd, i) => (
+      {/* Swipeable Calendar Body Container */}
+      <div
+        className="relative overflow-hidden select-none cursor-grab active:cursor-grabbing touch-pan-y"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        {/* Swipe Feedback Overlay Indicator */}
+        {isSwiping && Math.abs(dragOffset) > 25 && (
           <div
-            key={wd}
-            className={`text-[11px] sm:text-xs font-semibold py-0.5 sm:py-1 ${
-              i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-slate-400'
+            className={`absolute inset-x-0 top-0 bottom-0 z-20 pointer-events-none flex items-center ${
+              dragOffset > 0 ? 'justify-start pl-3' : 'justify-end pr-3'
             }`}
           >
-            {wd}
+            <div className="bg-indigo-600/90 text-white font-bold text-xs px-3 py-1.5 rounded-full shadow-lg backdrop-blur-xs flex items-center gap-1.5 animate-pulse">
+              {dragOffset > 0 ? (
+                <>
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>{prevMonthNum}월로 이동</span>
+                </>
+              ) : (
+                <>
+                  <span>{nextMonthNum}월로 이동</span>
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              )}
+            </div>
           </div>
-        ))}
-      </div>
+        )}
 
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((item, idx) => {
-          if (!item.current) {
-            return (
+        {/* Days & Grid with Elastic Translation */}
+        <div
+          style={{
+            transform: `translateX(${dragOffset * 0.35}px)`,
+            transition: isSwiping ? 'none' : 'transform 200ms ease-out',
+          }}
+        >
+          {/* Weekday Labels */}
+          <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
+            {weekdays.map((wd, i) => (
               <div
-                key={idx}
-                className="h-11 sm:h-13 flex items-start justify-center p-0.5 sm:p-1 text-[11px] sm:text-xs text-slate-300"
-              >
-                {item.day}
-              </div>
-            )
-          }
-
-          const isSelected = item.dateStr === selectedDate
-          const isToday = item.dateStr === todayStr
-          const dow = idx % 7
-          const stats = monthlyScheduleCounts[item.dateStr]
-          const count = stats?.total || 0
-          const comp = stats?.completed || 0
-
-          return (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => onSelectDate(item.dateStr)}
-              className={`h-11 sm:h-13 flex flex-col items-center justify-between p-0.5 sm:p-1 rounded-xl transition-all cursor-pointer active:scale-95 ${
-                isSelected
-                  ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-200'
-                  : 'hover:bg-indigo-50/70 text-slate-700'
-              } ${isToday && !isSelected ? 'ring-2 ring-indigo-400' : ''}`}
-            >
-              <span
-                className={`text-[11px] sm:text-xs leading-tight ${
-                  isSelected
-                    ? 'text-white'
-                    : dow === 0
-                    ? 'text-red-500'
-                    : dow === 6
-                    ? 'text-blue-500'
-                    : ''
+                key={wd}
+                className={`text-[11px] sm:text-xs font-semibold py-0.5 sm:py-1 ${
+                  i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-slate-400'
                 }`}
               >
-                {item.day}
-              </span>
+                {wd}
+              </div>
+            ))}
+          </div>
 
-              <div className="h-4 flex items-center justify-center w-full">
-                {count > 0 && (
+          {/* Days Grid */}
+          <div className="grid grid-cols-7 gap-1">
+            {days.map((item, idx) => {
+              if (!item.current) {
+                return (
+                  <div
+                    key={idx}
+                    className="h-11 sm:h-13 flex items-start justify-center p-0.5 sm:p-1 text-[11px] sm:text-xs text-slate-300"
+                  >
+                    {item.day}
+                  </div>
+                )
+              }
+
+              const isSelected = item.dateStr === selectedDate
+              const isToday = item.dateStr === todayStr
+              const dow = idx % 7
+              const stats = monthlyScheduleCounts[item.dateStr]
+              const count = stats?.total || 0
+              const comp = stats?.completed || 0
+
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleDateClick(item.dateStr)}
+                  className={`h-11 sm:h-13 flex flex-col items-center justify-between p-0.5 sm:p-1 rounded-xl transition-all cursor-pointer active:scale-95 ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-200'
+                      : 'hover:bg-indigo-50/70 text-slate-700'
+                  } ${isToday && !isSelected ? 'ring-2 ring-indigo-400' : ''}`}
+                >
                   <span
-                    className={`px-1 sm:px-1.5 py-0.2 rounded-full text-[9px] sm:text-[10px] font-medium leading-none truncate max-w-full ${
+                    className={`text-[11px] sm:text-xs leading-tight ${
                       isSelected
-                        ? 'bg-white text-indigo-700 font-bold'
-                        : comp === count
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-indigo-100 text-indigo-700'
+                        ? 'text-white'
+                        : dow === 0
+                        ? 'text-red-500'
+                        : dow === 6
+                        ? 'text-blue-500'
+                        : ''
                     }`}
                   >
-                    {comp}/{count}
+                    {item.day}
                   </span>
-                )}
-              </div>
-            </button>
-          )
-        })}
+
+                  <div className="h-4 flex items-center justify-center w-full">
+                    {count > 0 && (
+                      <span
+                        className={`px-1 sm:px-1.5 py-0.2 rounded-full text-[9px] sm:text-[10px] font-medium leading-none truncate max-w-full ${
+                          isSelected
+                            ? 'bg-white text-indigo-700 font-bold'
+                            : comp === count
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-indigo-100 text-indigo-700'
+                        }`}
+                      >
+                        {comp}/{count}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Swipe Guide Caption */}
+      <div className="text-[10px] text-slate-400 text-center mt-2.5 flex items-center justify-center gap-1 select-none">
+        <ChevronLeft className="w-3 h-3 text-slate-300" />
+        <span>좌우로 드래그(스와이프)하여 월을 변경할 수 있습니다</span>
+        <ChevronRight className="w-3 h-3 text-slate-300" />
       </div>
     </div>
   )
