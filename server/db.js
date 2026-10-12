@@ -27,25 +27,32 @@ export async function initDatabase() {
   try {
     dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true })
 
+    const dbName = process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || process.env.DB_NAME || 'todo_calendar_db'
     const connectionUri = process.env.MYSQL_URL || process.env.DATABASE_URL
 
     console.log('[DB Config Check]', {
       hasMysqlUrl: Boolean(process.env.MYSQL_URL),
       hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
       hasMysqlHost: Boolean(process.env.MYSQLHOST),
+      dbName,
     })
 
     if (connectionUri) {
       console.log('[DB Init] Connecting via URI...')
-      pool = mysql.createPool(connectionUri)
+      // Ensure utf8mb4 encoding for Korean characters
+      const uriWithCharset = connectionUri.includes('?')
+        ? (connectionUri.includes('charset=') ? connectionUri : `${connectionUri}&charset=utf8mb4`)
+        : `${connectionUri}?charset=utf8mb4`
+
+      pool = mysql.createPool(uriWithCharset)
     } else {
       const dbConfig = {
         host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
         port: Number(process.env.MYSQLPORT || process.env.DB_PORT) || 3306,
         user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
         password: process.env.MYSQLPASSWORD || process.env.MYSQL_ROOT_PASSWORD || process.env.DB_PASSWORD || '',
+        charset: 'utf8mb4',
       }
-      const dbName = process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || process.env.DB_NAME || 'todo_calendar_db'
 
       // Root connection to ensure database exists (for local or custom servers)
       try {
@@ -55,7 +62,6 @@ export async function initDatabase() {
         )
         await tempConnection.end()
       } catch (dbErr) {
-        // If user has restricted privileges (e.g. cloud managed DB), continue directly to pool
         console.warn(`[MySQL DB Check Notice]: ${dbErr.message}`)
       }
 
@@ -67,6 +73,11 @@ export async function initDatabase() {
         queueLimit: 0,
       })
     }
+
+    // Verify connection by getting a connection
+    const testConn = await pool.getConnection()
+    await testConn.query('SET NAMES utf8mb4')
+    testConn.release()
 
     // Create table if not exists
     const createTableQuery = `

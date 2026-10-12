@@ -68,6 +68,9 @@ app.get('/api/schedules', async (req, res) => {
     }))
     res.json(formatted)
   } catch (err) {
+    if (err.code === 'ER_NO_SUCH_TABLE') {
+      return res.json([])
+    }
     res.status(500).json({ error: err.message })
   }
 })
@@ -102,6 +105,33 @@ app.post('/api/schedules', async (req, res) => {
     })
   } catch (err) {
     console.error('[Create Schedule Error]:', err)
+    if (err.code === 'ER_NO_SUCH_TABLE') {
+      try {
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS schedules (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            date VARCHAR(10) NOT NULL,
+            completed BOOLEAN DEFAULT FALSE,
+            priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        `)
+        const [retryResult] = await pool.query(
+          'INSERT INTO schedules (title, date, completed, priority) VALUES (?, ?, false, ?)',
+          [title.trim(), date, priority]
+        )
+        return res.status(201).json({
+          id: retryResult.insertId,
+          title: title.trim(),
+          date,
+          completed: false,
+          priority,
+        })
+      } catch (retryErr) {
+        return res.status(500).json({ error: `일정 저장 실패: ${retryErr.message}` })
+      }
+    }
     res.status(500).json({ error: `일정 저장 실패: ${err.message}` })
   }
 })
