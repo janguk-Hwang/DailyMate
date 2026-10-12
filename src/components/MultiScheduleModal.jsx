@@ -63,7 +63,7 @@ export default function MultiScheduleModal({
     d.setMonth(d.getMonth() + 1)
     return formatDateStr(d)
   })
-  const [selectedDays, setSelectedDays] = useState([1, 3, 5]) // 월, 수, 금 기본
+  const [selectedDays, setSelectedDays] = useState([])
 
   // 3. Custom Multiple Dates Mode states
   const [customDates, setCustomDates] = useState([])
@@ -72,6 +72,7 @@ export default function MultiScheduleModal({
   useEffect(() => {
     if (isOpen) {
       setErrorMsg('')
+      setSelectedDays([])
       if (initialDate) {
         setStartDate(initialDate)
         setWeeklyStart(initialDate)
@@ -211,11 +212,10 @@ export default function MultiScheduleModal({
                 setTab('range')
                 setErrorMsg('')
               }}
-              className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                tab === 'range'
+              className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${tab === 'range'
                   ? 'bg-white text-indigo-700 shadow-sm'
                   : 'text-indigo-200 hover:text-white'
-              }`}
+                }`}
             >
               <CalendarRange className="w-3.5 h-3.5" />
               <span>연속 기간</span>
@@ -226,11 +226,10 @@ export default function MultiScheduleModal({
                 setTab('weekly')
                 setErrorMsg('')
               }}
-              className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                tab === 'weekly'
+              className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${tab === 'weekly'
                   ? 'bg-white text-indigo-700 shadow-sm'
                   : 'text-indigo-200 hover:text-white'
-              }`}
+                }`}
             >
               <Repeat className="w-3.5 h-3.5" />
               <span>요일 반복</span>
@@ -241,11 +240,10 @@ export default function MultiScheduleModal({
                 setTab('custom')
                 setErrorMsg('')
               }}
-              className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                tab === 'custom'
+              className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${tab === 'custom'
                   ? 'bg-white text-indigo-700 shadow-sm'
                   : 'text-indigo-200 hover:text-white'
-              }`}
+                }`}
             >
               <Calendar className="w-3.5 h-3.5" />
               <span>직접 선택</span>
@@ -345,19 +343,23 @@ export default function MultiScheduleModal({
                         type="button"
                         key={day.value}
                         onClick={() => toggleDay(day.value)}
-                        className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95 ${
-                          isSelected
+                        className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95 ${isSelected
                             ? 'bg-indigo-600 text-white shadow-sm'
                             : isWeekend
-                            ? 'bg-white text-rose-500 hover:bg-slate-100 border border-slate-200'
-                            : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-                        }`}
+                              ? 'bg-white text-rose-500 hover:bg-slate-100 border border-slate-200'
+                              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                          }`}
                       >
                         {day.label}
                       </button>
                     )
                   })}
                 </div>
+                {selectedDays.length === 0 && (
+                  <p className="text-[11px] text-indigo-600 mt-1.5 font-medium">
+                    ※ 반복할 요일을 최소 1개 이상 선택해주세요.
+                  </p>
+                )}
               </div>
 
               {/* Range for repeat */}
