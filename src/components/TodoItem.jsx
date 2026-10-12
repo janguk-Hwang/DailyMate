@@ -104,17 +104,11 @@ export default function TodoItem({
         isDragging ? 'opacity-30 scale-[0.98]' : ''
       }`}
     >
-      {/* Top Insertion Slot (위쪽 일정 사이를 비집고 들어가는 슬롯 효과) */}
+      {/* Top Insertion Line (위쪽 일정 사이 선 표시) */}
       {isDragOver && dragOverPosition === 'top' && (
-        <div className="py-1 my-0.5 transition-all duration-200">
+        <div className="py-1 -my-0.5 transition-all duration-150">
           <div className="h-1 bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-500 rounded-full shadow-sm shadow-indigo-300 flex items-center">
             <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 ring-2 ring-white shadow-sm -ml-0.5" />
-          </div>
-          <div className="h-7 bg-indigo-50/80 border-2 border-dashed border-indigo-300 rounded-xl mt-1 flex items-center justify-center gap-1.5 transition-all">
-            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
-            <span className="text-[10px] font-bold text-indigo-700 tracking-tight">
-              여기에 일정 삽입
-            </span>
           </div>
         </div>
       )}
@@ -230,15 +224,9 @@ export default function TodoItem({
         )}
       </div>
 
-      {/* Bottom Insertion Slot (아래쪽 일정 사이를 비집고 들어가는 슬롯 효과) */}
+      {/* Bottom Insertion Line (아래쪽 일정 사이 선 표시) */}
       {isDragOver && dragOverPosition === 'bottom' && (
-        <div className="py-1 my-0.5 transition-all duration-200">
-          <div className="h-7 bg-indigo-50/80 border-2 border-dashed border-indigo-300 rounded-xl mb-1 flex items-center justify-center gap-1.5 transition-all">
-            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
-            <span className="text-[10px] font-bold text-indigo-700 tracking-tight">
-              여기에 일정 삽입
-            </span>
-          </div>
+        <div className="py-1 -my-0.5 transition-all duration-150">
           <div className="h-1 bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-500 rounded-full shadow-sm shadow-indigo-300 flex items-center">
             <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 ring-2 ring-white shadow-sm -ml-0.5" />
           </div>
