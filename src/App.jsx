@@ -500,19 +500,32 @@ export default function App() {
           )}
         </main>
 
-        {/* Clear Completed */}
-        {user && completedCount > 0 && (
-          <footer className="mt-6 flex justify-end">
-            <button
-              type="button"
-              onClick={handleClearCompleted}
-              className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-            >
-              <CheckCheck className="w-3.5 h-3.5" />
-              <span>완료 항목 삭제 ({completedCount})</span>
-            </button>
-          </footer>
-        )}
+        {/* Footer Area with Copyright */}
+        <footer className="mt-8 pt-6 border-t border-slate-200/80 text-center space-y-3 pb-6">
+          {user && completedCount > 0 && (
+            <div className="flex justify-end mb-2">
+              <button
+                type="button"
+                onClick={handleClearCompleted}
+                className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                <span>완료 항목 삭제 ({completedCount})</span>
+              </button>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-600">To-Do 캘린더</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-[11px] text-slate-500">스마트한 개인 일정 관리 플래너</span>
+            </div>
+            <p className="text-[11px] text-slate-400 font-medium">
+              © {new Date().getFullYear()} To-Do 캘린더. All rights reserved.
+            </p>
+          </div>
+        </footer>
 
         {/* Auth Modal (Login / Sign Up / Social) */}
         <AuthModal
