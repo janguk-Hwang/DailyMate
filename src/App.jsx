@@ -34,7 +34,7 @@ export default function App() {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('custom') // 'custom' | 'priority' | 'created_desc' | 'created_asc'
   const [draggedIndex, setDraggedIndex] = useState(null)
-  const [dragOverIndex, setDragOverIndex] = useState(null)
+  const [dragOverInfo, setDragOverInfo] = useState(null) // { index, position: 'top' | 'bottom' }
   const [dbError, setDbError] = useState(null)
 
   // Auth States
@@ -291,38 +291,63 @@ export default function App() {
     return list
   }, [currentDayTodos, filter, search, sortBy])
 
-  // Drag and drop handlers
+  // Drag and drop handlers with insertion slot positioning
   const handleDragStart = (index, e) => {
     setDraggedIndex(index)
+    setDragOverInfo(null)
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move'
+      e.dataTransfer.setData('text/plain', String(index))
     }
   }
 
-  const handleDragEnter = (index) => {
-    setDragOverIndex(index)
+  const handleDragOverItem = (index, position) => {
+    if (draggedIndex === null || draggedIndex === index) {
+      if (dragOverInfo !== null) setDragOverInfo(null)
+      return
+    }
+    if (dragOverInfo?.index !== index || dragOverInfo?.position !== position) {
+      setDragOverInfo({ index, position })
+    }
+  }
+
+  const handleDragLeaveItem = (index) => {
+    if (dragOverInfo?.index === index) {
+      setDragOverInfo(null)
+    }
   }
 
   const handleDragEnd = () => {
     setDraggedIndex(null)
-    setDragOverIndex(null)
+    setDragOverInfo(null)
   }
 
-  const handleDrop = async (targetIndex) => {
+  const handleDrop = async (targetIndex, position = 'top') => {
     if (draggedIndex === null || draggedIndex === targetIndex) {
       setDraggedIndex(null)
-      setDragOverIndex(null)
+      setDragOverInfo(null)
       return
     }
+
+    const fromIndex = draggedIndex
+    const toIndex = targetIndex
+
+    const reordered = [...sortedTodos]
+    const [movedItem] = reordered.splice(fromIndex, 1)
+
+    // Calculate insertion index
+    let insertIndex = toIndex > fromIndex ? toIndex - 1 : toIndex
+    if (position === 'bottom') {
+      insertIndex += 1
+    }
+
+    insertIndex = Math.max(0, Math.min(insertIndex, reordered.length))
+    reordered.splice(insertIndex, 0, movedItem)
 
     // Switch to custom sort if user drags in a sorted mode
     if (sortBy !== 'custom') {
       setSortBy('custom')
     }
-
-    const reordered = [...sortedTodos]
-    const [movedItem] = reordered.splice(draggedIndex, 1)
-    reordered.splice(targetIndex, 0, movedItem)
 
     const otherDateTodos = allMonthTodos.filter((t) => t.date !== selectedDate)
     const reorderedIds = new Set(reordered.map((t) => t.id))
@@ -334,7 +359,7 @@ export default function App() {
     setAllMonthTodos([...updatedThisDay, ...otherDateTodos])
 
     setDraggedIndex(null)
-    setDragOverIndex(null)
+    setDragOverInfo(null)
 
     try {
       const orderIds = updatedThisDay.map((t) => t.id)
@@ -497,11 +522,13 @@ export default function App() {
                 onEdit={handleEdit}
                 isDraggable={Boolean(user)}
                 onDragStart={handleDragStart}
-                onDragEnter={handleDragEnter}
+                onDragOverItem={handleDragOverItem}
+                onDragLeaveItem={handleDragLeaveItem}
                 onDragEnd={handleDragEnd}
                 onDrop={handleDrop}
                 isDragging={draggedIndex === index}
-                isDragOver={dragOverIndex === index && draggedIndex !== index}
+                isDragOver={dragOverInfo?.index === index && draggedIndex !== index}
+                dragOverPosition={dragOverInfo?.index === index ? dragOverInfo?.position : null}
               />
             ))
           )}
