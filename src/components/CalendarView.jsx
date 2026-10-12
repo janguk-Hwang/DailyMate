@@ -15,7 +15,7 @@ export default function CalendarView({
   const [dragStartY, setDragStartY] = useState(null)
   const [dragOffset, setDragOffset] = useState(0)
   const [isSwiping, setIsSwiping] = useState(false)
-  const minSwipeThreshold = 45
+  const minSwipeThreshold = 80
 
   const prevMonthNum = month === 1 ? 12 : month - 1
   const nextMonthNum = month === 12 ? 1 : month + 1
@@ -185,21 +185,35 @@ export default function CalendarView({
         onMouseLeave={handleMouseUp}
       >
         {/* Swipe Feedback Overlay Indicator */}
-        {isSwiping && Math.abs(dragOffset) > 25 && (
+        {isSwiping && Math.abs(dragOffset) >= 35 && (
           <div
             className={`absolute inset-x-0 top-0 bottom-0 z-20 pointer-events-none flex items-center ${
               dragOffset > 0 ? 'justify-start pl-3' : 'justify-end pr-3'
             }`}
           >
-            <div className="bg-indigo-600/90 text-white font-bold text-xs px-3 py-1.5 rounded-full shadow-lg backdrop-blur-xs flex items-center gap-1.5 animate-pulse">
+            <div
+              className={`font-bold text-xs px-3 py-1.5 rounded-full shadow-lg backdrop-blur-xs flex items-center gap-1.5 transition-all duration-150 ${
+                Math.abs(dragOffset) >= minSwipeThreshold
+                  ? 'bg-indigo-600 text-white scale-105 shadow-indigo-500/30'
+                  : 'bg-slate-700/70 text-slate-200 opacity-80'
+              }`}
+            >
               {dragOffset > 0 ? (
                 <>
                   <ChevronLeft className="w-4 h-4" />
-                  <span>{prevMonthNum}월로 이동</span>
+                  <span>
+                    {Math.abs(dragOffset) >= minSwipeThreshold
+                      ? `${prevMonthNum}월로 이동`
+                      : `${prevMonthNum}월`}
+                  </span>
                 </>
               ) : (
                 <>
-                  <span>{nextMonthNum}월로 이동</span>
+                  <span>
+                    {Math.abs(dragOffset) >= minSwipeThreshold
+                      ? `${nextMonthNum}월로 이동`
+                      : `${nextMonthNum}월`}
+                  </span>
                   <ChevronRight className="w-4 h-4" />
                 </>
               )}
