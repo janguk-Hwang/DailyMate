@@ -409,16 +409,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Calendar View */}
-        <CalendarView
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          currentYearMonth={currentYearMonth}
-          onChangeYearMonth={setCurrentYearMonth}
-          monthlyScheduleCounts={monthlyCounts}
-        />
-
-        {/* Header with Selected Date Progress */}
+        {/* Header with Selected Date Progress (일정 진행 현황) */}
         <Header
           selectedDate={selectedDate}
           totalCount={totalCount}
@@ -454,11 +445,20 @@ export default function App() {
           </div>
         )}
 
-        {/* Schedule Input */}
+        {/* Schedule Input (일정 등록) */}
         <TodoInput
           onAdd={handleAddTodo}
           onOpenMulti={() => (user ? setMultiModalOpen(true) : handleOpenAuth('login'))}
           selectedDate={selectedDate}
+        />
+
+        {/* Calendar View (캘린더) */}
+        <CalendarView
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          currentYearMonth={currentYearMonth}
+          onChangeYearMonth={setCurrentYearMonth}
+          monthlyScheduleCounts={monthlyCounts}
         />
 
         {/* Filters & Sorting */}
