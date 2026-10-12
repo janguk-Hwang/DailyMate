@@ -1,4 +1,4 @@
-import { Search, ArrowUpDown, GripVertical, SlidersHorizontal } from 'lucide-react'
+import { Search, ArrowUpDown, ArrowDown, ArrowUp, GripVertical } from 'lucide-react'
 
 export default function TodoFilter({
   filter,
@@ -9,6 +9,16 @@ export default function TodoFilter({
   onSortChange,
   counts,
 }) {
+  const handleToggleCreatedSort = () => {
+    if (sortBy === 'created_desc') {
+      onSortChange('created_asc')
+    } else if (sortBy === 'created_asc') {
+      onSortChange('created_desc')
+    } else {
+      onSortChange('created_desc')
+    }
+  }
+
   return (
     <section className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-slate-200/80 mb-3.5 sm:mb-4 space-y-2.5 sm:space-y-3">
       {/* Row 1: Status Filters & Search */}
@@ -71,7 +81,7 @@ export default function TodoFilter({
         </div>
       </div>
 
-      {/* Row 2: Sort Order Filter & Drag Tip (Horizontal Scrollable on Mobile) */}
+      {/* Row 2: Sort Order Filter */}
       <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 sm:mx-0 sm:px-0">
           <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 flex-shrink-0 mr-1">
@@ -80,19 +90,7 @@ export default function TodoFilter({
           </div>
 
           <div className="flex items-center gap-1.5 flex-nowrap">
-            <button
-              type="button"
-              onClick={() => onSortChange('custom')}
-              className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap flex-shrink-0 active:scale-95 ${
-                sortBy === 'custom'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              <GripVertical className="w-3 h-3" />
-              <span>직접 순서</span>
-            </button>
-
+            {/* 우선순위 순 */}
             <button
               type="button"
               onClick={() => onSortChange('priority')}
@@ -105,35 +103,56 @@ export default function TodoFilter({
               우선순위 순
             </button>
 
+            {/* 등록 순 (토글: 최신순 ↓ / 오래된순 ↑) */}
             <button
               type="button"
-              onClick={() => onSortChange('created_desc')}
-              className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap flex-shrink-0 active:scale-95 ${
-                sortBy === 'created_desc'
+              onClick={handleToggleCreatedSort}
+              className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap flex-shrink-0 active:scale-95 ${
+                sortBy === 'created_desc' || sortBy === 'created_asc'
                   ? 'bg-indigo-600 text-white shadow-xs'
                   : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
+              title={
+                sortBy === 'created_desc'
+                  ? '현재 최신 등록순 (클릭 시 오래된 순으로 전환)'
+                  : sortBy === 'created_asc'
+                  ? '현재 오래된 등록순 (클릭 시 최신 순으로 전환)'
+                  : '등록 순 정렬'
+              }
             >
-              최신순
+              {sortBy === 'created_desc' ? (
+                <>
+                  <span>등록 순</span>
+                  <ArrowDown className="w-3 h-3 text-indigo-200" />
+                  <span className="text-[10px] text-indigo-200 font-normal">(최신)</span>
+                </>
+              ) : sortBy === 'created_asc' ? (
+                <>
+                  <span>등록 순</span>
+                  <ArrowUp className="w-3 h-3 text-indigo-200" />
+                  <span className="text-[10px] text-indigo-200 font-normal">(오래된)</span>
+                </>
+              ) : (
+                <>
+                  <span>등록 순</span>
+                  <ArrowDown className="w-3 h-3 text-slate-400" />
+                </>
+              )}
             </button>
 
-            <button
-              type="button"
-              onClick={() => onSortChange('created_asc')}
-              className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap flex-shrink-0 active:scale-95 ${
-                sortBy === 'created_asc'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              오래된순
-            </button>
+            {/* 드래그로 순서 변경 시 표시되는 직접 순서 알림 뱃지 (클릭 버튼 아님) */}
+            {sortBy === 'custom' && (
+              <span className="px-2 py-0.5 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/80 rounded-md flex items-center gap-1 whitespace-nowrap">
+                <GripVertical className="w-3 h-3 text-indigo-500" />
+                <span>직접 순서 적용됨</span>
+              </span>
+            )}
           </div>
         </div>
 
         <div className="text-[11px] text-slate-400 flex items-center gap-1 hidden sm:flex">
           <GripVertical className="w-3.5 h-3.5 text-slate-400" />
-          <span>왼쪽 손잡이를 잡고 끌어서 순서를 변경하세요</span>
+          <span>일정을 드래그하여 순서를 직접 바꿀 수 있습니다</span>
         </div>
       </div>
     </section>
