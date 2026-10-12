@@ -191,7 +191,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
       return setErrorMsg('아이디 중복 확인을 진행해주세요.')
     }
     if (!signupName.trim()) {
-      return setErrorMsg('이름 또는 닉네임을 입력해주세요.')
+      return setErrorMsg('닉네임을 입력해주세요.')
     }
     if (!signupPassword || signupPassword.length < 6) {
       return setErrorMsg('비밀번호는 최소 6자 이상이어야 합니다.')
@@ -492,17 +492,17 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                 </div>
               </div>
 
-              {/* Name */}
+              {/* Nickname */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                  이름 / 닉네임 <span className="text-red-500">*</span>
+                  닉네임 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={signupName}
                   onChange={(e) => setSignupName(e.target.value)}
                   autoComplete="off"
-                  placeholder="캘린더에 표시될 이름"
+                  placeholder="캘린더에 표시될 닉네임"
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
                   required
                 />
