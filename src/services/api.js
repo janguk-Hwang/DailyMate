@@ -208,3 +208,17 @@ export async function clearCompletedForDate(date) {
   if (!res.ok) throw new Error('Failed to clear completed schedules')
   return res.json()
 }
+
+export async function reorderSchedules(orderIds) {
+  const res = await fetch('/api/schedules/reorder', {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ orderIds }),
+  })
+  if (res.status === 401) {
+    removeToken()
+    throw new Error('AUTH_REQUIRED')
+  }
+  if (!res.ok) throw new Error('Failed to reorder schedules')
+  return res.json()
+}

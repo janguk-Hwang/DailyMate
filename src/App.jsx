@@ -16,6 +16,7 @@ import {
   getCurrentUser,
   setToken,
   removeToken,
+  reorderSchedules,
 } from './services/api'
 
 const getToday = () => {
@@ -29,6 +30,9 @@ export default function App() {
   const [allMonthTodos, setAllMonthTodos] = useState([])
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState('custom') // 'custom' | 'priority' | 'created_desc' | 'created_asc'
+  const [draggedIndex, setDraggedIndex] = useState(null)
+  const [dragOverIndex, setDragOverIndex] = useState(null)
   const [dbError, setDbError] = useState(null)
 
   // Auth States
@@ -228,11 +232,86 @@ export default function App() {
   const activeCount = totalCount - completedCount
   const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100)
 
-  const filteredTodos = currentDayTodos.filter((todo) => {
-    const match = filter === 'all' ? true : filter === 'active' ? !todo.completed : todo.completed
-    const matchSearch = (todo.title || todo.text || '').toLowerCase().includes(search.toLowerCase())
-    return match && matchSearch
-  })
+  const priorityWeights = { high: 3, medium: 2, low: 1 }
+
+  const sortedTodos = useMemo(() => {
+    let list = [...currentDayTodos]
+
+    const matchFilter = (todo) => {
+      const match = filter === 'all' ? true : filter === 'active' ? !todo.completed : todo.completed
+      const matchSearch = (todo.title || todo.text || '').toLowerCase().includes(search.toLowerCase())
+      return match && matchSearch
+    }
+
+    list = list.filter(matchFilter)
+
+    if (sortBy === 'priority') {
+      list.sort((a, b) => {
+        const pA = priorityWeights[a.priority] || 2
+        const pB = priorityWeights[b.priority] || 2
+        if (pB !== pA) return pB - pA
+        return (b.id || 0) - (a.id || 0)
+      })
+    } else if (sortBy === 'created_desc') {
+      list.sort((a, b) => (b.id || 0) - (a.id || 0))
+    } else if (sortBy === 'created_asc') {
+      list.sort((a, b) => (a.id || 0) - (b.id || 0))
+    }
+    return list
+  }, [currentDayTodos, filter, search, sortBy])
+
+  // Drag and drop handlers
+  const handleDragStart = (index, e) => {
+    setDraggedIndex(index)
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move'
+    }
+  }
+
+  const handleDragEnter = (index) => {
+    setDragOverIndex(index)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDrop = async (targetIndex) => {
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+
+    // Switch to custom sort if user drags in a sorted mode
+    if (sortBy !== 'custom') {
+      setSortBy('custom')
+    }
+
+    const reordered = [...sortedTodos]
+    const [movedItem] = reordered.splice(draggedIndex, 1)
+    reordered.splice(targetIndex, 0, movedItem)
+
+    const otherDateTodos = allMonthTodos.filter((t) => t.date !== selectedDate)
+    const reorderedIds = new Set(reordered.map((t) => t.id))
+    const unshownThisDay = allMonthTodos.filter(
+      (t) => t.date === selectedDate && !reorderedIds.has(t.id)
+    )
+
+    const updatedThisDay = [...reordered, ...unshownThisDay]
+    setAllMonthTodos([...updatedThisDay, ...otherDateTodos])
+
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+
+    try {
+      const orderIds = updatedThisDay.map((t) => t.id)
+      await reorderSchedules(orderIds)
+    } catch (err) {
+      console.error('[Reorder Schedules Error]:', err)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 py-6 sm:py-10 px-4 sm:px-6">
@@ -322,12 +401,14 @@ export default function App() {
         {/* Schedule Input */}
         <TodoInput onAdd={handleAddTodo} selectedDate={selectedDate} />
 
-        {/* Filters */}
+        {/* Filters & Sorting */}
         <TodoFilter
           filter={filter}
           onFilterChange={setFilter}
           search={search}
           onSearchChange={setSearch}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
           counts={{ total: totalCount, active: activeCount, completed: completedCount }}
         />
 
@@ -353,7 +434,7 @@ export default function App() {
                 <span>지금 로그인하기</span>
               </button>
             </div>
-          ) : filteredTodos.length === 0 ? (
+          ) : sortedTodos.length === 0 ? (
             <div className="bg-white/60 border border-dashed border-slate-200 rounded-2xl p-10 text-center">
               <div className="mx-auto w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
                 <AlertCircle className="w-6 h-6" />
@@ -365,9 +446,10 @@ export default function App() {
               </p>
             </div>
           ) : (
-            filteredTodos.map((todo) => (
+            sortedTodos.map((todo, index) => (
               <TodoItem
                 key={todo.id}
+                index={index}
                 todo={{
                   id: todo.id,
                   text: todo.title || todo.text,
@@ -378,6 +460,13 @@ export default function App() {
                 onToggle={handleToggle}
                 onDelete={handleDelete}
                 onEdit={handleEdit}
+                isDraggable={Boolean(user)}
+                onDragStart={handleDragStart}
+                onDragEnter={handleDragEnter}
+                onDragEnd={handleDragEnd}
+                onDrop={handleDrop}
+                isDragging={draggedIndex === index}
+                isDragOver={dragOverIndex === index && draggedIndex !== index}
               />
             ))
           )}

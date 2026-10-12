@@ -122,11 +122,15 @@ export async function initDatabase() {
     `
     await pool.query(createTableQuery)
 
-    // Ensure user_id column exists on existing schedules table
+    // Ensure user_id and order_index columns exist on existing schedules table
     try {
       const [cols] = await pool.query(`SHOW COLUMNS FROM schedules LIKE 'user_id'`)
       if (cols.length === 0) {
         await pool.query(`ALTER TABLE schedules ADD COLUMN user_id INT NULL AFTER id`)
+      }
+      const [orderCols] = await pool.query(`SHOW COLUMNS FROM schedules LIKE 'order_index'`)
+      if (orderCols.length === 0) {
+        await pool.query(`ALTER TABLE schedules ADD COLUMN order_index INT DEFAULT 0 AFTER priority`)
       }
     } catch (colErr) {
       console.warn('[Check Column Notice]:', colErr.message)

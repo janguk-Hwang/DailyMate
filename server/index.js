@@ -66,13 +66,13 @@ app.get('/api/schedules', authMiddleware, async (req, res) => {
     let params = [userId]
 
     if (date) {
-      query += ' AND date = ? ORDER BY id DESC'
+      query += ' AND date = ? ORDER BY order_index ASC, id DESC'
       params.push(date)
     } else if (month) {
-      query += ' AND date LIKE ? ORDER BY date ASC, id DESC'
+      query += ' AND date LIKE ? ORDER BY date ASC, order_index ASC, id DESC'
       params.push(`${month}%`)
     } else {
-      query += ' ORDER BY date DESC, id DESC'
+      query += ' ORDER BY date DESC, order_index ASC, id DESC'
     }
 
     const [rows] = await pool.query(query, params)
@@ -86,6 +86,34 @@ app.get('/api/schedules', authMiddleware, async (req, res) => {
       return res.json([])
     }
     console.error('[Get Schedules Error]:', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Reorder schedules for current user (Placed BEFORE /:id route)
+app.put('/api/schedules/reorder', authMiddleware, async (req, res) => {
+  const { orderIds } = req.body
+  const userId = req.user.id
+  const pool = await getSafePool()
+
+  if (!pool) {
+    return res.status(503).json({ error: '데이터베이스에 연결되지 않았습니다.' })
+  }
+
+  if (!Array.isArray(orderIds)) {
+    return res.status(400).json({ error: 'orderIds 목록이 필요합니다.' })
+  }
+
+  try {
+    for (let i = 0; i < orderIds.length; i++) {
+      await pool.query(
+        'UPDATE schedules SET order_index = ? WHERE id = ? AND user_id = ?',
+        [i, orderIds[i], userId]
+      )
+    }
+    res.json({ success: true, message: '순서가 저장되었습니다.' })
+  } catch (err) {
+    console.error('[Reorder Schedules Error]:', err)
     res.status(500).json({ error: err.message })
   }
 })
