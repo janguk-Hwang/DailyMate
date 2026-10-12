@@ -53,11 +53,11 @@ export default function CalendarView({
   const weekdays = ['일', '월', '화', '수', '목', '금', '토']
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 mb-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/80 mb-4 sm:mb-6">
+      <div className="flex items-center justify-between mb-3.5 sm:mb-4">
         <div className="flex items-center gap-2">
-          <CalendarIcon className="w-5 h-5 text-indigo-600" />
-          <h2 className="text-lg font-bold text-slate-800">
+          <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
+          <h2 className="text-base sm:text-lg font-bold text-slate-800">
             {year}년 {month}월
           </h2>
         </div>
@@ -65,7 +65,7 @@ export default function CalendarView({
           <button
             type="button"
             onClick={handleGoToday}
-            className="px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+            className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition-colors cursor-pointer"
           >
             오늘
           </button>
@@ -74,6 +74,7 @@ export default function CalendarView({
               type="button"
               onClick={handlePrevMonth}
               className="p-1.5 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+              title="이전 달"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -81,6 +82,7 @@ export default function CalendarView({
               type="button"
               onClick={handleNextMonth}
               className="p-1.5 hover:bg-slate-100 text-slate-600 border-l border-slate-200 transition-colors cursor-pointer"
+              title="다음 달"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -88,11 +90,11 @@ export default function CalendarView({
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center mb-2">
+      <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
         {weekdays.map((wd, i) => (
           <div
             key={wd}
-            className={`text-xs font-semibold py-1 ${
+            className={`text-[11px] sm:text-xs font-semibold py-0.5 sm:py-1 ${
               i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-slate-400'
             }`}
           >
@@ -107,7 +109,7 @@ export default function CalendarView({
             return (
               <div
                 key={idx}
-                className="h-13 flex items-start justify-center p-1 text-xs text-slate-300"
+                className="h-11 sm:h-13 flex items-start justify-center p-0.5 sm:p-1 text-[11px] sm:text-xs text-slate-300"
               >
                 {item.day}
               </div>
@@ -126,14 +128,14 @@ export default function CalendarView({
               key={idx}
               type="button"
               onClick={() => onSelectDate(item.dateStr)}
-              className={`h-13 flex flex-col items-center justify-between p-1 rounded-xl transition-all cursor-pointer ${
+              className={`h-11 sm:h-13 flex flex-col items-center justify-between p-0.5 sm:p-1 rounded-xl transition-all cursor-pointer active:scale-95 ${
                 isSelected
                   ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-200'
                   : 'hover:bg-indigo-50/70 text-slate-700'
               } ${isToday && !isSelected ? 'ring-2 ring-indigo-400' : ''}`}
             >
               <span
-                className={`text-xs ${
+                className={`text-[11px] sm:text-xs leading-tight ${
                   isSelected
                     ? 'text-white'
                     : dow === 0
@@ -146,12 +148,12 @@ export default function CalendarView({
                 {item.day}
               </span>
 
-              <div className="h-4 flex items-center justify-center">
+              <div className="h-4 flex items-center justify-center w-full">
                 {count > 0 && (
                   <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-medium ${
+                    className={`px-1 sm:px-1.5 py-0.2 rounded-full text-[9px] sm:text-[10px] font-medium leading-none truncate max-w-full ${
                       isSelected
-                        ? 'bg-white text-indigo-700'
+                        ? 'bg-white text-indigo-700 font-bold'
                         : comp === count
                         ? 'bg-emerald-100 text-emerald-700'
                         : 'bg-indigo-100 text-indigo-700'

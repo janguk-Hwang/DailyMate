@@ -184,34 +184,34 @@ export default function MultiScheduleModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transition-all">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-lg bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transition-all">
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white relative">
+        <div className="px-4.5 pt-5 pb-3.5 sm:px-6 sm:pt-6 sm:pb-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white relative">
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-5 right-5 p-1.5 rounded-full text-indigo-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="absolute top-4 right-4 sm:top-5 sm:right-5 p-1.5 rounded-full text-indigo-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2 mb-1">
-            <CalendarDays className="w-6 h-6 text-indigo-200" />
-            <h2 className="text-xl font-bold tracking-tight">다중 / 반복 일정 등록</h2>
+            <CalendarDays className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-200" />
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight">다중 / 반복 일정 등록</h2>
           </div>
-          <p className="text-xs text-indigo-100/90">
+          <p className="text-[11px] sm:text-xs text-indigo-100/90">
             기간 일정, 매주 요일 반복, 또는 원하는 여러 날을 선택해 한 번에 등록하세요.
           </p>
 
           {/* Mode Switch Tabs */}
-          <div className="flex mt-4 p-1 bg-indigo-900/40 rounded-xl">
+          <div className="flex mt-3.5 sm:mt-4 p-1 bg-indigo-900/40 rounded-xl gap-1">
             <button
               type="button"
               onClick={() => {
                 setTab('range')
                 setErrorMsg('')
               }}
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
                 tab === 'range'
                   ? 'bg-white text-indigo-700 shadow-sm'
                   : 'text-indigo-200 hover:text-white'
@@ -226,14 +226,14 @@ export default function MultiScheduleModal({
                 setTab('weekly')
                 setErrorMsg('')
               }}
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
                 tab === 'weekly'
                   ? 'bg-white text-indigo-700 shadow-sm'
                   : 'text-indigo-200 hover:text-white'
               }`}
             >
               <Repeat className="w-3.5 h-3.5" />
-              <span>매주 요일 반복</span>
+              <span>요일 반복</span>
             </button>
             <button
               type="button"
@@ -241,20 +241,20 @@ export default function MultiScheduleModal({
                 setTab('custom')
                 setErrorMsg('')
               }}
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
                 tab === 'custom'
                   ? 'bg-white text-indigo-700 shadow-sm'
                   : 'text-indigo-200 hover:text-white'
               }`}
             >
               <Calendar className="w-3.5 h-3.5" />
-              <span>날짜 직접 선택</span>
+              <span>직접 선택</span>
             </button>
           </div>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-3.5 sm:space-y-4 max-h-[75vh] overflow-y-auto">
           {errorMsg && (
             <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -272,7 +272,7 @@ export default function MultiScheduleModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="예: 프로젝트 스프린트, 운동, 학원 수업 등"
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              className="w-full px-3.5 sm:px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
               required
             />
           </div>
@@ -282,7 +282,7 @@ export default function MultiScheduleModal({
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             >
               <option value="high">우선순위: 높음 🔴</option>
               <option value="medium">우선순위: 보통 🟡</option>
@@ -292,12 +292,12 @@ export default function MultiScheduleModal({
 
           {/* TAB 1: Date Range */}
           {tab === 'range' && (
-            <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
+            <div className="p-3.5 sm:p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5 sm:space-y-3">
               <div className="font-semibold text-xs text-slate-700 flex items-center gap-1.5">
                 <CalendarRange className="w-4 h-4 text-indigo-600" />
                 <span>연속된 기간 설정</span>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 <div>
                   <label className="block text-[11px] text-slate-500 mb-1">시작일</label>
                   <input
@@ -325,7 +325,7 @@ export default function MultiScheduleModal({
 
           {/* TAB 2: Weekly Repeat */}
           {tab === 'weekly' && (
-            <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
+            <div className="p-3.5 sm:p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5 sm:space-y-3">
               <div className="font-semibold text-xs text-slate-700 flex items-center gap-1.5">
                 <Repeat className="w-4 h-4 text-indigo-600" />
                 <span>매주 반복 요일 및 기간 설정</span>
@@ -345,7 +345,7 @@ export default function MultiScheduleModal({
                         type="button"
                         key={day.value}
                         onClick={() => toggleDay(day.value)}
-                        className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                        className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95 ${
                           isSelected
                             ? 'bg-indigo-600 text-white shadow-sm'
                             : isWeekend
@@ -361,7 +361,7 @@ export default function MultiScheduleModal({
               </div>
 
               {/* Range for repeat */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pt-1">
                 <div>
                   <label className="block text-[11px] text-slate-500 mb-1">반복 시작일</label>
                   <input
@@ -389,7 +389,7 @@ export default function MultiScheduleModal({
 
           {/* TAB 3: Custom Multiple Dates */}
           {tab === 'custom' && (
-            <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
+            <div className="p-3.5 sm:p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5 sm:space-y-3">
               <div className="font-semibold text-xs text-slate-700 flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-indigo-600" />
                 <span>원하는 날짜를 선택하여 목록에 추가</span>
@@ -405,10 +405,10 @@ export default function MultiScheduleModal({
                 <button
                   type="button"
                   onClick={handleAddCustomDate}
-                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer flex-shrink-0"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>날짜 추가</span>
+                  <span>추가</span>
                 </button>
               </div>
 
@@ -424,7 +424,7 @@ export default function MultiScheduleModal({
                       <button
                         type="button"
                         onClick={() => handleRemoveCustomDate(d)}
-                        className="text-slate-400 hover:text-rose-500 cursor-pointer"
+                        className="text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -433,23 +433,23 @@ export default function MultiScheduleModal({
                 </div>
               ) : (
                 <p className="text-[11px] text-slate-400 italic">
-                  위에서 날짜를 선택하고 [날짜 추가]를 눌러주세요.
+                  위에서 날짜를 선택하고 [추가]를 눌러주세요.
                 </p>
               )}
             </div>
           )}
 
           {/* Summary Preview Box */}
-          <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-center justify-between text-xs">
+          <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 text-xs">
             <div className="flex items-center gap-1.5 text-indigo-800 font-semibold">
-              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <Sparkles className="w-4 h-4 text-indigo-600 flex-shrink-0" />
               <span>등록 예정 일수:</span>
               <span className="font-extrabold text-sm text-indigo-950 font-mono">
                 {computedDates.length}일
               </span>
             </div>
             {computedDates.length > 0 && (
-              <span className="text-[11px] text-indigo-600">
+              <span className="text-[11px] text-indigo-600 font-medium">
                 ({computedDates[0]} ~ {computedDates[computedDates.length - 1]})
               </span>
             )}
@@ -459,7 +459,7 @@ export default function MultiScheduleModal({
           <button
             type="submit"
             disabled={loading || computedDates.length === 0 || !title.trim()}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.99]"
           >
             {loading ? (
               <>

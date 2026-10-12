@@ -242,31 +242,31 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transition-all transform duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-md bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transition-all transform duration-200">
         {/* Header Bar */}
-        <div className="relative px-6 pt-6 pb-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white">
+        <div className="relative px-4.5 pt-5 pb-3.5 sm:px-6 sm:pt-6 sm:pb-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white">
           <button
             type="button"
             onClick={handleClose}
-            className="absolute top-5 right-5 p-1.5 rounded-full text-indigo-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="absolute top-4 right-4 sm:top-5 sm:right-5 p-1.5 rounded-full text-indigo-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2 mb-1">
-            <ShieldCheck className="w-6 h-6 text-indigo-200" />
-            <h2 className="text-xl font-bold tracking-tight">
+            <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-200" />
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight">
               {mode === 'login' ? '로그인' : '회원가입'}
             </h2>
           </div>
-          <p className="text-xs text-indigo-100/90">
+          <p className="text-[11px] sm:text-xs text-indigo-100/90">
             {mode === 'login'
               ? '로그인하여 나만의 개인 일정을 안전하게 관리하세요.'
               : '간단한 정보와 전화번호 인증으로 회원가입을 완료하세요.'}
           </p>
 
           {/* Mode Switch Tabs */}
-          <div className="flex mt-4 p-1 bg-indigo-900/40 rounded-xl">
+          <div className="flex mt-3.5 sm:mt-4 p-1 bg-indigo-900/40 rounded-xl gap-1">
             <button
               type="button"
               onClick={() => {
@@ -299,7 +299,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
         </div>
 
         {/* Body Content */}
-        <div className="p-6 max-h-[75vh] overflow-y-auto">
+        <div className="p-4 sm:p-6 max-h-[75vh] overflow-y-auto">
           {/* Notifications */}
           {errorMsg && (
             <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2 animate-shake">

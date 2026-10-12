@@ -63,13 +63,13 @@ export default function TodoItem({
       onDragOver={(e) => e.preventDefault()}
       onDragEnd={onDragEnd}
       onDrop={(e) => onDrop && onDrop(index, e)}
-      className={`group flex items-center gap-2.5 sm:gap-3 p-3.5 sm:p-4 rounded-xl border transition-all duration-200 select-none ${
+      className={`group flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl border transition-all duration-200 select-none ${
         isDragging
           ? 'opacity-40 scale-[0.98] border-indigo-400 bg-indigo-50/50 shadow-inner'
           : isDragOver
           ? 'border-indigo-500 bg-indigo-50/30 ring-2 ring-indigo-400/30'
           : todo.completed
-          ? 'bg-slate-50/70 border-slate-200/60 opacity-75'
+          ? 'bg-slate-50/70 border-slate-200/60 opacity-80'
           : 'bg-white border-slate-200/90 shadow-xs hover:border-indigo-200'
       }`}
     >
@@ -77,7 +77,7 @@ export default function TodoItem({
       {isDraggable && !isEditing ? (
         <div
           title="끌어서 순서 변경"
-          className="text-slate-300 hover:text-indigo-600 group-hover:text-slate-400 p-0.5 -ml-1 cursor-grab active:cursor-grabbing transition-colors flex-shrink-0"
+          className="text-slate-300 hover:text-indigo-600 sm:group-hover:text-slate-400 w-5 h-7 flex items-center justify-center -ml-1 cursor-grab active:cursor-grabbing transition-colors flex-shrink-0"
         >
           <GripVertical className="w-4 h-4" />
         </div>
@@ -87,7 +87,7 @@ export default function TodoItem({
       <button
         type="button"
         onClick={() => onToggle(todo.id)}
-        className="text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none flex-shrink-0 cursor-pointer"
+        className="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none flex-shrink-0 cursor-pointer active:scale-90"
         aria-label={todo.completed ? '미완료로 변경' : '완료로 변경'}
       >
         {todo.completed ? (
@@ -98,9 +98,9 @@ export default function TodoItem({
       </button>
 
       {/* Content / Edit Form */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 pr-1">
         {isEditing ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <input
               type="text"
               value={editText}
@@ -110,12 +110,12 @@ export default function TodoItem({
                 if (e.key === 'Escape') handleCancel()
               }}
               autoFocus
-              className="w-full px-2.5 py-1 text-sm border border-indigo-400 rounded-lg focus:outline-none ring-2 ring-indigo-500/20"
+              className="w-full px-2.5 py-1.5 text-sm border border-indigo-400 rounded-lg focus:outline-none ring-2 ring-indigo-500/20 bg-white"
             />
             <button
               type="button"
               onClick={handleSave}
-              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+              className="w-8 h-8 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer flex-shrink-0"
               title="저장"
             >
               <Check className="w-4 h-4" />
@@ -123,18 +123,18 @@ export default function TodoItem({
             <button
               type="button"
               onClick={handleCancel}
-              className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer flex-shrink-0"
               title="취소"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         ) : (
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="overflow-hidden">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               <span
                 onClick={() => onToggle(todo.id)}
-                className={`text-sm font-medium cursor-pointer transition-all ${
+                className={`text-sm font-medium cursor-pointer transition-all break-words break-all leading-snug ${
                   todo.completed
                     ? 'line-through text-slate-400'
                     : 'text-slate-700 hover:text-indigo-600'
@@ -144,7 +144,7 @@ export default function TodoItem({
               </span>
               {getPriorityBadge(todo.priority)}
             </div>
-            <span className="text-[11px] text-slate-400 mt-0.5 block">
+            <span className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 block">
               {todo.createdAt}
             </span>
           </div>
@@ -153,22 +153,22 @@ export default function TodoItem({
 
       {/* Action Buttons (Edit / Delete) */}
       {!isEditing && (
-        <div className="flex items-center gap-1 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex-shrink-0">
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer active:scale-90"
             title="수정"
           >
-            <Pencil className="w-4 h-4" />
+            <Pencil className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
             onClick={() => onDelete(todo.id)}
-            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer active:scale-90"
             title="삭제"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       )}

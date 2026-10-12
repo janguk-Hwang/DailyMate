@@ -338,7 +338,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 py-6 sm:py-10 px-4 sm:px-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 py-3.5 sm:py-10 px-3 sm:px-6">
       <div className="max-w-2xl mx-auto">
         {/* Top Navbar with Brand Logo Button */}
         <Navbar
@@ -351,7 +351,7 @@ export default function App() {
 
         {/* OAuth Error Alert */}
         {oauthError && (
-          <div className="bg-rose-50 border border-rose-300 text-rose-800 text-xs px-4 py-3 rounded-2xl mb-4 flex items-center justify-between shadow-sm">
+          <div className="bg-rose-50 border border-rose-300 text-rose-800 text-xs px-3.5 py-2.5 rounded-2xl mb-3.5 flex items-center justify-between shadow-sm">
             <span className="font-medium">⚠️ {oauthError}</span>
             <button
               type="button"
@@ -365,7 +365,7 @@ export default function App() {
 
         {/* Database Connection Error */}
         {dbError && (
-          <div className="bg-amber-50 border border-amber-300 text-amber-900 text-xs px-4 py-3 rounded-2xl mb-4 flex items-center justify-between shadow-sm">
+          <div className="bg-amber-50 border border-amber-300 text-amber-900 text-xs px-3.5 py-2.5 rounded-2xl mb-3.5 flex items-center justify-between shadow-sm">
             <span className="font-medium">⚠️ {dbError}</span>
             <button
               type="button"
@@ -396,17 +396,17 @@ export default function App() {
 
         {/* Not Logged In Callout */}
         {!user && !authLoading && (
-          <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-2xl p-5 mb-6 shadow-md shadow-indigo-200/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 text-left">
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                <Lock className="w-5 h-5 text-white" />
+          <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6 shadow-md shadow-indigo-200/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-start sm:items-center gap-3 text-left">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <Lock className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" />
               </div>
               <div>
                 <h3 className="font-bold text-sm tracking-tight flex items-center gap-1.5">
                   <span>나만의 비공개 캘린더</span>
                   <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
                 </h3>
-                <p className="text-xs text-indigo-100 mt-0.5">
+                <p className="text-xs text-indigo-100 mt-0.5 leading-relaxed">
                   로그인하시면 나만 볼 수 있는 개인 일정을 안전하게 등록하고 관리할 수 있습니다.
                 </p>
               </div>
@@ -414,7 +414,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => handleOpenAuth('login')}
-              className="px-4 py-2.5 bg-white text-indigo-600 hover:bg-indigo-50 font-semibold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 bg-white text-indigo-600 hover:bg-indigo-50 font-semibold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 flex-shrink-0 cursor-pointer"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>로그인하고 시작하기</span>
