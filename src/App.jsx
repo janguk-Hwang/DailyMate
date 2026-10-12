@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { AlertCircle, CheckCheck, Lock, Sparkles, LogIn } from 'lucide-react'
+import Navbar from './components/Navbar'
 import Header from './components/Header'
 import CalendarView from './components/CalendarView'
 import TodoInput from './components/TodoInput'
@@ -112,6 +113,13 @@ export default function App() {
     removeToken()
     setUser(null)
     setAllMonthTodos([])
+  }
+
+  const handleResetToday = () => {
+    const todayStr = getToday()
+    setSelectedDate(todayStr)
+    setCurrentYearMonth(todayStr.slice(0, 7))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const monthlyCounts = useMemo(() => {
@@ -227,8 +235,17 @@ export default function App() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 py-10 px-4 sm:px-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 py-6 sm:py-10 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto">
+        {/* Top Navbar with Brand Logo Button */}
+        <Navbar
+          user={user}
+          onOpenAuth={handleOpenAuth}
+          onLogout={handleLogout}
+          onResetToday={handleResetToday}
+          isTodaySelected={selectedDate === getToday()}
+        />
+
         {/* OAuth Error Alert */}
         {oauthError && (
           <div className="bg-rose-50 border border-rose-300 text-rose-800 text-xs px-4 py-3 rounded-2xl mb-4 flex items-center justify-between shadow-sm">
@@ -266,15 +283,12 @@ export default function App() {
           monthlyScheduleCounts={monthlyCounts}
         />
 
-        {/* Header with Auth Status */}
+        {/* Header with Selected Date Progress */}
         <Header
           selectedDate={selectedDate}
           totalCount={totalCount}
           completedCount={completedCount}
           progressPercent={progressPercent}
-          user={user}
-          onOpenAuth={handleOpenAuth}
-          onLogout={handleLogout}
         />
 
         {/* Not Logged In Callout */}
