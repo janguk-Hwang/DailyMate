@@ -222,3 +222,20 @@ export async function reorderSchedules(orderIds) {
   if (!res.ok) throw new Error('Failed to reorder schedules')
   return res.json()
 }
+
+export async function createBatchSchedules(payload) {
+  const res = await fetch('/api/schedules/batch', {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  })
+  if (res.status === 401) {
+    removeToken()
+    throw new Error('AUTH_REQUIRED')
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.details || err.error || `HTTP ${res.status}: 일괄 일정 등록 실패`)
+  }
+  return res.json()
+}

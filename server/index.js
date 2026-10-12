@@ -154,6 +154,64 @@ app.post('/api/schedules', authMiddleware, async (req, res) => {
   }
 })
 
+// Batch create schedules (기간/반복/다중 날짜)
+app.post('/api/schedules/batch', authMiddleware, async (req, res) => {
+  const { title, dates, schedules: customSchedules, priority = 'medium' } = req.body
+  const userId = req.user.id
+  const pool = await getSafePool()
+
+  if (!pool) {
+    return res.status(503).json({ error: '데이터베이스에 연결되지 않았습니다.' })
+  }
+
+  let itemsToInsert = []
+  if (Array.isArray(customSchedules) && customSchedules.length > 0) {
+    itemsToInsert = customSchedules.map((s) => ({
+      title: (s.title || '').trim(),
+      date: s.date,
+      priority: s.priority || 'medium',
+    }))
+  } else if (title && Array.isArray(dates) && dates.length > 0) {
+    const trimmedTitle = title.trim()
+    itemsToInsert = dates.map((d) => ({
+      title: trimmedTitle,
+      date: d,
+      priority,
+    }))
+  } else {
+    return res.status(400).json({ error: '등록할 일정 정보와 날짜 목록이 필요합니다.' })
+  }
+
+  try {
+    const createdItems = []
+    for (const item of itemsToInsert) {
+      if (!item.title || !item.date) continue
+      const [result] = await pool.query(
+        'INSERT INTO schedules (user_id, title, date, completed, priority, order_index) VALUES (?, ?, ?, false, ?, 0)',
+        [userId, item.title, item.date, item.priority]
+      )
+      createdItems.push({
+        id: result.insertId,
+        user_id: userId,
+        title: item.title,
+        date: item.date,
+        completed: false,
+        priority: item.priority,
+        order_index: 0,
+      })
+    }
+
+    res.status(201).json({
+      success: true,
+      count: createdItems.length,
+      schedules: createdItems,
+    })
+  } catch (err) {
+    console.error('[Batch Schedules Error]:', err)
+    res.status(500).json({ error: `일괄 일정 저장 실패: ${err.message}` })
+  }
+})
+
 // Update schedule for current user
 app.put('/api/schedules/:id', authMiddleware, async (req, res) => {
   const { id } = req.params

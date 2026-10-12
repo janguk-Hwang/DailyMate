@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, CalendarDays } from 'lucide-react'
 
-export default function TodoInput({ onAdd, selectedDate }) {
+export default function TodoInput({ onAdd, onOpenMulti, selectedDate }) {
   const [text, setText] = useState('')
   const [priority, setPriority] = useState('medium')
 
@@ -40,6 +40,17 @@ export default function TodoInput({ onAdd, selectedDate }) {
             <Plus className="w-4 h-4" />
             <span>등록</span>
           </button>
+          {onOpenMulti && (
+            <button
+              type="button"
+              onClick={onOpenMulti}
+              title="기간 일정, 매주 요일 반복, 여러 날짜 동시 등록"
+              className="flex items-center justify-center gap-1 px-3 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold border border-indigo-200 transition-colors cursor-pointer flex-shrink-0"
+            >
+              <CalendarDays className="w-4 h-4 text-indigo-600" />
+              <span className="hidden sm:inline">기간/반복</span>
+            </button>
+          )}
         </div>
       </form>
     </section>

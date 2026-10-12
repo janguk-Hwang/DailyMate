@@ -7,9 +7,11 @@ import TodoInput from './components/TodoInput'
 import TodoFilter from './components/TodoFilter'
 import TodoItem from './components/TodoItem'
 import AuthModal from './components/AuthModal'
+import MultiScheduleModal from './components/MultiScheduleModal'
 import {
   getMonthSchedules,
   createSchedule,
+  createBatchSchedules,
   updateSchedule,
   deleteSchedule,
   clearCompletedForDate,
@@ -40,6 +42,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalMode, setAuthModalMode] = useState('login')
+  const [multiModalOpen, setMultiModalOpen] = useState(false)
   const [oauthError, setOauthError] = useState(null)
 
   // 1. Initial OAuth URL check and Auto Login Check
@@ -155,6 +158,27 @@ export default function App() {
         handleOpenAuth('login')
       } else {
         alert(e.message || '일정 등록 실패')
+      }
+    }
+  }
+
+  const handleBatchAddTodo = async ({ title, dates, priority }) => {
+    if (!user) {
+      handleOpenAuth('login')
+      return
+    }
+
+    try {
+      const res = await createBatchSchedules({ title, dates, priority })
+      if (res.schedules && res.schedules.length > 0) {
+        setAllMonthTodos((prev) => [...res.schedules, ...prev])
+        await loadSchedules(currentYearMonth)
+      }
+    } catch (e) {
+      if (e.message === 'AUTH_REQUIRED') {
+        handleOpenAuth('login')
+      } else {
+        alert(e.message || '일괄 일정 등록 실패')
       }
     }
   }
@@ -399,7 +423,11 @@ export default function App() {
         )}
 
         {/* Schedule Input */}
-        <TodoInput onAdd={handleAddTodo} selectedDate={selectedDate} />
+        <TodoInput
+          onAdd={handleAddTodo}
+          onOpenMulti={() => (user ? setMultiModalOpen(true) : handleOpenAuth('login'))}
+          selectedDate={selectedDate}
+        />
 
         {/* Filters & Sorting */}
         <TodoFilter
@@ -492,6 +520,14 @@ export default function App() {
           onClose={() => setAuthModalOpen(false)}
           onAuthSuccess={handleAuthSuccess}
           initialMode={authModalMode}
+        />
+
+        {/* Multi / Recurring Schedule Modal */}
+        <MultiScheduleModal
+          isOpen={multiModalOpen}
+          onClose={() => setMultiModalOpen(false)}
+          initialDate={selectedDate}
+          onSubmitBatch={handleBatchAddTodo}
         />
       </div>
     </div>
