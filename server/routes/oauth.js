@@ -33,7 +33,23 @@ async function findOrCreateSocialUser(provider, providerId, name, email) {
     [provider, String(providerId)]
   )
 
-  if (existing.length > 0) return existing[0]
+  const isPlaceholder = (val) =>
+    !val ||
+    val === `${provider}_사용자` ||
+    val === '카카오 사용자' ||
+    val === '네이버 사용자' ||
+    val === '구글 사용자' ||
+    val.includes('_user')
+
+  if (existing.length > 0) {
+    const user = existing[0]
+    // If the saved name was a placeholder but we now have a real nickname/name, update DB
+    if (name && !isPlaceholder(name) && isPlaceholder(user.name)) {
+      await pool.query('UPDATE users SET name = ? WHERE id = ?', [name, user.id])
+      user.name = name
+    }
+    return user
+  }
 
   const displayName = name || `${provider}_사용자`
   const [result] = await pool.query(
@@ -142,7 +158,12 @@ router.get('/kakao/callback', async (req, res) => {
     })
 
     const profile = userRes.data
-    const nickname = profile.properties?.nickname || profile.kakao_account?.profile?.nickname || '카카오 사용자'
+    console.log('[Kakao User Profile Data]:', JSON.stringify(profile))
+    const nickname =
+      profile.kakao_account?.profile?.nickname ||
+      profile.properties?.nickname ||
+      profile.kakao_account?.name ||
+      (profile.kakao_account?.email ? profile.kakao_account.email.split('@')[0] : '카카오 사용자')
     const email = profile.kakao_account?.email || null
 
     const user = await findOrCreateSocialUser('kakao', profile.id, nickname, email)
@@ -199,8 +220,12 @@ router.get('/naver/callback', async (req, res) => {
       headers: { Authorization: `Bearer ${tokenRes.data.access_token}` },
     })
 
-    const profile = userRes.data.response
-    const nickname = profile.name || profile.nickname || '네이버 사용자'
+    const profile = userRes.data.response || {}
+    console.log('[Naver User Profile Data]:', JSON.stringify(profile))
+    const nickname =
+      profile.name ||
+      profile.nickname ||
+      (profile.email ? profile.email.split('@')[0] : '네이버 사용자')
     const email = profile.email || null
 
     const user = await findOrCreateSocialUser('naver', profile.id, nickname, email)
