@@ -15,7 +15,6 @@ import {
   Sparkles,
   Save,
   Check,
-  Palette,
   LayoutGrid,
   Eye,
   EyeOff,
@@ -45,14 +44,6 @@ import {
 } from '../services/api'
 
 const AVATAR_OPTIONS = ['🧑‍💻', '🚀', '🌟', '🦊', '🌿', '🎨', '🎯', '⚡', '☕', '🐱', '🐶', '💡']
-
-const THEME_OPTIONS = [
-  { id: 'indigo', name: '클래식 인디고', bg: 'bg-indigo-600', text: 'text-indigo-600', ring: 'ring-indigo-500' },
-  { id: 'emerald', name: '포레스트 그린', bg: 'bg-emerald-600', text: 'text-emerald-600', ring: 'ring-emerald-500' },
-  { id: 'violet', name: '미드나잇 퍼플', bg: 'bg-violet-600', text: 'text-violet-600', ring: 'ring-violet-500' },
-  { id: 'rose', name: '로맨틱 로즈', bg: 'bg-rose-600', text: 'text-rose-600', ring: 'ring-rose-500' },
-  { id: 'blue', name: '오션 블루', bg: 'bg-sky-600', text: 'text-sky-600', ring: 'ring-sky-500' },
-]
 
 export default function SettingsAndMyPageModal({
   isOpen,
@@ -932,33 +923,7 @@ export default function SettingsAndMyPageModal({
                 </div>
               </div>
 
-              {/* 5. Theme Color */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
-                <label className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1 block flex items-center gap-1.5">
-                  <Palette className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <span>테마 포인트 컬러</span>
-                </label>
-                <p className="text-[11px] text-slate-400 dark:text-slate-400 mb-3">버튼 및 하이라이트에 사용될 기본 색상을 선택합니다.</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {THEME_OPTIONS.map((theme) => (
-                    <button
-                      key={theme.id}
-                      type="button"
-                      onClick={() => onUpdateSettings({ ...settings, themeColor: theme.id })}
-                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition cursor-pointer ${
-                        settings.themeColor === theme.id
-                          ? 'border-indigo-500 bg-white dark:bg-slate-850 ring-2 ring-indigo-400/50 shadow-xs text-slate-800 dark:text-slate-100'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <span className={`w-3.5 h-3.5 rounded-full ${theme.bg}`} />
-                      <span className="truncate">{theme.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 6. Density */}
+              {/* 5. Density */}
               <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
                 <label className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1 block flex items-center gap-1.5">
                   <LayoutGrid className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />

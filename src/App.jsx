@@ -34,7 +34,6 @@ const DEFAULT_SETTINGS = {
   startOfWeek: 'sunday', // 'sunday' | 'monday'
   defaultPriority: 'medium', // 'high' | 'medium' | 'low'
   completedDisplay: 'show', // 'show' | 'hide' | 'bottom'
-  themeColor: 'indigo', // 'indigo' | 'emerald' | 'violet' | 'rose' | 'blue'
   density: 'normal', // 'normal' | 'compact'
   darkMode: 'system', // 'light' | 'dark' | 'system'
 }
@@ -573,37 +572,8 @@ export default function App() {
     }
   }
 
-  const getThemeGradient = (theme, isDarkMode) => {
-    if (isDarkMode) {
-      switch (theme) {
-        case 'emerald':
-          return 'from-slate-950 via-emerald-950/30 to-slate-900'
-        case 'violet':
-          return 'from-slate-950 via-violet-950/30 to-slate-900'
-        case 'rose':
-          return 'from-slate-950 via-rose-950/30 to-slate-900'
-        case 'blue':
-          return 'from-slate-950 via-sky-950/30 to-slate-900'
-        default:
-          return 'from-slate-950 via-indigo-950/30 to-slate-900'
-      }
-    }
-    switch (theme) {
-      case 'emerald':
-        return 'from-slate-100 via-emerald-50/40 to-slate-200'
-      case 'violet':
-        return 'from-slate-100 via-violet-50/40 to-slate-200'
-      case 'rose':
-        return 'from-slate-100 via-rose-50/40 to-slate-200'
-      case 'blue':
-        return 'from-slate-100 via-sky-50/40 to-slate-200'
-      default:
-        return 'from-slate-100 via-indigo-50/40 to-slate-200'
-    }
-  }
-
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${getThemeGradient(settings.themeColor, isDark)} py-3.5 sm:py-10 px-3 sm:px-6 transition-colors duration-300`}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 dark:from-slate-950 dark:via-indigo-950/30 dark:to-slate-900 py-3.5 sm:py-10 px-3 sm:px-6 transition-colors duration-300">
       <div className="max-w-2xl mx-auto">
         {/* Top Navbar with Brand Logo Button & Settings */}
         <Navbar
