@@ -119,11 +119,10 @@ export default function TodoDetailModal({
             <button
               type="button"
               onClick={() => onToggle && onToggle(todo.id)}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                todo.completed
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${todo.completed
                   ? 'bg-emerald-500 text-white shadow-xs'
                   : 'bg-white/20 text-indigo-100 hover:bg-white/30'
-              }`}
+                }`}
             >
               {todo.completed ? (
                 <>
@@ -164,11 +163,10 @@ export default function TodoDetailModal({
               <button
                 type="button"
                 onClick={() => setPriority('high')}
-                className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
-                  priority === 'high'
+                className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${priority === 'high'
                     ? 'bg-rose-50 border-rose-400 text-rose-700 ring-2 ring-rose-400/20'
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
+                  }`}
               >
                 <span>🔴</span>
                 <span>높음</span>
@@ -176,11 +174,10 @@ export default function TodoDetailModal({
               <button
                 type="button"
                 onClick={() => setPriority('medium')}
-                className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
-                  priority === 'medium'
+                className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${priority === 'medium'
                     ? 'bg-amber-50 border-amber-400 text-amber-700 ring-2 ring-amber-400/20'
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
+                  }`}
               >
                 <span>🟡</span>
                 <span>보통</span>
@@ -188,11 +185,10 @@ export default function TodoDetailModal({
               <button
                 type="button"
                 onClick={() => setPriority('low')}
-                className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
-                  priority === 'low'
+                className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${priority === 'low'
                     ? 'bg-emerald-50 border-emerald-400 text-emerald-700 ring-2 ring-emerald-400/20'
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
+                  }`}
               >
                 <span>🟢</span>
                 <span>낮음</span>
@@ -214,7 +210,7 @@ export default function TodoDetailModal({
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="일정에 필요한 준비물, 장소, 링크, 세부 내용 등을 자유롭게 메모해보세요... (줄바꿈 가능)"
+              placeholder="일정에 필요한 준비물, 장소, 링크, 세부 내용 등을 자유롭게 메모해보세요"
               rows={6}
               className="w-full px-3.5 sm:px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-slate-700 resize-none leading-relaxed"
             />

@@ -254,7 +254,7 @@ app.post('/api/schedules/batch', authMiddleware, async (req, res) => {
 app.put('/api/schedules/:id', authMiddleware, async (req, res) => {
   const { id } = req.params
   const userId = req.user.id
-  const { title, completed, priority, date } = req.body
+  const { title, description, completed, priority, date } = req.body
   const pool = await getSafePool()
 
   if (!pool) {
