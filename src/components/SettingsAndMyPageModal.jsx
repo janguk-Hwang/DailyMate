@@ -478,18 +478,22 @@ export default function SettingsAndMyPageModal({
                       </div>
 
                       {/* Account info badges */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-500 pt-1">
-                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/60">
-                          <span className="font-bold text-slate-700">아이디: </span>
-                          <span>{user.username || user.email || '소셜 간편 로그인'}</span>
+                      {(user.username || user.phone_number) && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+                          {user.username && (
+                            <div className="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700">
+                              <span className="font-bold text-slate-700 dark:text-slate-300">아이디: </span>
+                              <span className="text-slate-600 dark:text-slate-300">{user.username}</span>
+                            </div>
+                          )}
+                          {user.phone_number && (
+                            <div className="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700">
+                              <span className="font-bold text-slate-700 dark:text-slate-300">인증 휴대폰: </span>
+                              <span className="text-slate-600 dark:text-slate-300">{user.phone_number}</span>
+                            </div>
+                          )}
                         </div>
-                        {user.phone_number && (
-                          <div className="bg-white p-2.5 rounded-xl border border-slate-200/60">
-                            <span className="font-bold text-slate-700">인증 휴대폰: </span>
-                            <span>{user.phone_number}</span>
-                          </div>
-                        )}
-                      </div>
+                      )}
 
                       {profileMsg && (
                         <div
