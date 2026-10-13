@@ -392,18 +392,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
 
               {/* Social Buttons */}
               <div className="space-y-2.5">
-                {/* Kakao */}
-                <button
-                  type="button"
-                  onClick={() => handleSocialLogin('kakao')}
-                  className="w-full py-2.5 px-4 bg-[#FEE500] hover:bg-[#FADA0A] text-[#191919] font-medium rounded-xl text-xs flex items-center justify-center gap-2.5 transition-all shadow-sm cursor-pointer"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 3c-5.52 0-10 3.58-10 8 0 2.83 1.83 5.32 4.63 6.72l-.95 3.52c-.1.37.28.69.61.52l4.23-2.19c.48.05.97.08 1.48.08 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
-                  </svg>
-                  <span>카카오톡으로 시작하기</span>
-                </button>
-
                 {/* Google */}
                 <button
                   type="button"
@@ -429,6 +417,18 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                     />
                   </svg>
                   <span>Google 계정으로 시작하기</span>
+                </button>
+
+                {/* Kakao */}
+                <button
+                  type="button"
+                  onClick={() => handleSocialLogin('kakao')}
+                  className="w-full py-2.5 px-4 bg-[#FEE500] hover:bg-[#FADA0A] text-[#191919] font-medium rounded-xl text-xs flex items-center justify-center gap-2.5 transition-all shadow-sm cursor-pointer"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3c-5.52 0-10 3.58-10 8 0 2.83 1.83 5.32 4.63 6.72l-.95 3.52c-.1.37.28.69.61.52l4.23-2.19c.48.05.97.08 1.48.08 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
+                  </svg>
+                  <span>카카오톡으로 시작하기</span>
                 </button>
 
                 {/* Naver */}

@@ -213,8 +213,8 @@ export default function MultiScheduleModal({
                 setErrorMsg('')
               }}
               className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${tab === 'range'
-                  ? 'bg-white text-indigo-700 shadow-sm'
-                  : 'text-indigo-200 hover:text-white'
+                ? 'bg-white text-indigo-700 shadow-sm'
+                : 'text-indigo-200 hover:text-white'
                 }`}
             >
               <CalendarRange className="w-3.5 h-3.5" />
@@ -227,8 +227,8 @@ export default function MultiScheduleModal({
                 setErrorMsg('')
               }}
               className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${tab === 'weekly'
-                  ? 'bg-white text-indigo-700 shadow-sm'
-                  : 'text-indigo-200 hover:text-white'
+                ? 'bg-white text-indigo-700 shadow-sm'
+                : 'text-indigo-200 hover:text-white'
                 }`}
             >
               <Repeat className="w-3.5 h-3.5" />
@@ -241,8 +241,8 @@ export default function MultiScheduleModal({
                 setErrorMsg('')
               }}
               className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${tab === 'custom'
-                  ? 'bg-white text-indigo-700 shadow-sm'
-                  : 'text-indigo-200 hover:text-white'
+                ? 'bg-white text-indigo-700 shadow-sm'
+                : 'text-indigo-200 hover:text-white'
                 }`}
             >
               <Calendar className="w-3.5 h-3.5" />
@@ -344,10 +344,10 @@ export default function MultiScheduleModal({
                         key={day.value}
                         onClick={() => toggleDay(day.value)}
                         className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95 ${isSelected
-                            ? 'bg-indigo-600 text-white shadow-sm'
-                            : isWeekend
-                              ? 'bg-white text-rose-500 hover:bg-slate-100 border border-slate-200'
-                              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : isWeekend
+                            ? 'bg-white text-rose-500 hover:bg-slate-100 border border-slate-200'
+                            : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
                           }`}
                       >
                         {day.label}
