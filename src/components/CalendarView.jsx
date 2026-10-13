@@ -255,10 +255,15 @@ export default function CalendarView({
           <div className="grid grid-cols-7 gap-1">
             {days.map((item, idx) => {
               if (!item.current) {
+                const col = idx % 7
+                const isSunCol = isMondayStart ? col === 6 : col === 0
+                const isSatCol = isMondayStart ? col === 5 : col === 6
                 return (
                   <div
                     key={idx}
-                    className="h-11 sm:h-13 flex items-start justify-center p-0.5 sm:p-1 text-[11px] sm:text-xs text-slate-300"
+                    className={`h-11 sm:h-13 flex items-start justify-center p-0.5 sm:p-1 text-[11px] sm:text-xs select-none ${
+                      isSunCol ? 'text-red-200' : isSatCol ? 'text-blue-200' : 'text-slate-300'
+                    }`}
                   >
                     {item.day}
                   </div>
@@ -267,7 +272,9 @@ export default function CalendarView({
 
               const isSelected = item.dateStr === selectedDate
               const isToday = item.dateStr === todayStr
-              const dow = idx % 7
+              const dayOfWeek = item.dateStr ? new Date(`${item.dateStr}T00:00:00`).getDay() : null
+              const isSunday = dayOfWeek === 0
+              const isSaturday = dayOfWeek === 6
               const stats = monthlyScheduleCounts[item.dateStr]
               const count = stats?.total || 0
               const comp = stats?.completed || 0
@@ -284,12 +291,12 @@ export default function CalendarView({
                   } ${isToday && !isSelected ? 'ring-2 ring-indigo-400' : ''}`}
                 >
                   <span
-                    className={`text-[11px] sm:text-xs leading-tight ${
+                    className={`text-[11px] sm:text-xs leading-tight font-medium ${
                       isSelected
                         ? 'text-white'
-                        : dow === 0
+                        : isSunday
                         ? 'text-red-500'
-                        : dow === 6
+                        : isSaturday
                         ? 'text-blue-500'
                         : ''
                     }`}
