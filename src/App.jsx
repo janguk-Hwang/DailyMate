@@ -19,6 +19,7 @@ import {
   setToken,
   removeToken,
   reorderSchedules,
+  toggleAllSchedulesForDate,
 } from './services/api'
 
 const getToday = () => {
@@ -144,15 +145,35 @@ export default function App() {
     [allMonthTodos, selectedDate]
   )
 
-  const handleAddTodo = async (title, priority) => {
+  const handleAddTodo = async (titleOrTitles, priority) => {
     if (!user) {
       handleOpenAuth('login')
       return
     }
 
+    const titles = Array.isArray(titleOrTitles)
+      ? titleOrTitles
+      : String(titleOrTitles)
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
+
+    if (titles.length === 0) return
+
     try {
-      const created = await createSchedule({ title, date: selectedDate, priority })
-      setAllMonthTodos((prev) => [created, ...prev])
+      if (titles.length === 1) {
+        const created = await createSchedule({ title: titles[0], date: selectedDate, priority })
+        setAllMonthTodos((prev) => [created, ...prev])
+      } else {
+        const res = await createBatchSchedules({
+          titles,
+          dates: [selectedDate],
+          priority,
+        })
+        if (res.schedules && res.schedules.length > 0) {
+          setAllMonthTodos((prev) => [...res.schedules, ...prev])
+        }
+      }
     } catch (e) {
       if (e.message === 'AUTH_REQUIRED') {
         handleOpenAuth('login')
@@ -162,14 +183,23 @@ export default function App() {
     }
   }
 
-  const handleBatchAddTodo = async ({ title, dates, priority }) => {
+  const handleBatchAddTodo = async ({ title, titles, dates, priority }) => {
     if (!user) {
       handleOpenAuth('login')
       return
     }
 
     try {
-      const res = await createBatchSchedules({ title, dates, priority })
+      const titleList =
+        Array.isArray(titles) && titles.length > 0
+          ? titles
+          : title
+          ? String(title).split(',').map((t) => t.trim()).filter(Boolean)
+          : []
+
+      if (titleList.length === 0 || !dates || dates.length === 0) return
+
+      const res = await createBatchSchedules({ titles: titleList, dates, priority })
       if (res.schedules && res.schedules.length > 0) {
         setAllMonthTodos((prev) => [...res.schedules, ...prev])
         await loadSchedules(currentYearMonth)
@@ -262,6 +292,26 @@ export default function App() {
   const completedCount = currentDayTodos.filter((t) => t.completed).length
   const activeCount = totalCount - completedCount
   const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100)
+  const isAllCompleted = totalCount > 0 && currentDayTodos.every((t) => t.completed)
+
+  const handleToggleAll = async () => {
+    if (!user) {
+      handleOpenAuth('login')
+      return
+    }
+    if (currentDayTodos.length === 0) return
+
+    const targetCompleted = !isAllCompleted
+    setAllMonthTodos((prev) =>
+      prev.map((t) => (t.date === selectedDate ? { ...t, completed: targetCompleted } : t))
+    )
+    try {
+      await toggleAllSchedulesForDate(selectedDate, targetCompleted)
+    } catch (err) {
+      await loadSchedules(currentYearMonth)
+      alert(err.message || '전체 일정 상태 변경 실패')
+    }
+  }
 
   const priorityWeights = { high: 3, medium: 2, low: 1 }
 
@@ -470,7 +520,45 @@ export default function App() {
           sortBy={sortBy}
           onSortChange={setSortBy}
           counts={{ total: totalCount, active: activeCount, completed: completedCount }}
+          onToggleAll={user ? handleToggleAll : () => handleOpenAuth('login')}
+          isAllCompleted={isAllCompleted}
         />
+
+        {/* Selected Date Actions Header (선택된 날의 일정 모두 선택 바) */}
+        {user && totalCount > 0 && (
+          <div className="flex items-center justify-between px-1.5 pb-2 pt-0.5 text-xs">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleToggleAll}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer active:scale-95 ${
+                  isAllCompleted
+                    ? 'bg-indigo-600 text-white shadow-xs hover:bg-indigo-700'
+                    : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200'
+                }`}
+                title={isAllCompleted ? '선택된 날의 모든 일정 선택 해제' : '선택된 날의 모든 일정 선택'}
+              >
+                <CheckCheck className={`w-3.5 h-3.5 ${isAllCompleted ? 'text-white' : 'text-indigo-600'}`} />
+                <span>{isAllCompleted ? '선택 해제' : '모두 선택'}</span>
+              </button>
+              <span className="text-slate-400 text-[11px] font-medium">
+                {completedCount} / {totalCount}개 완료
+              </span>
+            </div>
+
+            {completedCount > 0 && (
+              <button
+                type="button"
+                onClick={handleClearCompleted}
+                className="inline-flex items-center gap-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1.5 rounded-xl border border-rose-200/80 transition-colors cursor-pointer bg-white/80 shadow-2xs"
+                title="완료(선택)된 항목 일괄 삭제"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                <span>완료 항목 삭제 ({completedCount})</span>
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Schedules List */}
         <main className="space-y-2.5">

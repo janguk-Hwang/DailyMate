@@ -151,12 +151,19 @@ export default function MultiScheduleModal({
     setCustomDates((prev) => prev.filter((d) => d !== dateToRemove))
   }
 
+  const titleItems = useMemo(() => {
+    return title
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean)
+  }, [title])
+
   // Submit Handler
   const handleSubmit = async (e) => {
     e.preventDefault()
     setErrorMsg('')
 
-    if (!title.trim()) {
+    if (titleItems.length === 0) {
       setErrorMsg('일정 제목을 입력해주세요.')
       return
     }
@@ -172,6 +179,7 @@ export default function MultiScheduleModal({
       setLoading(true)
       await onSubmitBatch({
         title: title.trim(),
+        titles: titleItems,
         dates: computedDates,
         priority,
       })
@@ -264,15 +272,26 @@ export default function MultiScheduleModal({
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               일정 제목 <span className="text-red-500">*</span>
+              <span className="text-[11px] font-normal text-slate-500 ml-1.5">
+                (쉼표 , 로 구분 시 여러 개 동시 등록)
+              </span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="예: 프로젝트 스프린트, 운동, 학원 수업 등"
+              placeholder="예: 프로젝트 스프린트, 운동, 학원 수업 (쉼표로 구분)"
               className="w-full px-3.5 sm:px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
               required
             />
+            {titleItems.length > 1 && (
+              <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-indigo-600 font-medium">
+                <span>💡 {titleItems.length}개 일정 인식:</span>
+                <span className="text-slate-600 font-normal truncate">
+                  {titleItems.join(' • ')}
+                </span>
+              </div>
+            )}
           </div>
 
           <div>
@@ -445,22 +464,28 @@ export default function MultiScheduleModal({
           <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 text-xs">
             <div className="flex items-center gap-1.5 text-indigo-800 font-semibold">
               <Sparkles className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-              <span>등록 예정 일수:</span>
+              <span>등록 예정:</span>
               <span className="font-extrabold text-sm text-indigo-950 font-mono">
                 {computedDates.length}일
+                {titleItems.length > 1 && ` × ${titleItems.length}개 일정`}
               </span>
             </div>
-            {computedDates.length > 0 && (
-              <span className="text-[11px] text-indigo-600 font-medium">
-                ({computedDates[0]} ~ {computedDates[computedDates.length - 1]})
+            <div className="flex items-center gap-2">
+              {computedDates.length > 0 && (
+                <span className="text-[11px] text-indigo-600 font-medium">
+                  ({computedDates[0]} ~ {computedDates[computedDates.length - 1]})
+                </span>
+              )}
+              <span className="font-bold px-2 py-0.5 bg-indigo-600 text-white rounded-lg text-[11px]">
+                총 {computedDates.length * (titleItems.length || 1)}건
               </span>
-            )}
+            </div>
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading || computedDates.length === 0 || !title.trim()}
+            disabled={loading || computedDates.length === 0 || titleItems.length === 0}
             className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.99]"
           >
             {loading ? (
@@ -469,7 +494,11 @@ export default function MultiScheduleModal({
                 <span>일괄 등록 처리 중...</span>
               </>
             ) : (
-              <span>총 {computedDates.length}개 날짜에 일괄 등록</span>
+              <span>
+                {titleItems.length > 1
+                  ? `총 ${computedDates.length * titleItems.length}건 일괄 등록 (${computedDates.length}일 × ${titleItems.length}개)`
+                  : `총 ${computedDates.length}개 날짜에 일괄 등록`}
+              </span>
             )}
           </button>
         </form>

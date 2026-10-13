@@ -248,3 +248,20 @@ export async function createBatchSchedules(payload) {
   }
   return res.json()
 }
+
+export async function toggleAllSchedulesForDate(date, completed) {
+  const res = await fetch(`/api/schedules/toggle-all/${date}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ completed }),
+  })
+  if (res.status === 401) {
+    removeToken()
+    throw new Error('AUTH_REQUIRED')
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.details || err.error || `HTTP ${res.status}: 전체 일정 상태 변경 실패`)
+  }
+  return res.json()
+}

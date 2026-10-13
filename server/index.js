@@ -118,6 +118,29 @@ app.put('/api/schedules/reorder', authMiddleware, async (req, res) => {
   }
 })
 
+// Toggle all schedules for a date for current user (Placed BEFORE /:id route)
+app.put('/api/schedules/toggle-all/:date', authMiddleware, async (req, res) => {
+  const { date } = req.params
+  const { completed } = req.body
+  const userId = req.user.id
+  const pool = await getSafePool()
+
+  if (!pool) {
+    return res.status(503).json({ error: '데이터베이스에 연결되지 않았습니다.' })
+  }
+
+  try {
+    await pool.query(
+      'UPDATE schedules SET completed = ? WHERE (user_id = ? OR user_id IS NULL) AND date = ?',
+      [completed ? 1 : 0, userId, date]
+    )
+    res.json({ success: true, completed: Boolean(completed) })
+  } catch (err) {
+    console.error('[Toggle All Schedules Error]:', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // Create schedule for current user
 app.post('/api/schedules', authMiddleware, async (req, res) => {
   const { title, date, priority = 'medium' } = req.body
@@ -154,9 +177,9 @@ app.post('/api/schedules', authMiddleware, async (req, res) => {
   }
 })
 
-// Batch create schedules (기간/반복/다중 날짜)
+// Batch create schedules (기간/반복/다중 날짜 및 쉼표 구분 다중 일정)
 app.post('/api/schedules/batch', authMiddleware, async (req, res) => {
-  const { title, dates, schedules: customSchedules, priority = 'medium' } = req.body
+  const { title, titles, dates, schedules: customSchedules, priority = 'medium' } = req.body
   const userId = req.user.id
   const pool = await getSafePool()
 
@@ -171,13 +194,27 @@ app.post('/api/schedules/batch', authMiddleware, async (req, res) => {
       date: s.date,
       priority: s.priority || 'medium',
     }))
-  } else if (title && Array.isArray(dates) && dates.length > 0) {
-    const trimmedTitle = title.trim()
-    itemsToInsert = dates.map((d) => ({
-      title: trimmedTitle,
-      date: d,
-      priority,
-    }))
+  } else if (
+    (title || (Array.isArray(titles) && titles.length > 0)) &&
+    Array.isArray(dates) &&
+    dates.length > 0
+  ) {
+    let titleList = []
+    if (Array.isArray(titles)) {
+      titleList = titles.flatMap((t) => String(t).split(',')).map((t) => t.trim()).filter(Boolean)
+    } else if (title) {
+      titleList = String(title).split(',').map((t) => t.trim()).filter(Boolean)
+    }
+
+    for (const d of dates) {
+      for (const t of titleList) {
+        itemsToInsert.push({
+          title: t,
+          date: d,
+          priority,
+        })
+      }
+    }
   } else {
     return res.status(400).json({ error: '등록할 일정 정보와 날짜 목록이 필요합니다.' })
   }
