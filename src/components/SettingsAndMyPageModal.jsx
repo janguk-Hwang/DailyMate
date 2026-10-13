@@ -129,7 +129,23 @@ export default function SettingsAndMyPageModal({
 
   if (!isOpen) return null
 
-  // 1. Handle Profile Update
+  // 1. Handle Instant Avatar Selection
+  const handleSelectAvatar = async (av) => {
+    setSelectedAvatar(av)
+    if (!user) return
+    try {
+      const res = await updateProfile({
+        avatar: av,
+      })
+      if (onUserUpdated) onUserUpdated(res.user)
+    } catch (err) {
+      console.warn('Failed to update avatar:', err)
+      setSelectedAvatar(user.avatar || '🧑‍💻')
+      setProfileMsg({ type: 'error', text: '아바타 변경 실패: ' + err.message })
+    }
+  }
+
+  // 2. Handle Profile Update (Nickname)
   const handleSaveProfile = async (e) => {
     e.preventDefault()
     if (!name.trim()) return
@@ -415,17 +431,21 @@ export default function SettingsAndMyPageModal({
                     <div className="space-y-4">
                       {/* Avatar Selector */}
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5">내 아바타 아이콘</label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">내 아바타 아이콘</label>
+                          <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">선택 시 즉시 변경</span>
+                        </div>
                         <div className="flex flex-wrap gap-2">
                           {AVATAR_OPTIONS.map((av) => (
                             <button
                               key={av}
                               type="button"
-                              onClick={() => setSelectedAvatar(av)}
+                              onClick={() => handleSelectAvatar(av)}
+                              title={`${av} 아바타로 즉시 변경`}
                               className={`w-9 h-9 sm:w-10 sm:h-10 text-lg rounded-xl flex items-center justify-center transition-all cursor-pointer ${
                                 selectedAvatar === av
-                                  ? 'bg-indigo-100 ring-2 ring-indigo-500 scale-105 shadow-xs'
-                                  : 'bg-white hover:bg-slate-100 border border-slate-200/80'
+                                  ? 'bg-indigo-100 dark:bg-indigo-950/80 ring-2 ring-indigo-500 scale-105 shadow-xs'
+                                  : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700'
                               }`}
                             >
                               {av}

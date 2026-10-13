@@ -267,7 +267,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
   const { name, avatar, phoneNumber } = req.body
   const userId = req.user.id
 
-  if (!name || !name.trim()) {
+  if (name !== undefined && !name.trim()) {
     return res.status(400).json({ error: '닉네임을 입력해주세요.' })
   }
 
@@ -277,8 +277,13 @@ router.put('/profile', authMiddleware, async (req, res) => {
   }
 
   try {
-    let query = 'UPDATE users SET name = ?'
-    const params = [name.trim()]
+    let query = 'UPDATE users SET id = id'
+    const params = []
+
+    if (name !== undefined) {
+      query += ', name = ?'
+      params.push(name.trim())
+    }
 
     if (avatar !== undefined) {
       query += ', avatar = ?'
