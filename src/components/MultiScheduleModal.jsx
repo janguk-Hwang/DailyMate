@@ -273,7 +273,7 @@ export default function MultiScheduleModal({
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               일정 제목 <span className="text-red-500">*</span>
               <span className="text-[11px] font-normal text-slate-500 ml-1.5">
-                (쉼표 , 로 구분 시 여러 개 동시 등록)
+                (,로 구분 시 여러 개 등록)
               </span>
             </label>
             <input
