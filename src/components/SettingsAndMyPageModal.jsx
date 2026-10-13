@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   X,
   User,
@@ -90,20 +90,28 @@ export default function SettingsAndMyPageModal({
   const [cleanupMsg, setCleanupMsg] = useState(null)
   const [exportLoading, setExportLoading] = useState(false)
 
+  const prevIsOpenRef = useRef(false)
+  const prevInitialTabRef = useRef(initialTab)
+
   // Sync initial tab and user data on open
   useEffect(() => {
     if (isOpen) {
-      setActiveTab(initialTab)
-      if (user) {
+      if (!prevIsOpenRef.current || prevInitialTabRef.current !== initialTab) {
+        setActiveTab(initialTab)
+      }
+      if (!prevIsOpenRef.current && user) {
         setName(user.name || '')
         setSelectedAvatar(user.avatar || '🧑‍💻')
         loadStats()
       }
+    } else {
       setProfileMsg(null)
       setPasswordMsg(null)
       setCleanupMsg(null)
       setDeleteError(null)
     }
+    prevIsOpenRef.current = isOpen
+    prevInitialTabRef.current = initialTab
   }, [isOpen, initialTab, user])
 
   const loadStats = async () => {
@@ -428,15 +436,15 @@ export default function SettingsAndMyPageModal({
 
                       {/* Name input */}
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">닉네임 / 이름</label>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">닉네임</label>
                         <div className="flex gap-2">
                           <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             maxLength={30}
-                            placeholder="사용할 이름을 입력하세요"
-                            className="flex-1 px-3.5 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                            placeholder="사용할 닉네임을 입력하세요"
+                            className="flex-1 px-3.5 py-2 text-xs sm:text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800 dark:text-slate-100"
                           />
                           <button
                             type="submit"

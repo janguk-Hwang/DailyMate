@@ -113,7 +113,7 @@ router.post('/signup', async (req, res) => {
   const { username, password, name, phoneNumber } = req.body
 
   if (!username || !password || !name || !phoneNumber) {
-    return res.status(400).json({ error: '모든 필수 항목(아이디, 비밀번호, 이름, 전화번호)을 입력해주세요.' })
+    return res.status(400).json({ error: '모든 필수 항목(아이디, 비밀번호, 닉네임, 전화번호)을 입력해주세요.' })
   }
 
   const cleanUsername = username.trim()
@@ -268,7 +268,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
   const userId = req.user.id
 
   if (!name || !name.trim()) {
-    return res.status(400).json({ error: '이름(닉네임)을 입력해주세요.' })
+    return res.status(400).json({ error: '닉네임을 입력해주세요.' })
   }
 
   const pool = await getSafePool()
