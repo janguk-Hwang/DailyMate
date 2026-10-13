@@ -565,8 +565,6 @@ export default function App() {
           sortBy={sortBy}
           onSortChange={setSortBy}
           counts={{ total: totalCount, active: activeCount, completed: completedCount }}
-          onToggleAll={user ? handleToggleAll : () => handleOpenAuth('login')}
-          isAllCompleted={isAllCompleted}
         />
 
         {/* Selected Date Actions Header (선택된 날의 일정 모두 선택 바) */}

@@ -1,4 +1,4 @@
-import { Search, ArrowDown, ArrowUp, CheckCheck } from 'lucide-react'
+import { Search, ArrowDown, ArrowUp } from 'lucide-react'
 
 export default function TodoFilter({
   filter,
@@ -8,8 +8,6 @@ export default function TodoFilter({
   sortBy,
   onSortChange,
   counts,
-  onToggleAll,
-  isAllCompleted,
 }) {
   const handleToggleCreatedSort = () => {
     if (sortBy === 'created_desc') {
@@ -61,25 +59,8 @@ export default function TodoFilter({
           </button>
         </div>
 
-        {/* 2. Sort & Action Buttons Group (모두 선택, 우선순위 순, 등록 순) */}
+        {/* 2. Sort Buttons Group (우선순위 순, 등록 순) */}
         <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
-          {/* 선택된 날의 일정 모두 선택 버튼 */}
-          {onToggleAll && counts.total > 0 && (
-            <button
-              type="button"
-              onClick={onToggleAll}
-              className={`px-2 sm:px-2.5 py-1 sm:py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap active:scale-95 ${
-                isAllCompleted
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200/80'
-              }`}
-              title={isAllCompleted ? '선택된 날의 모든 일정 선택 해제' : '선택된 날의 모든 일정 선택'}
-            >
-              <CheckCheck className={`w-3.5 h-3.5 ${isAllCompleted ? 'text-white' : 'text-indigo-600'}`} />
-              <span>{isAllCompleted ? '선택 해제' : '모두 선택'}</span>
-            </button>
-          )}
-
           {/* 우선순위 순 */}
           <button
             type="button"
