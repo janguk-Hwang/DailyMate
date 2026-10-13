@@ -243,7 +243,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-md bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transition-all transform duration-200">
+      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all transform duration-200">
         {/* Header Bar */}
         <div className="relative px-4.5 pt-5 pb-3.5 sm:px-6 sm:pt-6 sm:pb-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white">
           <button
@@ -331,7 +331,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
             <div>
               <form onSubmit={handleLoginSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
                     아이디
                   </label>
                   <div className="relative">
@@ -341,14 +341,14 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                       value={loginUsername}
                       onChange={(e) => setLoginUsername(e.target.value)}
                       placeholder="아이디를 입력하세요"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 transition-colors"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
                     비밀번호
                   </label>
                   <div className="relative">
@@ -358,7 +358,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder="비밀번호를 입력하세요"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 transition-colors"
                       required
                     />
                   </div>
@@ -383,9 +383,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
               {/* Social Login Separator */}
               <div className="relative my-6 text-center">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
+                  <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
                 </div>
-                <span className="relative px-3 bg-white text-xs font-medium text-slate-400">
+                <span className="relative px-3 bg-white dark:bg-slate-900 text-xs font-medium text-slate-400 dark:text-slate-500">
                   또는 소셜 계정으로 로그인
                 </span>
               </div>
@@ -396,7 +396,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                 <button
                   type="button"
                   onClick={() => handleSocialLogin('google')}
-                  className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 font-medium rounded-xl text-xs flex items-center justify-center gap-2.5 border border-slate-200 transition-all shadow-sm cursor-pointer"
+                  className="w-full py-2.5 px-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium rounded-xl text-xs flex items-center justify-center gap-2.5 border border-slate-200 dark:border-slate-700 transition-all shadow-sm cursor-pointer"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
                     <path
@@ -449,7 +449,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
             <form onSubmit={handleSignupSubmit} autoComplete="off" className="space-y-4">
               {/* Username + Duplicate Check */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
                   아이디 <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
@@ -464,7 +464,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                       }}
                       autoComplete="off"
                       placeholder="3~20자 영문, 숫자"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100"
                       required
                     />
                   </div>
@@ -474,15 +474,15 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                     disabled={checkingUsername || !signupUsername.trim()}
                     className={`px-3 py-2.5 text-xs font-semibold rounded-xl flex items-center gap-1 transition-all cursor-pointer ${
                       usernameChecked === true
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'
+                        ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                        : 'bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
                     }`}
                   >
                     {checkingUsername ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : usernameChecked === true ? (
                       <>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span>확인완료</span>
                       </>
                     ) : (
@@ -494,7 +494,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
 
               {/* Nickname */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
                   닉네임 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -503,14 +503,14 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                   onChange={(e) => setSignupName(e.target.value)}
                   autoComplete="off"
                   placeholder="캘린더에 표시될 닉네임"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100"
                   required
                 />
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
                   비밀번호 <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -521,7 +521,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                     onChange={(e) => setSignupPassword(e.target.value)}
                     autoComplete="new-password"
                     placeholder="최소 6자 이상"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100"
                     required
                   />
                 </div>
@@ -529,7 +529,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
 
               {/* Password Confirm */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
                   비밀번호 확인 <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -540,7 +540,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                     onChange={(e) => setSignupPasswordConfirm(e.target.value)}
                     autoComplete="new-password"
                     placeholder="비밀번호 다시 입력"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100"
                     required
                   />
                 </div>
@@ -548,8 +548,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                   <p
                     className={`mt-1 text-[11px] font-medium ${
                       signupPassword === signupPasswordConfirm
-                        ? 'text-emerald-600'
-                        : 'text-rose-500'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-rose-500 dark:text-rose-400'
                     }`}
                   >
                     {signupPassword === signupPasswordConfirm
@@ -560,8 +560,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
               </div>
 
               {/* Phone Verification Section */}
-              <div className="pt-2 border-t border-slate-100">
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
                   전화번호 인증 <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
@@ -577,7 +577,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                       }}
                       placeholder="01012345678"
                       disabled={phoneVerified}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white disabled:bg-slate-100"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 disabled:bg-slate-100 dark:disabled:bg-slate-800/40"
                       required
                     />
                   </div>

@@ -23,6 +23,9 @@ import {
   FileCode,
   LogOut,
   ChevronRight,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react'
 import {
   updateProfile,
@@ -283,44 +286,44 @@ export default function SettingsAndMyPageModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200/90 dark:border-slate-800 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden text-slate-800 dark:text-slate-100 transition-colors">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60 flex-shrink-0">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/60 dark:bg-slate-800/50 flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
               {activeTab === 'profile' && <User className="w-5 h-5" />}
               {activeTab === 'settings' && <SettingsIcon className="w-5 h-5" />}
               {activeTab === 'security' && <Shield className="w-5 h-5" />}
               {activeTab === 'about' && <Info className="w-5 h-5" />}
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                 {activeTab === 'profile' && '마이페이지 & 통계'}
                 {activeTab === 'settings' && '캘린더 환경설정'}
                 {activeTab === 'security' && '계정 및 보안'}
                 {activeTab === 'about' && '서비스 정보'}
               </h2>
-              <p className="text-[11px] text-slate-400 font-medium">개인 맞춤 설정과 일정 데이터를 관리합니다</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">개인 맞춤 설정과 일정 데이터를 관리합니다</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-100 bg-white px-3 sm:px-5 gap-1.5 sm:gap-2 flex-shrink-0 overflow-x-auto no-scrollbar py-2">
+        <div className="flex border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 sm:px-5 gap-1.5 sm:gap-2 flex-shrink-0 overflow-x-auto no-scrollbar py-2">
           <button
             type="button"
             onClick={() => setActiveTab('profile')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'profile'
-                ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs'
-                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold shadow-2xs'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             <User className="w-4 h-4" />
@@ -331,8 +334,8 @@ export default function SettingsAndMyPageModal({
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'settings'
-                ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs'
-                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold shadow-2xs'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             <SettingsIcon className="w-4 h-4" />
@@ -343,8 +346,8 @@ export default function SettingsAndMyPageModal({
             onClick={() => setActiveTab('security')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'security'
-                ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs'
-                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold shadow-2xs'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             <Shield className="w-4 h-4" />
@@ -355,8 +358,8 @@ export default function SettingsAndMyPageModal({
             onClick={() => setActiveTab('about')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'about'
-                ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs'
-                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold shadow-2xs'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             <Info className="w-4 h-4" />
@@ -622,50 +625,97 @@ export default function SettingsAndMyPageModal({
           {/* ================= TAB 2: SETTINGS ================= */}
           {activeTab === 'settings' && (
             <div className="space-y-6">
-              {/* 1. Start of Week */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
-                <label className="text-xs font-bold text-slate-800 mb-1 block">달력 시작 요일</label>
-                <p className="text-[11px] text-slate-400 mb-3">월간 캘린더 그리드의 시작 기준 요일을 선택합니다.</p>
+              {/* 1. Dark Mode / Theme Mode */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1 block flex items-center gap-1.5">
+                  <Sun className="w-4 h-4 text-amber-500" />
+                  <span>화면 모드 (다크 모드)</span>
+                </label>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400 mb-3">밝은 라이트 모드 또는 눈이 편안한 다크 모드를 선택합니다.</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ ...settings, darkMode: 'light' })}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition ${
+                      settings.darkMode === 'light'
+                        ? 'border-indigo-500 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-2xs ring-2 ring-indigo-400/30'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Sun className="w-3.5 h-3.5 text-amber-500" />
+                    <span>라이트</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ ...settings, darkMode: 'dark' })}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition ${
+                      settings.darkMode === 'dark'
+                        ? 'border-indigo-500 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-2xs ring-2 ring-indigo-400/30'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>다크</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ ...settings, darkMode: 'system' })}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition ${
+                      (settings.darkMode || 'system') === 'system'
+                        ? 'border-indigo-500 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-2xs ring-2 ring-indigo-400/30'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Monitor className="w-3.5 h-3.5 text-slate-400" />
+                    <span>시스템</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Start of Week */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1 block">달력 시작 요일</label>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400 mb-3">월간 캘린더 그리드의 시작 기준 요일을 선택합니다.</p>
                 <div className="grid grid-cols-2 gap-2.5">
                   <button
                     type="button"
                     onClick={() => onUpdateSettings({ ...settings, startOfWeek: 'sunday' })}
                     className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${
                       settings.startOfWeek === 'sunday'
-                        ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 shadow-2xs'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                        ? 'border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 shadow-2xs'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span>일요일 시작 (일~토)</span>
-                    {settings.startOfWeek === 'sunday' && <Check className="w-4 h-4 text-indigo-600" />}
+                    {settings.startOfWeek === 'sunday' && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
                   </button>
                   <button
                     type="button"
                     onClick={() => onUpdateSettings({ ...settings, startOfWeek: 'monday' })}
                     className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${
                       settings.startOfWeek === 'monday'
-                        ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 shadow-2xs'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                        ? 'border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 shadow-2xs'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span>월요일 시작 (월~일)</span>
-                    {settings.startOfWeek === 'monday' && <Check className="w-4 h-4 text-indigo-600" />}
+                    {settings.startOfWeek === 'monday' && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
                   </button>
                 </div>
               </div>
 
-              {/* 2. Default Priority */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
-                <label className="text-xs font-bold text-slate-800 mb-1 block">새 일정 기본 우선순위</label>
-                <p className="text-[11px] text-slate-400 mb-3">일정을 빠르게 추가할 때 기본 지정될 우선순위입니다.</p>
+              {/* 3. Default Priority */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1 block">새 일정 기본 우선순위</label>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400 mb-3">일정을 빠르게 추가할 때 기본 지정될 우선순위입니다.</p>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => onUpdateSettings({ ...settings, defaultPriority: 'high' })}
                     className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition ${
                       settings.defaultPriority === 'high'
-                        ? 'border-rose-500 bg-rose-50 text-rose-700 shadow-2xs'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                        ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 shadow-2xs'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-rose-500" />
@@ -676,8 +726,8 @@ export default function SettingsAndMyPageModal({
                     onClick={() => onUpdateSettings({ ...settings, defaultPriority: 'medium' })}
                     className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition ${
                       settings.defaultPriority === 'medium'
-                        ? 'border-amber-500 bg-amber-50 text-amber-700 shadow-2xs'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 shadow-2xs'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-amber-500" />
@@ -688,8 +738,8 @@ export default function SettingsAndMyPageModal({
                     onClick={() => onUpdateSettings({ ...settings, defaultPriority: 'low' })}
                     className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition ${
                       settings.defaultPriority === 'low'
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-2xs'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 shadow-2xs'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -698,16 +748,16 @@ export default function SettingsAndMyPageModal({
                 </div>
               </div>
 
-              {/* 3. Completed Item Display */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
-                <label className="text-xs font-bold text-slate-800 mb-1 block">완료된 일정 표시 방식</label>
-                <p className="text-[11px] text-slate-400 mb-3">할 일을 완료했을 때 목록에서 보여주는 방식을 설정합니다.</p>
+              {/* 4. Completed Item Display */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1 block">완료된 일정 표시 방식</label>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400 mb-3">할 일을 완료했을 때 목록에서 보여주는 방식을 설정합니다.</p>
                 <div className="space-y-2">
                   <label
                     className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
                       settings.completedDisplay === 'show'
-                        ? 'border-indigo-500 bg-indigo-50/60 text-indigo-900 font-bold'
-                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-200 font-bold'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -726,8 +776,8 @@ export default function SettingsAndMyPageModal({
                   <label
                     className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
                       settings.completedDisplay === 'bottom'
-                        ? 'border-indigo-500 bg-indigo-50/60 text-indigo-900 font-bold'
-                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-200 font-bold'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -746,8 +796,8 @@ export default function SettingsAndMyPageModal({
                   <label
                     className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
                       settings.completedDisplay === 'hide'
-                        ? 'border-indigo-500 bg-indigo-50/60 text-indigo-900 font-bold'
-                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                        ? 'border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/50 text-indigo-900 dark:text-indigo-200 font-bold'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -765,13 +815,13 @@ export default function SettingsAndMyPageModal({
                 </div>
               </div>
 
-              {/* 4. Theme Color */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
-                <label className="text-xs font-bold text-slate-800 mb-1 block flex items-center gap-1.5">
-                  <Palette className="w-4 h-4 text-indigo-600" />
+              {/* 5. Theme Color */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1 block flex items-center gap-1.5">
+                  <Palette className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   <span>테마 포인트 컬러</span>
                 </label>
-                <p className="text-[11px] text-slate-400 mb-3">버튼 및 하이라이트에 사용될 기본 색상을 선택합니다.</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400 mb-3">버튼 및 하이라이트에 사용될 기본 색상을 선택합니다.</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {THEME_OPTIONS.map((theme) => (
                     <button
@@ -780,8 +830,8 @@ export default function SettingsAndMyPageModal({
                       onClick={() => onUpdateSettings({ ...settings, themeColor: theme.id })}
                       className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition cursor-pointer ${
                         settings.themeColor === theme.id
-                          ? 'border-indigo-500 bg-white ring-2 ring-indigo-400/50 shadow-xs'
-                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                          ? 'border-indigo-500 bg-white dark:bg-slate-850 ring-2 ring-indigo-400/50 shadow-xs text-slate-800 dark:text-slate-100'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                       }`}
                     >
                       <span className={`w-3.5 h-3.5 rounded-full ${theme.bg}`} />
@@ -791,37 +841,37 @@ export default function SettingsAndMyPageModal({
                 </div>
               </div>
 
-              {/* 5. Density */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
-                <label className="text-xs font-bold text-slate-800 mb-1 block flex items-center gap-1.5">
-                  <LayoutGrid className="w-4 h-4 text-indigo-600" />
+              {/* 6. Density */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1 block flex items-center gap-1.5">
+                  <LayoutGrid className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   <span>화면 간격 (밀도)</span>
                 </label>
-                <p className="text-[11px] text-slate-400 mb-3">일정 카드의 크기와 여백을 취향에 맞게 조정합니다.</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-400 mb-3">일정 카드의 크기와 여백을 취향에 맞게 조정합니다.</p>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => onUpdateSettings({ ...settings, density: 'normal' })}
                     className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${
                       settings.density === 'normal'
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-2xs'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 shadow-2xs'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span>기본 뷰 (편안하게)</span>
-                    {settings.density === 'normal' && <Check className="w-4 h-4 text-indigo-600" />}
+                    {settings.density === 'normal' && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
                   </button>
                   <button
                     type="button"
                     onClick={() => onUpdateSettings({ ...settings, density: 'compact' })}
                     className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${
                       settings.density === 'compact'
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-2xs'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 shadow-2xs'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span>컴팩트 뷰 (더 많은 항목)</span>
-                    {settings.density === 'compact' && <Check className="w-4 h-4 text-indigo-600" />}
+                    {settings.density === 'compact' && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
                   </button>
                 </div>
               </div>
@@ -1048,7 +1098,7 @@ export default function SettingsAndMyPageModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between flex-shrink-0 text-xs">
+        <div className="px-5 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between flex-shrink-0 text-xs">
           {user ? (
             <button
               type="button"
@@ -1056,7 +1106,7 @@ export default function SettingsAndMyPageModal({
                 onClose()
                 if (onLogout) onLogout()
               }}
-              className="text-slate-500 hover:text-rose-600 flex items-center gap-1 cursor-pointer font-medium"
+              className="text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center gap-1 cursor-pointer font-medium transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>로그아웃</span>
@@ -1068,7 +1118,7 @@ export default function SettingsAndMyPageModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition cursor-pointer"
+            className="px-4 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl transition cursor-pointer"
           >
             닫기
           </button>

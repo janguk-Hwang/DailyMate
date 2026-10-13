@@ -140,12 +140,12 @@ export default function CalendarView({
     : ['일', '월', '화', '수', '목', '금', '토']
 
   return (
-    <div className="bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/80 mb-4 sm:mb-6">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/80 dark:border-slate-800 mb-4 sm:mb-6 transition-colors">
       {/* Month Header */}
       <div className="flex items-center justify-between mb-3.5 sm:mb-4">
         <div className="flex items-center gap-2">
-          <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
-          <h2 className="text-base sm:text-lg font-bold text-slate-800">
+          <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400" />
+          <h2 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">
             {year}년 {month}월
           </h2>
         </div>
@@ -153,15 +153,15 @@ export default function CalendarView({
           <button
             type="button"
             onClick={handleGoToday}
-            className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+            className="px-2.5 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors cursor-pointer"
           >
             오늘
           </button>
-          <div className="flex border border-slate-200 rounded-lg overflow-hidden">
+          <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="p-1.5 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+              className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
               title="이전 달"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -169,7 +169,7 @@ export default function CalendarView({
             <button
               type="button"
               onClick={handleNextMonth}
-              className="p-1.5 hover:bg-slate-100 text-slate-600 border-l border-slate-200 transition-colors cursor-pointer"
+              className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border-l border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
               title="다음 달"
             >
               <ChevronRight className="w-4 h-4" />
@@ -242,7 +242,7 @@ export default function CalendarView({
                 <div
                   key={wd}
                   className={`text-[11px] sm:text-xs font-semibold py-0.5 sm:py-1 ${
-                    isSunday ? 'text-red-500' : isSaturday ? 'text-blue-500' : 'text-slate-400'
+                    isSunday ? 'text-red-500' : isSaturday ? 'text-blue-500' : 'text-slate-400 dark:text-slate-500'
                   }`}
                 >
                   {wd}
@@ -262,7 +262,11 @@ export default function CalendarView({
                   <div
                     key={idx}
                     className={`h-11 sm:h-13 flex items-start justify-center p-0.5 sm:p-1 text-[11px] sm:text-xs select-none ${
-                      isSunCol ? 'text-red-200' : isSatCol ? 'text-blue-200' : 'text-slate-300'
+                      isSunCol
+                        ? 'text-red-200 dark:text-red-950'
+                        : isSatCol
+                        ? 'text-blue-200 dark:text-blue-950'
+                        : 'text-slate-300 dark:text-slate-700'
                     }`}
                   >
                     {item.day}
@@ -286,9 +290,9 @@ export default function CalendarView({
                   onClick={() => handleDateClick(item.dateStr)}
                   className={`h-11 sm:h-13 flex flex-col items-center justify-between p-0.5 sm:p-1 rounded-xl transition-all cursor-pointer active:scale-95 ${
                     isSelected
-                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-200'
-                      : 'hover:bg-indigo-50/70 text-slate-700'
-                  } ${isToday && !isSelected ? 'ring-2 ring-indigo-400' : ''}`}
+                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-200 dark:shadow-none'
+                      : 'hover:bg-indigo-50/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
+                  } ${isToday && !isSelected ? 'ring-2 ring-indigo-400 dark:ring-indigo-500' : ''}`}
                 >
                   <span
                     className={`text-[11px] sm:text-xs leading-tight font-medium ${
@@ -311,8 +315,8 @@ export default function CalendarView({
                           isSelected
                             ? 'bg-white text-indigo-700 font-bold'
                             : comp === count
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-indigo-100 text-indigo-700'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'
+                            : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300'
                         }`}
                       >
                         {comp}/{count}

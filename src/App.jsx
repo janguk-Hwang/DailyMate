@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS = {
   completedDisplay: 'show', // 'show' | 'hide' | 'bottom'
   themeColor: 'indigo', // 'indigo' | 'emerald' | 'violet' | 'rose' | 'blue'
   density: 'normal', // 'normal' | 'compact'
+  darkMode: 'system', // 'light' | 'dark' | 'system'
 }
 
 function loadInitialSettings() {
@@ -63,6 +64,41 @@ export default function App() {
   const [settings, setSettings] = useState(loadInitialSettings)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [settingsModalTab, setSettingsModalTab] = useState('profile')
+  const [isDark, setIsDark] = useState(false)
+
+  // Dark Mode Sync Effect
+  useEffect(() => {
+    const updateTheme = () => {
+      const mode = settings.darkMode || 'system'
+      let dark = false
+      if (mode === 'dark') {
+        dark = true
+      } else if (mode === 'light') {
+        dark = false
+      } else {
+        dark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : false
+      }
+      setIsDark(dark)
+      if (dark) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    }
+
+    updateTheme()
+
+    if (window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const handleChange = () => {
+        if ((settings.darkMode || 'system') === 'system') {
+          updateTheme()
+        }
+      }
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    }
+  }, [settings.darkMode])
 
   // Auth States
   const [user, setUser] = useState(null)
@@ -123,6 +159,11 @@ export default function App() {
         console.warn('Failed to sync settings with server:', e)
       }
     }
+  }
+
+  const handleToggleDarkMode = () => {
+    const nextMode = isDark ? 'light' : 'dark'
+    handleUpdateSettings({ ...settings, darkMode: nextMode })
   }
 
   const handleOpenSettings = (tab = 'settings') => {
@@ -532,7 +573,21 @@ export default function App() {
     }
   }
 
-  const getThemeGradient = (theme) => {
+  const getThemeGradient = (theme, isDarkMode) => {
+    if (isDarkMode) {
+      switch (theme) {
+        case 'emerald':
+          return 'from-slate-950 via-emerald-950/30 to-slate-900'
+        case 'violet':
+          return 'from-slate-950 via-violet-950/30 to-slate-900'
+        case 'rose':
+          return 'from-slate-950 via-rose-950/30 to-slate-900'
+        case 'blue':
+          return 'from-slate-950 via-sky-950/30 to-slate-900'
+        default:
+          return 'from-slate-950 via-indigo-950/30 to-slate-900'
+      }
+    }
     switch (theme) {
       case 'emerald':
         return 'from-slate-100 via-emerald-50/40 to-slate-200'
@@ -548,7 +603,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${getThemeGradient(settings.themeColor)} py-3.5 sm:py-10 px-3 sm:px-6 transition-colors duration-300`}>
+    <div className={`min-h-screen bg-gradient-to-br ${getThemeGradient(settings.themeColor, isDark)} py-3.5 sm:py-10 px-3 sm:px-6 transition-colors duration-300`}>
       <div className="max-w-2xl mx-auto">
         {/* Top Navbar with Brand Logo Button & Settings */}
         <Navbar
@@ -558,16 +613,18 @@ export default function App() {
           onResetToday={handleResetToday}
           isTodaySelected={selectedDate === getToday()}
           onOpenSettings={handleOpenSettings}
+          isDark={isDark}
+          onToggleDark={handleToggleDarkMode}
         />
 
         {/* OAuth Error Alert */}
         {oauthError && (
-          <div className="bg-rose-50 border border-rose-300 text-rose-800 text-xs px-3.5 py-2.5 rounded-2xl mb-3.5 flex items-center justify-between shadow-sm">
+          <div className="bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-900/60 text-rose-800 dark:text-rose-300 text-xs px-3.5 py-2.5 rounded-2xl mb-3.5 flex items-center justify-between shadow-sm">
             <span className="font-medium">⚠️ {oauthError}</span>
             <button
               type="button"
               onClick={() => setOauthError(null)}
-              className="text-rose-600 hover:text-rose-800 font-bold ml-3 cursor-pointer"
+              className="text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 font-bold ml-3 cursor-pointer"
             >
               닫기
             </button>
@@ -576,12 +633,12 @@ export default function App() {
 
         {/* Database Connection Error */}
         {dbError && (
-          <div className="bg-amber-50 border border-amber-300 text-amber-900 text-xs px-3.5 py-2.5 rounded-2xl mb-3.5 flex items-center justify-between shadow-sm">
+          <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-900/60 text-amber-900 dark:text-amber-300 text-xs px-3.5 py-2.5 rounded-2xl mb-3.5 flex items-center justify-between shadow-sm">
             <span className="font-medium">⚠️ {dbError}</span>
             <button
               type="button"
               onClick={() => loadSchedules(currentYearMonth)}
-              className="text-indigo-600 hover:text-indigo-800 underline font-bold ml-3 flex-shrink-0 cursor-pointer"
+              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 underline font-bold ml-3 flex-shrink-0 cursor-pointer"
             >
               다시 시도
             </button>
@@ -598,7 +655,7 @@ export default function App() {
 
         {/* Not Logged In Callout */}
         {!user && !authLoading && (
-          <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6 shadow-md shadow-indigo-200/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 dark:from-indigo-700 dark:to-indigo-800 text-white rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6 shadow-md shadow-indigo-200/50 dark:shadow-none flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-start sm:items-center gap-3 text-left">
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
                 <Lock className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" />
@@ -662,15 +719,15 @@ export default function App() {
                 onClick={handleToggleAll}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer active:scale-95 ${
                   isAllCompleted
-                    ? 'bg-indigo-600 text-white shadow-xs hover:bg-indigo-700'
-                    : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200'
+                    ? 'bg-indigo-600 text-white shadow-xs hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600'
+                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-slate-700'
                 }`}
                 title={isAllCompleted ? '선택된 날의 모든 일정 선택 해제' : '선택된 날의 모든 일정 선택'}
               >
-                <CheckCheck className={`w-3.5 h-3.5 ${isAllCompleted ? 'text-white' : 'text-indigo-600'}`} />
+                <CheckCheck className={`w-3.5 h-3.5 ${isAllCompleted ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`} />
                 <span>{isAllCompleted ? '선택 해제' : '모두 선택'}</span>
               </button>
-              <span className="text-slate-400 text-[11px] font-medium">
+              <span className="text-slate-400 dark:text-slate-500 text-[11px] font-medium">
                 {completedCount} / {totalCount}개 완료
               </span>
             </div>
@@ -679,7 +736,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleClearCompleted}
-                className="inline-flex items-center gap-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1.5 rounded-xl border border-rose-200/80 transition-colors cursor-pointer bg-white/80 shadow-2xs"
+                className="inline-flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2.5 py-1.5 rounded-xl border border-rose-200/80 dark:border-rose-900/60 transition-colors cursor-pointer bg-white/80 dark:bg-slate-900/80 shadow-2xs"
                 title="완료(선택)된 항목 일괄 삭제"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
@@ -692,14 +749,14 @@ export default function App() {
         {/* Schedules List */}
         <main className="space-y-2.5">
           {!user ? (
-            <div className="bg-white/70 border border-dashed border-slate-200 rounded-2xl p-10 text-center">
-              <div className="mx-auto w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mb-3">
+            <div className="bg-white/70 dark:bg-slate-900/60 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center">
+              <div className="mx-auto w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-500 dark:text-indigo-400 mb-3">
                 <Lock className="w-6 h-6" />
               </div>
-              <p className="text-slate-700 font-bold text-sm mb-1">
+              <p className="text-slate-700 dark:text-slate-200 font-bold text-sm mb-1">
                 개인 일정이 보호되고 있습니다
               </p>
-              <p className="text-slate-500 text-xs mb-4">
+              <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
                 소셜 로그인 또는 일반 회원가입 후 나만의 일정을 추가해보세요.
               </p>
               <button
@@ -712,11 +769,11 @@ export default function App() {
               </button>
             </div>
           ) : sortedTodos.length === 0 ? (
-            <div className="bg-white/60 border border-dashed border-slate-200 rounded-2xl p-10 text-center">
-              <div className="mx-auto w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+            <div className="bg-white/60 dark:bg-slate-900/60 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center">
+              <div className="mx-auto w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3">
                 <AlertCircle className="w-6 h-6" />
               </div>
-              <p className="text-slate-600 font-medium text-sm">
+              <p className="text-slate-600 dark:text-slate-300 font-medium text-sm">
                 {search
                   ? `'${search}' 검색 결과가 없습니다.`
                   : `${selectedDate}에 등록된 일정이 없습니다.`}
@@ -762,23 +819,23 @@ export default function App() {
             <button
               type="button"
               onClick={handleClearCompleted}
-              className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-xl border border-slate-200/60 transition-colors cursor-pointer bg-white/60 shadow-2xs"
+              className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-rose-400 hover:bg-red-50 dark:hover:bg-rose-950/40 px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-800 transition-colors cursor-pointer bg-white/60 dark:bg-slate-900/60 shadow-2xs"
             >
-              <CheckCheck className="w-3.5 h-3.5 text-slate-400" />
+              <CheckCheck className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
               <span>완료 항목 삭제 ({completedCount})</span>
             </button>
           </div>
         )}
 
         {/* Footer Area with Copyright */}
-        <footer className="mt-8 pt-6 border-t border-slate-200/80 text-center space-y-3 pb-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
+        <footer className="mt-8 pt-6 border-t border-slate-200/80 dark:border-slate-800 text-center space-y-3 pb-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400 dark:text-slate-500">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-600">To-Do 캘린더</span>
-              <span className="text-slate-300">•</span>
-              <span className="text-[11px] text-slate-500">스마트한 개인 일정 관리 플래너</span>
+              <span className="font-bold text-slate-600 dark:text-slate-300">To-Do 캘린더</span>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">스마트한 개인 일정 관리 플래너</span>
             </div>
-            <p className="text-[11px] text-slate-400 font-medium">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
               © {new Date().getFullYear()} To-Do 캘린더. All rights reserved.
             </p>
           </div>

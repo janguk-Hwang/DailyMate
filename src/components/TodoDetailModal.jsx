@@ -91,7 +91,7 @@ export default function TodoDetailModal({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="relative w-full max-w-lg bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transition-all flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-5 pt-5 pb-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white relative flex-shrink-0">
           <button
@@ -143,7 +143,7 @@ export default function TodoDetailModal({
         <form onSubmit={handleSave} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
           {/* Title */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
               일정 제목 <span className="text-rose-500">*</span>
             </label>
             <input
@@ -151,21 +151,21 @@ export default function TodoDetailModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="일정 제목을 입력하세요"
-              className="w-full px-3.5 sm:px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium text-slate-800"
+              className="w-full px-3.5 sm:px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 transition-all font-medium text-slate-800 dark:text-slate-100"
               required
             />
           </div>
 
           {/* Priority */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">우선순위</label>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">우선순위</label>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setPriority('high')}
                 className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${priority === 'high'
-                    ? 'bg-rose-50 border-rose-400 text-rose-700 ring-2 ring-rose-400/20'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-700 dark:text-rose-300 ring-2 ring-rose-400/20'
+                    : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
               >
                 <span>🔴</span>
@@ -175,8 +175,8 @@ export default function TodoDetailModal({
                 type="button"
                 onClick={() => setPriority('medium')}
                 className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${priority === 'medium'
-                    ? 'bg-amber-50 border-amber-400 text-amber-700 ring-2 ring-amber-400/20'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 dark:border-amber-700 text-amber-700 dark:text-amber-300 ring-2 ring-amber-400/20'
+                    : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
               >
                 <span>🟡</span>
@@ -186,8 +186,8 @@ export default function TodoDetailModal({
                 type="button"
                 onClick={() => setPriority('low')}
                 className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${priority === 'low'
-                    ? 'bg-emerald-50 border-emerald-400 text-emerald-700 ring-2 ring-emerald-400/20'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-400/20'
+                    : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
               >
                 <span>🟢</span>
@@ -199,11 +199,11 @@ export default function TodoDetailModal({
           {/* Detailed Content / Memo */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                 <span>상세 내용 및 메모</span>
               </label>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">
                 {description.length}자
               </span>
             </div>
@@ -212,20 +212,20 @@ export default function TodoDetailModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="일정에 필요한 준비물, 장소, 링크, 세부 내용 등을 자유롭게 메모해보세요"
               rows={6}
-              className="w-full px-3.5 sm:px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-slate-700 resize-none leading-relaxed"
+              className="w-full px-3.5 sm:px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-700 dark:text-slate-200 resize-none leading-relaxed"
             />
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
               💡 메모를 입력해두면 일정 카드에 메모 아이콘이 표시되어 쉽게 확인할 수 있습니다.
             </p>
           </div>
         </form>
 
         {/* Footer Actions */}
-        <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50/80 border-t border-slate-200/80 flex items-center justify-between gap-2 flex-shrink-0">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50/80 dark:bg-slate-950/60 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 flex-shrink-0">
           <button
             type="button"
             onClick={handleDelete}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-rose-200"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-800"
           >
             <Trash2 className="w-4 h-4" />
             <span>삭제</span>
@@ -235,7 +235,7 @@ export default function TodoDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
+              className="px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             >
               취소
             </button>

@@ -20,17 +20,17 @@ export default function TodoFilter({
   }
 
   return (
-    <section className="bg-white rounded-2xl p-2.5 sm:p-3 shadow-xs border border-slate-200/80 mb-3.5 sm:mb-4">
+    <section className="bg-white dark:bg-slate-900 rounded-2xl p-2.5 sm:p-3 shadow-xs border border-slate-200/80 dark:border-slate-800 mb-3.5 sm:mb-4 transition-colors">
       <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-2.5">
         {/* 1. Status Filter Group (전체, 진행, 완료) */}
-        <div className="flex bg-slate-100 p-0.5 sm:p-1 rounded-xl flex-shrink-0">
+        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 sm:p-1 rounded-xl flex-shrink-0">
           <button
             type="button"
             onClick={() => onFilterChange('all')}
             className={`px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center ${
               filter === 'all'
-                ? 'bg-white text-indigo-600 shadow-xs'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
             전체 ({counts.total})
@@ -40,8 +40,8 @@ export default function TodoFilter({
             onClick={() => onFilterChange('active')}
             className={`px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center ${
               filter === 'active'
-                ? 'bg-white text-indigo-600 shadow-xs'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
             진행 ({counts.active})
@@ -51,8 +51,8 @@ export default function TodoFilter({
             onClick={() => onFilterChange('completed')}
             className={`px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center ${
               filter === 'completed'
-                ? 'bg-white text-indigo-600 shadow-xs'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
             }`}
           >
             완료 ({counts.completed})
@@ -68,7 +68,7 @@ export default function TodoFilter({
             className={`px-2 sm:px-2.5 py-1 sm:py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
               sortBy === 'priority'
                 ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+                : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700'
             }`}
           >
             우선순위 순
@@ -81,7 +81,7 @@ export default function TodoFilter({
             className={`px-2 sm:px-2.5 py-1 sm:py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap active:scale-95 ${
               sortBy === 'created_desc' || sortBy === 'created_asc'
                 ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+                : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700'
             }`}
             title={
               sortBy === 'created_desc'
@@ -120,13 +120,13 @@ export default function TodoFilter({
             placeholder="일정 검색..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-8 pr-7 py-1 sm:py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50/50 focus:bg-white transition-all"
+            className="w-full pl-8 pr-7 py-1 sm:py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-slate-50/50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-all"
           />
           {search && (
             <button
               type="button"
               onClick={() => onSearchChange('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer text-xs"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer text-xs"
               title="검색어 지우기"
             >
               ✕

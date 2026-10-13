@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer utilities {
   /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
@@ -15,4 +17,9 @@
 html {
   -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
+}
+
+html.dark {
+  color-scheme: dark;
+  background-color: #0f172a;
 }

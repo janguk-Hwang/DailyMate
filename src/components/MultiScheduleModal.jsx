@@ -194,7 +194,7 @@ export default function MultiScheduleModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transition-all">
+      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all">
         {/* Header */}
         <div className="px-4.5 pt-5 pb-3.5 sm:px-6 sm:pt-6 sm:pb-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white relative">
           <button
@@ -270,9 +270,9 @@ export default function MultiScheduleModal({
 
           {/* Title & Priority */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               일정 제목 <span className="text-red-500">*</span>
-              <span className="text-[11px] font-normal text-slate-500 ml-1.5">
+              <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400 ml-1.5">
                 (,로 구분 시 여러 개 등록)
               </span>
             </label>
@@ -281,13 +281,13 @@ export default function MultiScheduleModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="예: 프로젝트 스프린트, 운동, 학원 수업 (쉼표로 구분)"
-              className="w-full px-3.5 sm:px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              className="w-full px-3.5 sm:px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100"
               required
             />
             {titleItems.length > 1 && (
-              <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-indigo-600 font-medium">
+              <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">
                 <span>💡 {titleItems.length}개 일정 인식:</span>
-                <span className="text-slate-600 font-normal truncate">
+                <span className="text-slate-600 dark:text-slate-400 font-normal truncate">
                   {titleItems.join(' • ')}
                 </span>
               </div>
@@ -295,11 +295,11 @@ export default function MultiScheduleModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">우선순위</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">우선순위</label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
-              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             >
               <option value="high">우선순위: 높음 🔴</option>
               <option value="medium">우선순위: 보통 🟡</option>
@@ -309,30 +309,30 @@ export default function MultiScheduleModal({
 
           {/* TAB 1: Date Range */}
           {tab === 'range' && (
-            <div className="p-3.5 sm:p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5 sm:space-y-3">
-              <div className="font-semibold text-xs text-slate-700 flex items-center gap-1.5">
-                <CalendarRange className="w-4 h-4 text-indigo-600" />
+            <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl space-y-2.5 sm:space-y-3">
+              <div className="font-semibold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <CalendarRange className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span>연속된 기간 설정</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1">시작일</label>
+                  <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">시작일</label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1">종료일</label>
+                  <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">종료일</label>
                   <input
                     type="date"
                     value={endDate}
                     min={startDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
                     required
                   />
                 </div>
@@ -342,15 +342,15 @@ export default function MultiScheduleModal({
 
           {/* TAB 2: Weekly Repeat */}
           {tab === 'weekly' && (
-            <div className="p-3.5 sm:p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5 sm:space-y-3">
-              <div className="font-semibold text-xs text-slate-700 flex items-center gap-1.5">
-                <Repeat className="w-4 h-4 text-indigo-600" />
+            <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl space-y-2.5 sm:space-y-3">
+              <div className="font-semibold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Repeat className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span>매주 반복 요일 및 기간 설정</span>
               </div>
 
               {/* Day of Week Selectors */}
               <div>
-                <label className="block text-[11px] text-slate-500 mb-1.5">
+                <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">
                   반복할 요일 (다중 선택)
                 </label>
                 <div className="grid grid-cols-7 gap-1">
@@ -365,8 +365,8 @@ export default function MultiScheduleModal({
                         className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95 ${isSelected
                           ? 'bg-indigo-600 text-white shadow-sm'
                           : isWeekend
-                            ? 'bg-white text-rose-500 hover:bg-slate-100 border border-slate-200'
-                            : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                            ? 'bg-white dark:bg-slate-800 text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                           }`}
                       >
                         {day.label}
@@ -375,7 +375,7 @@ export default function MultiScheduleModal({
                   })}
                 </div>
                 {selectedDays.length === 0 && (
-                  <p className="text-[11px] text-indigo-600 mt-1.5 font-medium">
+                  <p className="text-[11px] text-indigo-600 dark:text-indigo-400 mt-1.5 font-medium">
                     ※ 반복할 요일을 최소 1개 이상 선택해주세요.
                   </p>
                 )}
@@ -384,23 +384,23 @@ export default function MultiScheduleModal({
               {/* Range for repeat */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pt-1">
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1">반복 시작일</label>
+                  <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">반복 시작일</label>
                   <input
                     type="date"
                     value={weeklyStart}
                     onChange={(e) => setWeeklyStart(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1">반복 종료일</label>
+                  <label className="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">반복 종료일</label>
                   <input
                     type="date"
                     value={weeklyEnd}
                     min={weeklyStart}
                     onChange={(e) => setWeeklyEnd(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
                     required
                   />
                 </div>
@@ -410,9 +410,9 @@ export default function MultiScheduleModal({
 
           {/* TAB 3: Custom Multiple Dates */}
           {tab === 'custom' && (
-            <div className="p-3.5 sm:p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5 sm:space-y-3">
-              <div className="font-semibold text-xs text-slate-700 flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-indigo-600" />
+            <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl space-y-2.5 sm:space-y-3">
+              <div className="font-semibold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span>원하는 날짜를 선택하여 목록에 추가</span>
               </div>
 
@@ -421,7 +421,7 @@ export default function MultiScheduleModal({
                   type="date"
                   value={pickDateInput}
                   onChange={(e) => setPickDateInput(e.target.value)}
-                  className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
                 />
                 <button
                   type="button"
@@ -439,7 +439,7 @@ export default function MultiScheduleModal({
                   {customDates.map((d) => (
                     <span
                       key={d}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-indigo-200 text-indigo-700 rounded-lg text-[11px] font-medium"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 rounded-lg text-[11px] font-medium"
                     >
                       <span>{d}</span>
                       <button
@@ -461,18 +461,18 @@ export default function MultiScheduleModal({
           )}
 
           {/* Summary Preview Box */}
-          <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 text-xs">
-            <div className="flex items-center gap-1.5 text-indigo-800 font-semibold">
-              <Sparkles className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+          <div className="p-3 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-2xl flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1 text-xs">
+            <div className="flex items-center gap-1.5 text-indigo-800 dark:text-indigo-200 font-semibold">
+              <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
               <span>등록 예정:</span>
-              <span className="font-extrabold text-sm text-indigo-950 font-mono">
+              <span className="font-extrabold text-sm text-indigo-950 dark:text-indigo-100 font-mono">
                 {computedDates.length}일
                 {titleItems.length > 1 && ` × ${titleItems.length}개 일정`}
               </span>
             </div>
             <div className="flex items-center gap-2">
               {computedDates.length > 0 && (
-                <span className="text-[11px] text-indigo-600 font-medium">
+                <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">
                   ({computedDates[0]} ~ {computedDates[computedDates.length - 1]})
                 </span>
               )}
