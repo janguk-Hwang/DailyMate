@@ -143,7 +143,7 @@ app.put('/api/schedules/toggle-all/:date', authMiddleware, async (req, res) => {
 
 // Create schedule for current user
 app.post('/api/schedules', authMiddleware, async (req, res) => {
-  const { title, date, priority = 'medium' } = req.body
+  const { title, description = null, date, priority = 'medium' } = req.body
   const userId = req.user.id
   const pool = await getSafePool()
 
@@ -160,13 +160,14 @@ app.post('/api/schedules', authMiddleware, async (req, res) => {
 
   try {
     const [result] = await pool.query(
-      'INSERT INTO schedules (user_id, title, date, completed, priority) VALUES (?, ?, ?, false, ?)',
-      [userId, title.trim(), date, priority]
+      'INSERT INTO schedules (user_id, title, description, date, completed, priority) VALUES (?, ?, ?, ?, false, ?)',
+      [userId, title.trim(), description ? description.trim() : null, date, priority]
     )
     res.status(201).json({
       id: result.insertId,
       user_id: userId,
       title: title.trim(),
+      description: description ? description.trim() : null,
       date,
       completed: false,
       priority,
@@ -280,6 +281,10 @@ app.put('/api/schedules/:id', authMiddleware, async (req, res) => {
     if (title !== undefined) {
       updates.push('title = ?')
       params.push(title.trim())
+    }
+    if (description !== undefined) {
+      updates.push('description = ?')
+      params.push(description ? description.trim() : null)
     }
     if (completed !== undefined) {
       updates.push('completed = ?')

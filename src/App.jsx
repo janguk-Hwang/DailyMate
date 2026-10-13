@@ -8,6 +8,7 @@ import TodoFilter from './components/TodoFilter'
 import TodoItem from './components/TodoItem'
 import AuthModal from './components/AuthModal'
 import MultiScheduleModal from './components/MultiScheduleModal'
+import TodoDetailModal from './components/TodoDetailModal'
 import {
   getMonthSchedules,
   createSchedule,
@@ -44,6 +45,7 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalMode, setAuthModalMode] = useState('login')
   const [multiModalOpen, setMultiModalOpen] = useState(false)
+  const [selectedDetailTodo, setSelectedDetailTodo] = useState(null)
   const [oauthError, setOauthError] = useState(null)
 
   // 1. Initial OAuth URL check and Auto Login Check
@@ -254,7 +256,7 @@ export default function App() {
     }
   }
 
-  const handleEdit = async (id, title, priority) => {
+  const handleEdit = async (id, title, priority, description) => {
     if (!user) {
       handleOpenAuth('login')
       return
@@ -265,9 +267,13 @@ export default function App() {
       if (priority !== undefined) {
         payload.priority = priority
       }
+      if (description !== undefined) {
+        payload.description = description
+      }
       const updated = await updateSchedule(id, payload)
       const updatedTitle = updated.title || title
       const updatedPriority = updated.priority || priority
+      const updatedDesc = updated.description !== undefined ? updated.description : description
       setAllMonthTodos((prev) =>
         prev.map((t) =>
           t.id === id
@@ -276,13 +282,38 @@ export default function App() {
                 title: updatedTitle,
                 text: updatedTitle,
                 priority: updatedPriority,
+                description: updatedDesc,
               }
             : t
         )
       )
+      if (selectedDetailTodo && selectedDetailTodo.id === id) {
+        setSelectedDetailTodo((prev) => ({
+          ...prev,
+          title: updatedTitle,
+          text: updatedTitle,
+          priority: updatedPriority,
+          description: updatedDesc,
+        }))
+      }
     } catch (e) {
       alert(e.message || '일정 수정 실패')
     }
+  }
+
+  const handleOpenDetail = (todo) => {
+    setSelectedDetailTodo(todo)
+  }
+
+  const handleDetailToggle = async (id) => {
+    await handleToggle(id)
+    setSelectedDetailTodo((prev) =>
+      prev && prev.id === id ? { ...prev, completed: !prev.completed } : prev
+    )
+  }
+
+  const handleSaveDetail = async (id, { title, description, priority }) => {
+    await handleEdit(id, title, priority, description)
   }
 
   const handleClearCompleted = async () => {
@@ -614,14 +645,18 @@ export default function App() {
                 index={index}
                 todo={{
                   id: todo.id,
+                  title: todo.title,
                   text: todo.title || todo.text,
+                  description: todo.description,
                   completed: todo.completed,
                   priority: todo.priority,
+                  date: todo.date,
                   createdAt: todo.date,
                 }}
                 onToggle={handleToggle}
                 onDelete={handleDelete}
                 onEdit={handleEdit}
+                onOpenDetail={handleOpenDetail}
                 isDraggable={Boolean(user)}
                 onDragStart={handleDragStart}
                 onDragOverItem={handleDragOverItem}
@@ -678,6 +713,16 @@ export default function App() {
           onClose={() => setMultiModalOpen(false)}
           initialDate={selectedDate}
           onSubmitBatch={handleBatchAddTodo}
+        />
+
+        {/* Schedule Detail & Memo Modal */}
+        <TodoDetailModal
+          isOpen={Boolean(selectedDetailTodo)}
+          onClose={() => setSelectedDetailTodo(null)}
+          todo={selectedDetailTodo}
+          onSave={handleSaveDetail}
+          onDelete={handleDelete}
+          onToggle={handleDetailToggle}
         />
       </div>
     </div>

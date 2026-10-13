@@ -132,6 +132,10 @@ export async function initDatabase() {
       if (orderCols.length === 0) {
         await pool.query(`ALTER TABLE schedules ADD COLUMN order_index INT DEFAULT 0 AFTER priority`)
       }
+      const [descCols] = await pool.query(`SHOW COLUMNS FROM schedules LIKE 'description'`)
+      if (descCols.length === 0) {
+        await pool.query(`ALTER TABLE schedules ADD COLUMN description TEXT NULL AFTER title`)
+      }
     } catch (colErr) {
       console.warn('[Check Column Notice]:', colErr.message)
     }

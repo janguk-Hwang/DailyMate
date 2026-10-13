@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { CheckCircle2, Circle, Trash2, Pencil, Check, X, GripVertical } from 'lucide-react'
+import { CheckCircle2, Circle, Trash2, Pencil, Check, X, GripVertical, FileText } from 'lucide-react'
 
 export default function TodoItem({
   todo,
@@ -7,6 +7,7 @@ export default function TodoItem({
   onToggle,
   onDelete,
   onEdit,
+  onOpenDetail,
   isDraggable = true,
   onDragStart,
   onDragOverItem,
@@ -195,20 +196,36 @@ export default function TodoItem({
               </div>
             </div>
           ) : (
-            <div className="overflow-hidden">
+            <div
+              className="overflow-hidden cursor-pointer group/text"
+              onClick={() => onOpenDetail && onOpenDetail(todo)}
+            >
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 <span
-                  onClick={() => onToggle(todo.id)}
-                  className={`text-sm font-medium cursor-pointer transition-all break-words break-all leading-snug ${
+                  className={`text-sm font-medium transition-all break-words break-all leading-snug group-hover/text:text-indigo-600 ${
                     todo.completed
                       ? 'line-through text-slate-400'
-                      : 'text-slate-700 hover:text-indigo-600'
+                      : 'text-slate-700'
                   }`}
                 >
                   {todo.text}
                 </span>
                 {getPriorityBadge(todo.priority)}
+                {todo.description && (
+                  <span
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-600 border border-indigo-100"
+                    title="상세 메모 있음 (클릭 시 확인)"
+                  >
+                    <FileText className="w-3 h-3 text-indigo-500" />
+                    <span>메모</span>
+                  </span>
+                )}
               </div>
+              {todo.description && (
+                <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1 italic">
+                  {todo.description}
+                </p>
+              )}
               <span className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 block">
                 {todo.createdAt}
               </span>
@@ -221,9 +238,9 @@ export default function TodoItem({
           <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex-shrink-0">
             <button
               type="button"
-              onClick={handleStartEdit}
+              onClick={() => (onOpenDetail ? onOpenDetail(todo) : handleStartEdit())}
               className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer active:scale-90"
-              title="수정"
+              title="상세 내용 및 수정"
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
