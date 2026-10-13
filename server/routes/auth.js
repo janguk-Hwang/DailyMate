@@ -448,34 +448,63 @@ router.get('/stats', authMiddleware, async (req, res) => {
     const monthCompleted = Number(monthRows[0]?.monthCompleted || 0)
     const monthRate = monthTotal > 0 ? Math.round((monthCompleted / monthTotal) * 100) : 0
 
-    // Streak calculation (consecutive active completion days)
-    const [completedDatesRows] = await pool.query(
-      `SELECT DISTINCT date 
-       FROM schedules 
-       WHERE user_id = ? AND completed = 1 
-       ORDER BY date DESC`,
-      [userId]
-    )
-
-    const completedDates = new Set(completedDatesRows.map((r) => r.date))
-    let streakDays = 0
-
+    // Streak calculation (연속 완수)
+    // 규칙:
+    // 1. 일정이 비어있는 날(등록된 일정이 0개인 날)은 연속에 포함하지 않음 (카운트 증가 안함)
+    // 2. 비어있는 날이 있더라도 연속이 끊기지 않고, '일정이 존재하는 날'만 연속 완수 여부 판단
+    // 3. 일정이 존재하는 날의 모든 일정(completed === total)을 완료했을 때 완수한 날로 판정
+    // 4. 오늘(today)에 아직 미완료 일정이 남아있더라도(진행 중), 이전 일정 있는 날들의 연속 완수는 유지
     const todayDate = new Date()
     const formatD = (d) =>
       `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const todayStr = formatD(todayDate)
 
-    // Check if today or yesterday has completions
-    const checkDate = new Date(todayDate)
-    const todayStr = formatD(checkDate)
+    const [scheduledDatesRows] = await pool.query(
+      `SELECT 
+        date,
+        COUNT(*) AS totalCount,
+        SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) AS completedCount
+       FROM schedules 
+       WHERE user_id = ? AND date <= ?
+       GROUP BY date 
+       ORDER BY date DESC`,
+      [userId, todayStr]
+    )
 
-    // Start from today or yesterday
-    if (!completedDates.has(todayStr)) {
-      checkDate.setDate(checkDate.getDate() - 1)
-    }
+    let streakDays = 0
 
-    while (completedDates.has(formatD(checkDate))) {
-      streakDays++
-      checkDate.setDate(checkDate.getDate() - 1)
+    if (scheduledDatesRows.length > 0) {
+      let startIndex = 0
+      const firstDay = scheduledDatesRows[0]
+      const isFirstDayToday = firstDay.date === todayStr
+      const isFirstDayFullyCompleted =
+        Number(firstDay.totalCount) > 0 &&
+        Number(firstDay.completedCount) === Number(firstDay.totalCount)
+
+      if (isFirstDayToday) {
+        if (isFirstDayFullyCompleted) {
+          // 오늘 일정을 모두 완수한 경우 오늘부터 카운트 시작
+          startIndex = 0
+        } else {
+          // 오늘은 아직 진행 중이므로 오늘을 제외하고 직전 일정이 있던 날부터 연속 완수 체크
+          startIndex = 1
+        }
+      } else {
+        // 오늘은 일정이 없는 날(비어있는 날)이므로, 가장 최근 일정이 있던 날부터 체크
+        startIndex = 0
+      }
+
+      for (let i = startIndex; i < scheduledDatesRows.length; i++) {
+        const day = scheduledDatesRows[i]
+        const total = Number(day.totalCount)
+        const completed = Number(day.completedCount)
+
+        if (total > 0 && completed === total) {
+          streakDays++
+        } else {
+          break
+        }
+      }
     }
 
     res.json({

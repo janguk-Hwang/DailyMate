@@ -547,14 +547,17 @@ export default function SettingsAndMyPageModal({
                       </div>
 
                       {/* Streak */}
-                      <div className="bg-amber-50/80 p-3 rounded-2xl border border-amber-200/60 text-center">
-                        <span className="text-[11px] text-amber-700 font-medium block flex items-center justify-center gap-1">
+                      <div
+                        className="bg-amber-50/80 dark:bg-amber-950/40 p-3 rounded-2xl border border-amber-200/60 dark:border-amber-900/60 text-center"
+                        title="일정이 비어있는 날을 제외하고, 일정이 등록된 날들을 기준으로 연속으로 모두 완료한 날 수입니다."
+                      >
+                        <span className="text-[11px] text-amber-700 dark:text-amber-300 font-medium block flex items-center justify-center gap-1">
                           <Flame className="w-3 h-3 text-amber-500 fill-amber-500" />
                           <span>연속 완수</span>
                         </span>
-                        <span className="text-lg sm:text-xl font-extrabold text-amber-800 mt-0.5 block">
+                        <span className="text-lg sm:text-xl font-extrabold text-amber-800 dark:text-amber-200 mt-0.5 block">
                           {stats?.streakDays ?? 0}
-                          <span className="text-xs font-normal text-amber-600 ml-0.5">일째</span>
+                          <span className="text-xs font-normal text-amber-600 dark:text-amber-400 ml-0.5">일째</span>
                         </span>
                       </div>
                     </div>
