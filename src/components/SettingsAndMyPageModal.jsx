@@ -92,6 +92,17 @@ export default function SettingsAndMyPageModal({
 
   const prevIsOpenRef = useRef(false)
   const prevInitialTabRef = useRef(initialTab)
+  const backdropMouseDownRef = useRef(false)
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (!isOpen) return
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = originalOverflow
+    }
+  }, [isOpen])
 
   // Sync initial tab and user data on open
   useEffect(() => {
@@ -308,8 +319,28 @@ export default function SettingsAndMyPageModal({
     }
   }
 
+  // Modal Backdrop Click Helper (외부에서 누르고 뗐을 때만 닫기)
+  const handleBackdropMouseDown = (e) => {
+    if (e.target === e.currentTarget) {
+      backdropMouseDownRef.current = true
+    } else {
+      backdropMouseDownRef.current = false
+    }
+  }
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget && backdropMouseDownRef.current) {
+      onClose()
+    }
+    backdropMouseDownRef.current = false
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+      onMouseDown={handleBackdropMouseDown}
+      onClick={handleBackdropClick}
+    >
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200/90 dark:border-slate-800 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden text-slate-800 dark:text-slate-100 transition-colors">
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/60 dark:bg-slate-800/50 flex-shrink-0">
