@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url'
 import { initDatabase, getSafePool, getDbStatus } from './db.js'
 import authRouter from './routes/auth.js'
 import oauthRouter from './routes/oauth.js'
-import { authMiddleware } from './middleware/auth.js'
+import { authMiddleware, optionalAuthMiddleware } from './middleware/auth.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -415,6 +415,39 @@ app.delete('/api/schedules/completed-all', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('[Clear All Completed Error]:', err)
     res.status(500).json({ error: err.message })
+  }
+})
+
+// Submit Feedback or Issue Report (개선 사항 및 이슈 제보)
+app.post('/api/feedback', optionalAuthMiddleware, async (req, res) => {
+  const { category, title, content, contact } = req.body
+  const userId = req.user ? req.user.id : null
+
+  if (!title || !title.trim()) {
+    return res.status(400).json({ error: '제목을 입력해주세요.' })
+  }
+  if (!content || !content.trim()) {
+    return res.status(400).json({ error: '상세 내용을 입력해주세요.' })
+  }
+
+  const pool = await getSafePool()
+  if (!pool) {
+    return res.status(503).json({ error: '데이터베이스 연결 불가' })
+  }
+
+  try {
+    const validCategory = ['feature', 'bug', 'other'].includes(category) ? category : 'feature'
+    await pool.query(
+      'INSERT INTO feedbacks (user_id, category, title, content, contact) VALUES (?, ?, ?, ?, ?)',
+      [userId, validCategory, title.trim(), content.trim(), contact ? contact.trim() : null]
+    )
+    res.json({
+      success: true,
+      message: '소중한 의견이 성공적으로 접수되었습니다. 적극 검토하여 반영하겠습니다!',
+    })
+  } catch (err) {
+    console.error('[Feedback Submission Error]:', err)
+    res.status(500).json({ error: '제보 접수 중 오류가 발생했습니다: ' + err.message })
   }
 })
 

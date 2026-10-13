@@ -26,6 +26,13 @@ import {
   Sun,
   Moon,
   Monitor,
+  MessageSquarePlus,
+  Send,
+  ExternalLink,
+  Bug,
+  Lightbulb,
+  MessageCircle,
+  Loader2,
 } from 'lucide-react'
 import {
   updateProfile,
@@ -34,6 +41,7 @@ import {
   getUserStats,
   exportSchedules,
   cleanupAllCompletedSchedules,
+  submitFeedback,
 } from '../services/api'
 
 const AVATAR_OPTIONS = ['🧑‍💻', '🚀', '🌟', '🦊', '🌿', '🎨', '🎯', '⚡', '☕', '🐱', '🐶', '💡']
@@ -89,6 +97,15 @@ export default function SettingsAndMyPageModal({
   const [cleanupLoading, setCleanupLoading] = useState(false)
   const [cleanupMsg, setCleanupMsg] = useState(null)
   const [exportLoading, setExportLoading] = useState(false)
+
+  // Feedback & Issue Report States
+  const [feedbackCategory, setFeedbackCategory] = useState('feature') // 'feature' | 'bug' | 'other'
+  const [feedbackTitle, setFeedbackTitle] = useState('')
+  const [feedbackContent, setFeedbackContent] = useState('')
+  const [feedbackContact, setFeedbackContact] = useState('')
+  const [feedbackSending, setFeedbackSending] = useState(false)
+  const [feedbackSuccessMsg, setFeedbackSuccessMsg] = useState('')
+  const [feedbackErrorMsg, setFeedbackErrorMsg] = useState('')
 
   const prevIsOpenRef = useRef(false)
   const prevInitialTabRef = useRef(initialTab)
@@ -319,6 +336,40 @@ export default function SettingsAndMyPageModal({
     }
   }
 
+  // Feedback Submit Handler
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault()
+    if (!feedbackTitle.trim()) {
+      setFeedbackErrorMsg('제목을 입력해주세요.')
+      return
+    }
+    if (!feedbackContent.trim()) {
+      setFeedbackErrorMsg('내용을 입력해주세요.')
+      return
+    }
+
+    setFeedbackSending(true)
+    setFeedbackErrorMsg('')
+    setFeedbackSuccessMsg('')
+
+    try {
+      const res = await submitFeedback({
+        category: feedbackCategory,
+        title: feedbackTitle.trim(),
+        content: feedbackContent.trim(),
+        contact: feedbackContact.trim() || (user ? `${user.name || user.username || '회원'} (${user.email || '계정'})` : ''),
+      })
+      setFeedbackSuccessMsg(res.message || '소중한 의견이 성공적으로 접수되었습니다. 감사합니다!')
+      setFeedbackTitle('')
+      setFeedbackContent('')
+      setFeedbackContact('')
+    } catch (err) {
+      setFeedbackErrorMsg(err.message || '제보 접수에 실패했습니다.')
+    } finally {
+      setFeedbackSending(false)
+    }
+  }
+
   // Modal Backdrop Click Helper (외부에서 누르고 뗐을 때만 닫기)
   const handleBackdropMouseDown = (e) => {
     if (e.target === e.currentTarget) {
@@ -356,7 +407,7 @@ export default function SettingsAndMyPageModal({
                 {activeTab === 'profile' && '마이페이지 & 통계'}
                 {activeTab === 'settings' && '캘린더 환경설정'}
                 {activeTab === 'security' && '계정 및 보안'}
-                {activeTab === 'about' && '서비스 정보'}
+                {activeTab === 'about' && '서비스 안내 & 제보'}
               </h2>
               <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">개인 맞춤 설정과 일정 데이터를 관리합니다</p>
             </div>
@@ -417,8 +468,8 @@ export default function SettingsAndMyPageModal({
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
-            <Info className="w-4 h-4" />
-            <span>서비스 안내</span>
+            <MessageSquarePlus className="w-4 h-4" />
+            <span>서비스 안내 & 제보</span>
           </button>
         </div>
 
@@ -1119,45 +1170,202 @@ export default function SettingsAndMyPageModal({
             </div>
           )}
 
-          {/* ================= TAB 4: ABOUT ================= */}
+          {/* ================= TAB 4: ABOUT & FEEDBACK ================= */}
           {activeTab === 'about' && (
             <div className="space-y-4">
-              <div className="text-center py-5 bg-gradient-to-b from-indigo-50/60 to-white rounded-2xl border border-indigo-100">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mx-auto mb-2.5 shadow-md shadow-indigo-200">
+              {/* App Banner */}
+              <div className="text-center py-5 bg-gradient-to-b from-indigo-50/60 to-white dark:from-indigo-950/40 dark:to-slate-900 rounded-2xl border border-indigo-100 dark:border-indigo-900/60">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mx-auto mb-2.5 shadow-md shadow-indigo-200 dark:shadow-none">
                   <Calendar className="w-6 h-6" />
                 </div>
-                <h3 className="font-extrabold text-base text-slate-900">To-Do 캘린더</h3>
-                <p className="text-xs text-slate-500 mt-0.5">나만의 스마트한 개인 일정 & 플래너</p>
-                <span className="inline-block mt-2 px-2.5 py-0.5 text-[11px] font-bold text-indigo-600 bg-indigo-100/80 rounded-full">
-                  버전 v1.1.0
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100">To-Do 캘린더</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">나만의 스마트한 개인 일정 & 플래너</p>
+                <span className="inline-block mt-2 px-2.5 py-0.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100/80 dark:bg-indigo-950/80 rounded-full">
+                  버전 v1.2.0
                 </span>
               </div>
 
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 space-y-2 text-xs text-slate-600">
-                <h4 className="font-bold text-slate-800">주요 탑재 기능</h4>
-                <ul className="list-disc pl-4 space-y-1 text-slate-500">
-                  <li>인터랙티브 월간 캘린더 (스와이프 & 오늘 바로가기)</li>
-                  <li>쉼표(,) 구분 다중 일정 동시 등록 & 상세 메모 에디터</li>
-                  <li>기간/요일 반복 일정 일괄 생성</li>
-                  <li>우선순위 관리 및 드래그 앤 드롭 순서 변경</li>
-                  <li>개인 보안 격리 & Google/카카오/네이버 소셜 연동</li>
-                  <li>생산성 통계 대시보드 & 엑셀/JSON 데이터 내보내기</li>
-                </ul>
+              {/* Direct Feedback & Issue Report Card */}
+              <div className="bg-slate-50/90 dark:bg-slate-800/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5 font-bold text-sm text-slate-900 dark:text-slate-100">
+                    <MessageSquarePlus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    <span>개선 사항 및 이슈 제보</span>
+                  </div>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">앱 내 직접 접수</span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+                  서비스를 이용하며 바라는 개선점이나 발견하신 버그/불편 사항을 작성해주세요. 소중한 의견을 적극 검토하여 업데이트에 반영하겠습니다.
+                </p>
+
+                {feedbackSuccessMsg && (
+                  <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 rounded-xl text-xs flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    <span>{feedbackSuccessMsg}</span>
+                  </div>
+                )}
+
+                {feedbackErrorMsg && (
+                  <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 rounded-xl text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600 dark:text-rose-400" />
+                    <span>{feedbackErrorMsg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleFeedbackSubmit} className="space-y-3.5">
+                  {/* Category Selection */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      제보 유형
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFeedbackCategory('feature')}
+                        className={`py-2 px-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                          feedbackCategory === 'feature'
+                            ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-400 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-400/20'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                        <span>개선 제안</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFeedbackCategory('bug')}
+                        className={`py-2 px-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                          feedbackCategory === 'bug'
+                            ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-400 dark:border-rose-700 text-rose-700 dark:text-rose-300 ring-2 ring-rose-400/20'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        <Bug className="w-3.5 h-3.5 text-rose-500" />
+                        <span>버그 제보</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFeedbackCategory('other')}
+                        className={`py-2 px-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                          feedbackCategory === 'other'
+                            ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-400 dark:border-sky-700 text-sky-700 dark:text-sky-300 ring-2 ring-sky-400/20'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 text-sky-500" />
+                        <span>기타 문의</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      제목 <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={feedbackTitle}
+                      onChange={(e) => setFeedbackTitle(e.target.value)}
+                      maxLength={100}
+                      placeholder={
+                        feedbackCategory === 'feature'
+                          ? '예: 캘린더에 공휴일 및 대체휴일 표시 기능 제안'
+                          : feedbackCategory === 'bug'
+                          ? '예: 모바일 화면에서 특정 버튼 터치 오류'
+                          : '문의 제목을 입력하세요'
+                      }
+                      className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800 dark:text-slate-100"
+                      required
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      상세 내용 <span className="text-rose-500">*</span>
+                    </label>
+                    <textarea
+                      value={feedbackContent}
+                      onChange={(e) => setFeedbackContent(e.target.value)}
+                      rows={4}
+                      placeholder="자세한 제안 배경, 원하시는 동작, 또는 버그가 발생한 상황과 재현 경로를 편하게 적어주세요."
+                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800 dark:text-slate-100 resize-none leading-relaxed"
+                      required
+                    />
+                  </div>
+
+                  {/* Contact / Email (Optional) */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      연락처 / 이메일 <span className="text-slate-400 text-[11px] font-normal">(선택)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={feedbackContact}
+                      onChange={(e) => setFeedbackContact(e.target.value)}
+                      placeholder={
+                        user
+                          ? `답변 수신용 이메일 (미입력 시 로그인 닉네임 [${user.name || user.username}]으로 기록)`
+                          : '답변을 원하시면 이메일 주소를 남겨주세요'
+                      }
+                      className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800 dark:text-slate-100"
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="pt-1 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={feedbackSending || !feedbackTitle.trim() || !feedbackContent.trim()}
+                      className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                    >
+                      {feedbackSending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>전송 중...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          <span>제보 전송하기</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
 
-              <div className="p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
+              {/* GitHub Link Card */}
+              <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
                 <div>
-                  <div className="font-bold text-slate-800">GitHub 저장소</div>
-                  <div className="text-[11px] text-slate-400">소스 코드 및 이슈 제보</div>
+                  <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                    <span>GitHub 공개 저장소 및 이슈 트래커</span>
+                  </div>
+                  <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    GitHub 계정이 있으신 경우 이슈를 직접 등록하거나 코드를 확인할 수 있습니다.
+                  </div>
                 </div>
-                <a
-                  href="https://github.com/janguk-Hwang/todo-calendar-app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition"
-                >
-                  저장소 방문
-                </a>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <a
+                    href="https://github.com/janguk-Hwang/todo-calendar-app/issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-semibold border border-rose-200 dark:border-rose-800 transition"
+                  >
+                    <span>이슈 제보</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <a
+                    href="https://github.com/janguk-Hwang/todo-calendar-app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition"
+                  >
+                    <span>저장소 방문</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
               </div>
             </div>
           )}

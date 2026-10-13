@@ -373,3 +373,14 @@ export async function cleanupAllCompletedSchedules() {
   return data
 }
 
+export async function submitFeedback({ category, title, content, contact }) {
+  const res = await fetch('/api/feedback', {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ category, title, content, contact }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || '제보 접수에 실패했습니다.')
+  return data
+}
+

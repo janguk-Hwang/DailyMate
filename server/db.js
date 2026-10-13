@@ -146,6 +146,19 @@ export async function initDatabase() {
       if (settingsCols.length === 0) {
         await pool.query(`ALTER TABLE users ADD COLUMN settings TEXT NULL AFTER email`)
       }
+
+      // Create feedbacks table if not exists
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS feedbacks (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id INT NULL,
+          category ENUM('feature', 'bug', 'other') DEFAULT 'feature',
+          title VARCHAR(255) NOT NULL,
+          content TEXT NOT NULL,
+          contact VARCHAR(255) NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `)
     } catch (colErr) {
       console.warn('[Check Column Notice]:', colErr.message)
     }
