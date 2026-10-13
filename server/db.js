@@ -136,6 +136,16 @@ export async function initDatabase() {
       if (descCols.length === 0) {
         await pool.query(`ALTER TABLE schedules ADD COLUMN description TEXT NULL AFTER title`)
       }
+
+      // Ensure avatar and settings columns exist on users table
+      const [avatarCols] = await pool.query(`SHOW COLUMNS FROM users LIKE 'avatar'`)
+      if (avatarCols.length === 0) {
+        await pool.query(`ALTER TABLE users ADD COLUMN avatar VARCHAR(50) DEFAULT 'user' AFTER name`)
+      }
+      const [settingsCols] = await pool.query(`SHOW COLUMNS FROM users LIKE 'settings'`)
+      if (settingsCols.length === 0) {
+        await pool.query(`ALTER TABLE users ADD COLUMN settings TEXT NULL AFTER email`)
+      }
     } catch (colErr) {
       console.warn('[Check Column Notice]:', colErr.message)
     }

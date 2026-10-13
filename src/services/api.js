@@ -265,3 +265,111 @@ export async function toggleAllSchedulesForDate(date, completed) {
   }
   return res.json()
 }
+
+// ---------------- MyPage & Profile APIs ----------------
+export async function updateProfile(payload) {
+  const res = await fetch('/api/auth/profile', {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  })
+  if (res.status === 401) {
+    removeToken()
+    throw new Error('AUTH_REQUIRED')
+  }
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || '프로필 수정 실패')
+  return data
+}
+
+export async function updatePassword({ currentPassword, newPassword }) {
+  const res = await fetch('/api/auth/password', {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+  if (res.status === 401) {
+    removeToken()
+    throw new Error('AUTH_REQUIRED')
+  }
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || '비밀번호 변경 실패')
+  return data
+}
+
+export async function deleteAccount({ password }) {
+  const res = await fetch('/api/auth/account', {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ password }),
+  })
+  if (res.status === 401) {
+    removeToken()
+    throw new Error('AUTH_REQUIRED')
+  }
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || '회원 탈퇴 처리 실패')
+  removeToken()
+  return data
+}
+
+export async function getUserStats() {
+  const res = await fetch('/api/auth/stats', {
+    headers: getAuthHeaders(),
+  })
+  if (res.status === 401) {
+    removeToken()
+    throw new Error('AUTH_REQUIRED')
+  }
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || '통계 조회 실패')
+  return data
+}
+
+// ---------------- Settings APIs ----------------
+export async function getUserSettings() {
+  const res = await fetch('/api/auth/settings', {
+    headers: getAuthHeaders(),
+  })
+  if (!res.ok) return { settings: {} }
+  const data = await res.json()
+  return data.settings || {}
+}
+
+export async function updateUserSettings(settings) {
+  const res = await fetch('/api/auth/settings', {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ settings }),
+  })
+  if (!res.ok) throw new Error('설정 저장 실패')
+  return res.json()
+}
+
+// ---------------- Data Backup & Maintenance APIs ----------------
+export async function exportSchedules() {
+  const res = await fetch('/api/schedules/export', {
+    headers: getAuthHeaders(),
+  })
+  if (res.status === 401) {
+    removeToken()
+    throw new Error('AUTH_REQUIRED')
+  }
+  if (!res.ok) throw new Error('일정 내보내기 실패')
+  return res.json()
+}
+
+export async function cleanupAllCompletedSchedules() {
+  const res = await fetch('/api/schedules/completed-all', {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  })
+  if (res.status === 401) {
+    removeToken()
+    throw new Error('AUTH_REQUIRED')
+  }
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || '전체 완료 일정 정리 실패')
+  return data
+}
+

@@ -1,9 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, CalendarDays } from 'lucide-react'
 
-export default function TodoInput({ onAdd, onOpenMulti, selectedDate }) {
+export default function TodoInput({ onAdd, onOpenMulti, selectedDate, defaultPriority = 'medium' }) {
   const [text, setText] = useState('')
-  const [priority, setPriority] = useState('medium')
+  const [priority, setPriority] = useState(defaultPriority)
+
+  useEffect(() => {
+    setPriority(defaultPriority)
+  }, [defaultPriority])
 
   const titleList = text
     .split(',')

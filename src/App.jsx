@@ -9,6 +9,7 @@ import TodoItem from './components/TodoItem'
 import AuthModal from './components/AuthModal'
 import MultiScheduleModal from './components/MultiScheduleModal'
 import TodoDetailModal from './components/TodoDetailModal'
+import SettingsAndMyPageModal from './components/SettingsAndMyPageModal'
 import {
   getMonthSchedules,
   createSchedule,
@@ -21,11 +22,30 @@ import {
   removeToken,
   reorderSchedules,
   toggleAllSchedulesForDate,
+  updateUserSettings,
 } from './services/api'
 
 const getToday = () => {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const DEFAULT_SETTINGS = {
+  startOfWeek: 'sunday', // 'sunday' | 'monday'
+  defaultPriority: 'medium', // 'high' | 'medium' | 'low'
+  completedDisplay: 'show', // 'show' | 'hide' | 'bottom'
+  themeColor: 'indigo', // 'indigo' | 'emerald' | 'violet' | 'rose' | 'blue'
+  density: 'normal', // 'normal' | 'compact'
+}
+
+function loadInitialSettings() {
+  try {
+    const saved = localStorage.getItem('todo_calendar_settings')
+    if (saved) return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) }
+  } catch (e) {
+    console.warn('Failed to parse saved settings:', e)
+  }
+  return DEFAULT_SETTINGS
 }
 
 export default function App() {
@@ -38,6 +58,11 @@ export default function App() {
   const [draggedIndex, setDraggedIndex] = useState(null)
   const [dragOverInfo, setDragOverInfo] = useState(null) // { index, position: 'top' | 'bottom' }
   const [dbError, setDbError] = useState(null)
+
+  // Settings & Theme
+  const [settings, setSettings] = useState(loadInitialSettings)
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false)
+  const [settingsModalTab, setSettingsModalTab] = useState('profile')
 
   // Auth States
   const [user, setUser] = useState(null)
@@ -68,6 +93,14 @@ export default function App() {
 
         const currentUser = await getCurrentUser()
         setUser(currentUser)
+
+        if (currentUser?.settings) {
+          setSettings((prev) => {
+            const merged = { ...prev, ...currentUser.settings }
+            localStorage.setItem('todo_calendar_settings', JSON.stringify(merged))
+            return merged
+          })
+        }
       } catch (err) {
         console.error('[Check Auth Failed]:', err)
         setUser(null)
@@ -78,6 +111,31 @@ export default function App() {
 
     checkAuth()
   }, [])
+
+  // Handle settings update
+  const handleUpdateSettings = async (newSettings) => {
+    setSettings(newSettings)
+    localStorage.setItem('todo_calendar_settings', JSON.stringify(newSettings))
+    if (user) {
+      try {
+        await updateUserSettings(newSettings)
+      } catch (e) {
+        console.warn('Failed to sync settings with server:', e)
+      }
+    }
+  }
+
+  const handleOpenSettings = (tab = 'settings') => {
+    setSettingsModalTab(tab)
+    setSettingsModalOpen(true)
+  }
+
+  const handleUserUpdated = (updatedUser) => {
+    setUser(updatedUser)
+    if (updatedUser?.settings) {
+      handleUpdateSettings({ ...settings, ...updatedUser.settings })
+    }
+  }
 
   // 2. Load Schedules (only if user is logged in)
   const loadSchedules = useCallback(async (ym) => {
@@ -364,6 +422,10 @@ export default function App() {
     let list = [...currentDayTodos]
 
     const matchFilter = (todo) => {
+      // If completedDisplay === 'hide', hide completed items unless filter is explicitly 'completed'
+      if (settings.completedDisplay === 'hide' && filter !== 'completed' && todo.completed) {
+        return false
+      }
       const match = filter === 'all' ? true : filter === 'active' ? !todo.completed : todo.completed
       const matchSearch = (todo.title || todo.text || '').toLowerCase().includes(search.toLowerCase())
       return match && matchSearch
@@ -383,8 +445,14 @@ export default function App() {
     } else if (sortBy === 'created_asc') {
       list.sort((a, b) => (a.id || 0) - (b.id || 0))
     }
+
+    // If completedDisplay === 'bottom', place completed items at the end of the list
+    if (settings.completedDisplay === 'bottom' && filter === 'all') {
+      list.sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1))
+    }
+
     return list
-  }, [currentDayTodos, filter, search, sortBy])
+  }, [currentDayTodos, filter, search, sortBy, settings.completedDisplay])
 
   // Drag and drop handlers with insertion slot positioning
   const handleDragStart = (index, e) => {
@@ -464,16 +532,32 @@ export default function App() {
     }
   }
 
+  const getThemeGradient = (theme) => {
+    switch (theme) {
+      case 'emerald':
+        return 'from-slate-100 via-emerald-50/40 to-slate-200'
+      case 'violet':
+        return 'from-slate-100 via-violet-50/40 to-slate-200'
+      case 'rose':
+        return 'from-slate-100 via-rose-50/40 to-slate-200'
+      case 'blue':
+        return 'from-slate-100 via-sky-50/40 to-slate-200'
+      default:
+        return 'from-slate-100 via-indigo-50/40 to-slate-200'
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 py-3.5 sm:py-10 px-3 sm:px-6">
+    <div className={`min-h-screen bg-gradient-to-br ${getThemeGradient(settings.themeColor)} py-3.5 sm:py-10 px-3 sm:px-6 transition-colors duration-300`}>
       <div className="max-w-2xl mx-auto">
-        {/* Top Navbar with Brand Logo Button */}
+        {/* Top Navbar with Brand Logo Button & Settings */}
         <Navbar
           user={user}
           onOpenAuth={handleOpenAuth}
           onLogout={handleLogout}
           onResetToday={handleResetToday}
           isTodaySelected={selectedDate === getToday()}
+          onOpenSettings={handleOpenSettings}
         />
 
         {/* OAuth Error Alert */}
@@ -545,6 +629,7 @@ export default function App() {
           onAdd={handleAddTodo}
           onOpenMulti={() => (user ? setMultiModalOpen(true) : handleOpenAuth('login'))}
           selectedDate={selectedDate}
+          defaultPriority={settings.defaultPriority}
         />
 
         {/* Calendar View (캘린더) */}
@@ -554,6 +639,7 @@ export default function App() {
           currentYearMonth={currentYearMonth}
           onChangeYearMonth={setCurrentYearMonth}
           monthlyScheduleCounts={monthlyCounts}
+          startOfWeek={settings.startOfWeek}
         />
 
         {/* Filters & Sorting */}
@@ -664,6 +750,7 @@ export default function App() {
                 isDragging={draggedIndex === index}
                 isDragOver={dragOverInfo?.index === index && draggedIndex !== index}
                 dragOverPosition={dragOverInfo?.index === index ? dragOverInfo?.position : null}
+                density={settings.density}
               />
             ))
           )}
@@ -721,6 +808,20 @@ export default function App() {
           onSave={handleSaveDetail}
           onDelete={handleDelete}
           onToggle={handleDetailToggle}
+        />
+
+        {/* Settings & MyPage Modal */}
+        <SettingsAndMyPageModal
+          isOpen={settingsModalOpen}
+          initialTab={settingsModalTab}
+          onClose={() => setSettingsModalOpen(false)}
+          user={user}
+          onUserUpdated={handleUserUpdated}
+          onLogout={handleLogout}
+          onOpenAuth={handleOpenAuth}
+          settings={settings}
+          onUpdateSettings={handleUpdateSettings}
+          onRefreshSchedules={() => loadSchedules(currentYearMonth)}
         />
       </div>
     </div>

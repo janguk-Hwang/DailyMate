@@ -1,4 +1,4 @@
-import { Calendar, CheckSquare, LogIn, LogOut, User, UserPlus, Sparkles } from 'lucide-react'
+import { Calendar, CheckSquare, LogIn, LogOut, User, UserPlus, Settings as SettingsIcon } from 'lucide-react'
 
 export default function Navbar({
   user,
@@ -6,6 +6,7 @@ export default function Navbar({
   onLogout,
   onResetToday,
   isTodaySelected,
+  onOpenSettings,
 }) {
   const getProviderBadge = (provider) => {
     switch (provider) {
@@ -38,7 +39,7 @@ export default function Navbar({
               To-Do 캘린더
             </span>
             <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-indigo-600 bg-indigo-50 rounded-md">
-              v1.0
+              v1.1
             </span>
           </div>
           <p className="text-[11px] text-slate-400 font-medium hidden sm:block">
@@ -47,8 +48,8 @@ export default function Navbar({
         </div>
       </button>
 
-      {/* Right: Quick Today Jump & User Profile / Login */}
-      <div className="flex items-center gap-1.5 sm:gap-3">
+      {/* Right: Quick Today Jump, Settings & User Profile / Login */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5">
         {!isTodaySelected && (
           <button
             type="button"
@@ -60,26 +61,47 @@ export default function Navbar({
           </button>
         )}
 
+        {/* Global Settings Gear Button */}
+        <button
+          type="button"
+          onClick={() => onOpenSettings('settings')}
+          title="환경설정"
+          className="p-1.5 sm:p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors cursor-pointer border border-slate-200/60 bg-slate-50/50"
+        >
+          <SettingsIcon className="w-4 h-4" />
+        </button>
+
         {user ? (
           <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 border border-slate-200/80 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl">
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
-              <User className="w-3.5 h-3.5" />
-            </div>
-            <div className="text-left max-w-[75px] xs:max-w-[110px] sm:max-w-[160px] truncate">
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                <span className="text-xs font-bold text-slate-800 truncate">
-                  {user.name || user.username}
-                </span>
-                <span className="hidden sm:inline-block">
-                  {getProviderBadge(user.provider)}
-                </span>
+            <button
+              type="button"
+              onClick={() => onOpenSettings('profile')}
+              title="마이페이지 & 통계 열기"
+              className="flex items-center gap-1.5 text-left group cursor-pointer focus:outline-none"
+            >
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:scale-105 transition">
+                {user.avatar ? (
+                  <span className="text-xs">{user.avatar}</span>
+                ) : (
+                  <User className="w-3.5 h-3.5" />
+                )}
               </div>
-            </div>
+              <div className="max-w-[75px] xs:max-w-[110px] sm:max-w-[150px] truncate">
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <span className="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition truncate">
+                    {user.name || user.username}
+                  </span>
+                  <span className="hidden sm:inline-block">
+                    {getProviderBadge(user.provider)}
+                  </span>
+                </div>
+              </div>
+            </button>
             <button
               type="button"
               onClick={onLogout}
               title="로그아웃"
-              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer flex-shrink-0"
+              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer flex-shrink-0 ml-0.5"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>

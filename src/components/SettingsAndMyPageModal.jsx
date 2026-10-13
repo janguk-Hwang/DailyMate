@@ -1,0 +1,1079 @@
+import { useState, useEffect } from 'react'
+import {
+  X,
+  User,
+  Settings as SettingsIcon,
+  Shield,
+  Info,
+  CheckCircle2,
+  Flame,
+  Calendar,
+  Download,
+  Trash2,
+  KeyRound,
+  AlertTriangle,
+  Sparkles,
+  Save,
+  Check,
+  Palette,
+  LayoutGrid,
+  Eye,
+  EyeOff,
+  FileSpreadsheet,
+  FileCode,
+  LogOut,
+  ChevronRight,
+} from 'lucide-react'
+import {
+  updateProfile,
+  updatePassword,
+  deleteAccount,
+  getUserStats,
+  exportSchedules,
+  cleanupAllCompletedSchedules,
+} from '../services/api'
+
+const AVATAR_OPTIONS = ['🧑‍💻', '🚀', '🌟', '🦊', '🌿', '🎨', '🎯', '⚡', '☕', '🐱', '🐶', '💡']
+
+const THEME_OPTIONS = [
+  { id: 'indigo', name: '클래식 인디고', bg: 'bg-indigo-600', text: 'text-indigo-600', ring: 'ring-indigo-500' },
+  { id: 'emerald', name: '포레스트 그린', bg: 'bg-emerald-600', text: 'text-emerald-600', ring: 'ring-emerald-500' },
+  { id: 'violet', name: '미드나잇 퍼플', bg: 'bg-violet-600', text: 'text-violet-600', ring: 'ring-violet-500' },
+  { id: 'rose', name: '로맨틱 로즈', bg: 'bg-rose-600', text: 'text-rose-600', ring: 'ring-rose-500' },
+  { id: 'blue', name: '오션 블루', bg: 'bg-sky-600', text: 'text-sky-600', ring: 'ring-sky-500' },
+]
+
+export default function SettingsAndMyPageModal({
+  isOpen,
+  initialTab = 'profile',
+  onClose,
+  user,
+  onUserUpdated,
+  onLogout,
+  onOpenAuth,
+  settings,
+  onUpdateSettings,
+  onRefreshSchedules,
+}) {
+  const [activeTab, setActiveTab] = useState(initialTab) // 'profile' | 'settings' | 'security' | 'about'
+
+  // Profile States
+  const [name, setName] = useState('')
+  const [selectedAvatar, setSelectedAvatar] = useState('🧑‍💻')
+  const [profileSaving, setProfileSaving] = useState(false)
+  const [profileMsg, setProfileMsg] = useState(null)
+
+  // Stats States
+  const [stats, setStats] = useState(null)
+  const [statsLoading, setStatsLoading] = useState(false)
+
+  // Password States
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showCurrentPw, setShowCurrentPw] = useState(false)
+  const [showNewPw, setShowNewPw] = useState(false)
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordMsg, setPasswordMsg] = useState(null)
+
+  // Delete Account States
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
+
+  // Data Action States
+  const [cleanupLoading, setCleanupLoading] = useState(false)
+  const [cleanupMsg, setCleanupMsg] = useState(null)
+  const [exportLoading, setExportLoading] = useState(false)
+
+  // Sync initial tab and user data on open
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(initialTab)
+      if (user) {
+        setName(user.name || '')
+        setSelectedAvatar(user.avatar || '🧑‍💻')
+        loadStats()
+      }
+      setProfileMsg(null)
+      setPasswordMsg(null)
+      setCleanupMsg(null)
+      setDeleteError(null)
+    }
+  }, [isOpen, initialTab, user])
+
+  const loadStats = async () => {
+    if (!user) return
+    setStatsLoading(true)
+    try {
+      const data = await getUserStats()
+      setStats(data)
+    } catch (e) {
+      console.warn('Failed to load stats:', e)
+    } finally {
+      setStatsLoading(false)
+    }
+  }
+
+  if (!isOpen) return null
+
+  // 1. Handle Profile Update
+  const handleSaveProfile = async (e) => {
+    e.preventDefault()
+    if (!name.trim()) return
+    setProfileSaving(true)
+    setProfileMsg(null)
+    try {
+      const res = await updateProfile({
+        name: name.trim(),
+        avatar: selectedAvatar,
+      })
+      if (onUserUpdated) onUserUpdated(res.user)
+      setProfileMsg({ type: 'success', text: '프로필 정보가 저장되었습니다.' })
+    } catch (err) {
+      setProfileMsg({ type: 'error', text: err.message })
+    } finally {
+      setProfileSaving(false)
+    }
+  }
+
+  // 2. Handle Password Change
+  const handleSavePassword = async (e) => {
+    e.preventDefault()
+    setPasswordMsg(null)
+
+    if (newPassword !== confirmPassword) {
+      setPasswordMsg({ type: 'error', text: '새 비밀번호와 확인이 일치하지 않습니다.' })
+      return
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordMsg({ type: 'error', text: '비밀번호는 최소 6자 이상이어야 합니다.' })
+      return
+    }
+
+    setPasswordSaving(true)
+    try {
+      await updatePassword({ currentPassword, newPassword })
+      setPasswordMsg({ type: 'success', text: '비밀번호가 성공적으로 변경되었습니다.' })
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (err) {
+      setPasswordMsg({ type: 'error', text: err.message })
+    } finally {
+      setPasswordSaving(false)
+    }
+  }
+
+  // 3. Handle Account Withdrawal
+  const handleDeleteAccount = async () => {
+    const isLocal = user?.provider === 'local'
+    if (isLocal && !deletePassword) {
+      setDeleteError('비밀번호를 입력해주세요.')
+      return
+    }
+    if (!isLocal && deleteConfirmText !== '회원탈퇴') {
+      setDeleteError('탈퇴를 위해 "회원탈퇴"를 정확히 입력해주세요.')
+      return
+    }
+
+    if (!window.confirm('정말로 탈퇴하시겠습니까? 저장된 모든 일정과 개인 데이터가 영구 삭제됩니다.')) {
+      return
+    }
+
+    setDeleteLoading(true)
+    setDeleteError(null)
+    try {
+      await deleteAccount({ password: deletePassword })
+      alert('회원 탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.')
+      onClose()
+      if (onLogout) onLogout()
+    } catch (err) {
+      setDeleteError(err.message)
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  // 4. Handle Export (JSON / CSV)
+  const handleExportJSON = async () => {
+    setExportLoading(true)
+    try {
+      const data = await exportSchedules()
+      const jsonStr = JSON.stringify(data, null, 2)
+      const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `todo-schedules-${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      alert(`내보내기 실패: ${err.message}`)
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
+  const handleExportCSV = async () => {
+    setExportLoading(true)
+    try {
+      const data = await exportSchedules()
+      const schedules = data.schedules || []
+
+      // CSV Header
+      let csvContent = '\uFEFF날짜,제목,메모,완료여부,우선순위,등록일시\n'
+      schedules.forEach((item) => {
+        const title = `"${(item.title || '').replace(/"/g, '""')}"`
+        const desc = `"${(item.description || '').replace(/"/g, '""')}"`
+        const completed = item.completed ? '완료' : '미완료'
+        const priority = item.priority === 'high' ? '높음' : item.priority === 'low' ? '낮음' : '보통'
+        csvContent += `${item.date},${title},${desc},${completed},${priority},${item.created_at || ''}\n`
+      })
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `todo-schedules-${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      alert(`내보내기 실패: ${err.message}`)
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
+  // 5. Cleanup all completed schedules
+  const handleCleanupCompleted = async () => {
+    if (!window.confirm('전체 날짜에 걸쳐 완료된 모든 일정을 일괄 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      return
+    }
+
+    setCleanupLoading(true)
+    setCleanupMsg(null)
+    try {
+      const res = await cleanupAllCompletedSchedules()
+      setCleanupMsg(res.message)
+      if (onRefreshSchedules) onRefreshSchedules()
+      loadStats()
+    } catch (err) {
+      setCleanupMsg(err.message)
+    } finally {
+      setCleanupLoading(false)
+    }
+  }
+
+  // Provider Badge Helper
+  const getProviderBadge = (provider) => {
+    switch (provider) {
+      case 'kakao':
+        return <span className="px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 font-bold rounded-md">카카오톡 로그인</span>
+      case 'google':
+        return <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 font-bold rounded-md">Google 계정</span>
+      case 'naver':
+        return <span className="px-2 py-0.5 text-xs bg-emerald-100 text-emerald-800 font-bold rounded-md">네이버 계정</span>
+      default:
+        return <span className="px-2 py-0.5 text-xs bg-slate-100 text-slate-700 font-bold rounded-md">일반 계정</span>
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60 flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+              {activeTab === 'profile' && <User className="w-5 h-5" />}
+              {activeTab === 'settings' && <SettingsIcon className="w-5 h-5" />}
+              {activeTab === 'security' && <Shield className="w-5 h-5" />}
+              {activeTab === 'about' && <Info className="w-5 h-5" />}
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                {activeTab === 'profile' && '마이페이지 & 통계'}
+                {activeTab === 'settings' && '캘린더 환경설정'}
+                {activeTab === 'security' && '계정 및 보안'}
+                {activeTab === 'about' && '서비스 정보'}
+              </h2>
+              <p className="text-[11px] text-slate-400 font-medium">개인 맞춤 설정과 일정 데이터를 관리합니다</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex border-b border-slate-100 bg-white px-3 sm:px-5 gap-1.5 sm:gap-2 flex-shrink-0 overflow-x-auto no-scrollbar py-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('profile')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === 'profile'
+                ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>내 정보 & 통계</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('settings')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === 'settings'
+                ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+            }`}
+          >
+            <SettingsIcon className="w-4 h-4" />
+            <span>환경설정</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('security')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === 'security'
+                ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+            }`}
+          >
+            <Shield className="w-4 h-4" />
+            <span>계정 & 보안</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('about')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === 'about'
+                ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+            }`}
+          >
+            <Info className="w-4 h-4" />
+            <span>서비스 안내</span>
+          </button>
+        </div>
+
+        {/* Modal Body Content (Scrollable) */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+          {/* ================= TAB 1: PROFILE & STATS ================= */}
+          {activeTab === 'profile' && (
+            <>
+              {!user ? (
+                <div className="text-center py-10 px-4">
+                  <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <User className="w-7 h-7" />
+                  </div>
+                  <h3 className="font-bold text-base text-slate-800">로그인이 필요한 메뉴입니다</h3>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                    로그인하시면 나의 일정 달성률 통계, 개인 프로필 관리, 데이터 백업 기능을 자유롭게 이용하실 수 있습니다.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose()
+                      onOpenAuth('login')
+                    }}
+                    className="mt-4 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition shadow-sm cursor-pointer"
+                  >
+                    로그인하고 시작하기
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Profile Edit Card */}
+                  <form onSubmit={handleSaveProfile} className="bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200/80">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-indigo-600" />
+                        <span>프로필 정보</span>
+                      </h3>
+                      <div>{getProviderBadge(user.provider)}</div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Avatar Selector */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">내 아바타 아이콘</label>
+                        <div className="flex flex-wrap gap-2">
+                          {AVATAR_OPTIONS.map((av) => (
+                            <button
+                              key={av}
+                              type="button"
+                              onClick={() => setSelectedAvatar(av)}
+                              className={`w-9 h-9 sm:w-10 sm:h-10 text-lg rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                                selectedAvatar === av
+                                  ? 'bg-indigo-100 ring-2 ring-indigo-500 scale-105 shadow-xs'
+                                  : 'bg-white hover:bg-slate-100 border border-slate-200/80'
+                              }`}
+                            >
+                              {av}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Name input */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">닉네임 / 이름</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            maxLength={30}
+                            placeholder="사용할 이름을 입력하세요"
+                            className="flex-1 px-3.5 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                          />
+                          <button
+                            type="submit"
+                            disabled={profileSaving || !name.trim()}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 disabled:opacity-50 transition flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                          >
+                            <Save className="w-3.5 h-3.5" />
+                            <span>{profileSaving ? '저장 중...' : '저장'}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Account info badges */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-500 pt-1">
+                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/60">
+                          <span className="font-bold text-slate-700">아이디: </span>
+                          <span>{user.username || user.email || '소셜 간편 로그인'}</span>
+                        </div>
+                        {user.phone_number && (
+                          <div className="bg-white p-2.5 rounded-xl border border-slate-200/60">
+                            <span className="font-bold text-slate-700">인증 휴대폰: </span>
+                            <span>{user.phone_number}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {profileMsg && (
+                        <div
+                          className={`text-xs p-2.5 rounded-xl ${
+                            profileMsg.type === 'success'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          }`}
+                        >
+                          {profileMsg.text}
+                        </div>
+                      )}
+                    </div>
+                  </form>
+
+                  {/* Productivity & Stats Dashboard */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>생산성 & 달성 통계</span>
+                      </h3>
+                      {statsLoading && <span className="text-[10px] text-slate-400">집계 중...</span>}
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3">
+                      {/* Total */}
+                      <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 text-center">
+                        <span className="text-[11px] text-slate-500 font-medium block">총 등록 일정</span>
+                        <span className="text-lg sm:text-xl font-extrabold text-slate-800 mt-0.5 block">
+                          {stats?.totalCount ?? 0}
+                          <span className="text-xs font-normal text-slate-400 ml-0.5">개</span>
+                        </span>
+                      </div>
+
+                      {/* Completed */}
+                      <div className="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200/60 text-center">
+                        <span className="text-[11px] text-emerald-700 font-medium block">완수한 일정</span>
+                        <span className="text-lg sm:text-xl font-extrabold text-emerald-800 mt-0.5 block">
+                          {stats?.completedCount ?? 0}
+                          <span className="text-xs font-normal text-emerald-600 ml-0.5">개</span>
+                        </span>
+                      </div>
+
+                      {/* Rate */}
+                      <div className="bg-indigo-50/70 p-3 rounded-2xl border border-indigo-200/60 text-center">
+                        <span className="text-[11px] text-indigo-700 font-medium block">누적 달성률</span>
+                        <span className="text-lg sm:text-xl font-extrabold text-indigo-800 mt-0.5 block">
+                          {stats?.completionRate ?? 0}%
+                        </span>
+                      </div>
+
+                      {/* Streak */}
+                      <div className="bg-amber-50/80 p-3 rounded-2xl border border-amber-200/60 text-center">
+                        <span className="text-[11px] text-amber-700 font-medium block flex items-center justify-center gap-1">
+                          <Flame className="w-3 h-3 text-amber-500 fill-amber-500" />
+                          <span>연속 완수</span>
+                        </span>
+                        <span className="text-lg sm:text-xl font-extrabold text-amber-800 mt-0.5 block">
+                          {stats?.streakDays ?? 0}
+                          <span className="text-xs font-normal text-amber-600 ml-0.5">일째</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Monthly Summary Box */}
+                    {stats?.currentMonth && (
+                      <div className="bg-gradient-to-r from-indigo-50 to-indigo-100/60 rounded-2xl p-3.5 border border-indigo-200/70 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-indigo-600" />
+                          <div>
+                            <span className="font-bold text-indigo-950">
+                              {stats.currentMonth.yearMonth} 이번 달 완수율
+                            </span>
+                            <span className="text-indigo-600 ml-2 font-extrabold">
+                              {stats.currentMonth.rate}%
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-indigo-700 text-[11px] font-medium">
+                          {stats.currentMonth.completed} / {stats.currentMonth.total}개 완료
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Data Export & Backup & Cleanup */}
+                  <div className="pt-2 border-t border-slate-100">
+                    <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-1.5">
+                      <Download className="w-4 h-4 text-indigo-600" />
+                      <span>데이터 백업 & 관리</span>
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {/* JSON Export */}
+                      <button
+                        type="button"
+                        onClick={handleExportJSON}
+                        disabled={exportLoading}
+                        className="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 transition text-left cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition">
+                            <FileCode className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-slate-800">JSON 데이터 백업</div>
+                            <div className="text-[10px] text-slate-400">모든 일정 데이터 백업 다운로드</div>
+                          </div>
+                        </div>
+                        <Download className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition" />
+                      </button>
+
+                      {/* Excel/CSV Export */}
+                      <button
+                        type="button"
+                        onClick={handleExportCSV}
+                        disabled={exportLoading}
+                        className="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/40 transition text-left cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition">
+                            <FileSpreadsheet className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-slate-800">엑셀(CSV) 내보내기</div>
+                            <div className="text-[10px] text-slate-400">스프레드시트 열기 가능 형식</div>
+                          </div>
+                        </div>
+                        <Download className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition" />
+                      </button>
+                    </div>
+
+                    {/* Cleanup completed */}
+                    <div className="mt-3 flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                      <div>
+                        <div className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                          <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                          <span>완료된 모든 일정 일괄 정리</span>
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          모든 날짜의 완료된 항목을 일괄 삭제하여 깔끔하게 정리합니다
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCleanupCompleted}
+                        disabled={cleanupLoading}
+                        className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition cursor-pointer flex-shrink-0"
+                      >
+                        {cleanupLoading ? '정리 중...' : '일괄 정리'}
+                      </button>
+                    </div>
+                    {cleanupMsg && <p className="text-xs text-indigo-600 mt-1.5 font-medium">{cleanupMsg}</p>}
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {/* ================= TAB 2: SETTINGS ================= */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              {/* 1. Start of Week */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
+                <label className="text-xs font-bold text-slate-800 mb-1 block">달력 시작 요일</label>
+                <p className="text-[11px] text-slate-400 mb-3">월간 캘린더 그리드의 시작 기준 요일을 선택합니다.</p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ ...settings, startOfWeek: 'sunday' })}
+                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${
+                      settings.startOfWeek === 'sunday'
+                        ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 shadow-2xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>일요일 시작 (일~토)</span>
+                    {settings.startOfWeek === 'sunday' && <Check className="w-4 h-4 text-indigo-600" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ ...settings, startOfWeek: 'monday' })}
+                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${
+                      settings.startOfWeek === 'monday'
+                        ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 shadow-2xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>월요일 시작 (월~일)</span>
+                    {settings.startOfWeek === 'monday' && <Check className="w-4 h-4 text-indigo-600" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Default Priority */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
+                <label className="text-xs font-bold text-slate-800 mb-1 block">새 일정 기본 우선순위</label>
+                <p className="text-[11px] text-slate-400 mb-3">일정을 빠르게 추가할 때 기본 지정될 우선순위입니다.</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ ...settings, defaultPriority: 'high' })}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition ${
+                      settings.defaultPriority === 'high'
+                        ? 'border-rose-500 bg-rose-50 text-rose-700 shadow-2xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                    <span>높음 (High)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ ...settings, defaultPriority: 'medium' })}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition ${
+                      settings.defaultPriority === 'medium'
+                        ? 'border-amber-500 bg-amber-50 text-amber-700 shadow-2xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span>보통 (Medium)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ ...settings, defaultPriority: 'low' })}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition ${
+                      settings.defaultPriority === 'low'
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-2xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>낮음 (Low)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 3. Completed Item Display */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
+                <label className="text-xs font-bold text-slate-800 mb-1 block">완료된 일정 표시 방식</label>
+                <p className="text-[11px] text-slate-400 mb-3">할 일을 완료했을 때 목록에서 보여주는 방식을 설정합니다.</p>
+                <div className="space-y-2">
+                  <label
+                    className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
+                      settings.completedDisplay === 'show'
+                        ? 'border-indigo-500 bg-indigo-50/60 text-indigo-900 font-bold'
+                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="completedDisplay"
+                        checked={settings.completedDisplay === 'show'}
+                        onChange={() => onUpdateSettings({ ...settings, completedDisplay: 'show' })}
+                        className="accent-indigo-600"
+                      />
+                      <span className="text-xs">일반 표시 (취소선 유지)</span>
+                    </div>
+                    <Eye className="w-4 h-4 text-slate-400" />
+                  </label>
+
+                  <label
+                    className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
+                      settings.completedDisplay === 'bottom'
+                        ? 'border-indigo-500 bg-indigo-50/60 text-indigo-900 font-bold'
+                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="completedDisplay"
+                        checked={settings.completedDisplay === 'bottom'}
+                        onChange={() => onUpdateSettings({ ...settings, completedDisplay: 'bottom' })}
+                        className="accent-indigo-600"
+                      />
+                      <span className="text-xs">완료 항목 맨 아래로 이동</span>
+                    </div>
+                    <span className="text-[11px] text-slate-400">자동 하단 정렬</span>
+                  </label>
+
+                  <label
+                    className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
+                      settings.completedDisplay === 'hide'
+                        ? 'border-indigo-500 bg-indigo-50/60 text-indigo-900 font-bold'
+                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="completedDisplay"
+                        checked={settings.completedDisplay === 'hide'}
+                        onChange={() => onUpdateSettings({ ...settings, completedDisplay: 'hide' })}
+                        className="accent-indigo-600"
+                      />
+                      <span className="text-xs">완료 항목 자동 숨기기</span>
+                    </div>
+                    <EyeOff className="w-4 h-4 text-slate-400" />
+                  </label>
+                </div>
+              </div>
+
+              {/* 4. Theme Color */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
+                <label className="text-xs font-bold text-slate-800 mb-1 block flex items-center gap-1.5">
+                  <Palette className="w-4 h-4 text-indigo-600" />
+                  <span>테마 포인트 컬러</span>
+                </label>
+                <p className="text-[11px] text-slate-400 mb-3">버튼 및 하이라이트에 사용될 기본 색상을 선택합니다.</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {THEME_OPTIONS.map((theme) => (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      onClick={() => onUpdateSettings({ ...settings, themeColor: theme.id })}
+                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition cursor-pointer ${
+                        settings.themeColor === theme.id
+                          ? 'border-indigo-500 bg-white ring-2 ring-indigo-400/50 shadow-xs'
+                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className={`w-3.5 h-3.5 rounded-full ${theme.bg}`} />
+                      <span className="truncate">{theme.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 5. Density */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
+                <label className="text-xs font-bold text-slate-800 mb-1 block flex items-center gap-1.5">
+                  <LayoutGrid className="w-4 h-4 text-indigo-600" />
+                  <span>화면 간격 (밀도)</span>
+                </label>
+                <p className="text-[11px] text-slate-400 mb-3">일정 카드의 크기와 여백을 취향에 맞게 조정합니다.</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ ...settings, density: 'normal' })}
+                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${
+                      settings.density === 'normal'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-2xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>기본 뷰 (편안하게)</span>
+                    {settings.density === 'normal' && <Check className="w-4 h-4 text-indigo-600" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ ...settings, density: 'compact' })}
+                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${
+                      settings.density === 'compact'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-2xs'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>컴팩트 뷰 (더 많은 항목)</span>
+                    {settings.density === 'compact' && <Check className="w-4 h-4 text-indigo-600" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================= TAB 3: SECURITY ================= */}
+          {activeTab === 'security' && (
+            <div className="space-y-6">
+              {!user ? (
+                <div className="text-center py-10 px-4">
+                  <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Shield className="w-7 h-7" />
+                  </div>
+                  <h3 className="font-bold text-base text-slate-800">로그인이 필요한 메뉴입니다</h3>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                    계정 보안 관리 및 비밀번호 변경은 로그인 후 이용하실 수 있습니다.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose()
+                      onOpenAuth('login')
+                    }}
+                    className="mt-4 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition shadow-sm cursor-pointer"
+                  >
+                    로그인하기
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Password Change (Local User Only) */}
+                  {user.provider === 'local' ? (
+                    <form onSubmit={handleSavePassword} className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3.5">
+                      <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-1">
+                        <KeyRound className="w-4 h-4 text-indigo-600" />
+                        <span>비밀번호 변경</span>
+                      </h3>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">현재 비밀번호</label>
+                        <div className="relative">
+                          <input
+                            type={showCurrentPw ? 'text' : 'password'}
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            placeholder="현재 비밀번호를 입력하세요"
+                            required
+                            className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowCurrentPw(!showCurrentPw)}
+                            className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          >
+                            {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">새 비밀번호 (6자 이상)</label>
+                        <div className="relative">
+                          <input
+                            type={showNewPw ? 'text' : 'password'}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="새 비밀번호를 입력하세요"
+                            minLength={6}
+                            required
+                            className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPw(!showNewPw)}
+                            className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          >
+                            {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">새 비밀번호 확인</label>
+                        <input
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="새 비밀번호를 한 번 더 입력하세요"
+                          required
+                          className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      {passwordMsg && (
+                        <div
+                          className={`text-xs p-2.5 rounded-xl ${
+                            passwordMsg.type === 'success'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          }`}
+                        >
+                          {passwordMsg.text}
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={passwordSaving || !currentPassword || !newPassword}
+                        className="w-full py-2.5 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 cursor-pointer"
+                      >
+                        {passwordSaving ? '변경 처리 중...' : '비밀번호 변경하기'}
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
+                      <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                        <Shield className="w-4 h-4 text-emerald-600" />
+                        <span>소셜 로그인 연동 계정</span>
+                      </div>
+                      <p className="text-slate-500">
+                        회원님은 <strong>{user.provider.toUpperCase()}</strong> 소셜 계정으로 로그인 중입니다.
+                        비밀번호 변경 및 계정 보안은 해당 소셜 서비스의 보안 설정에서 관리됩니다.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Danger Zone: Account Withdrawal */}
+                  <div className="p-4 sm:p-5 rounded-2xl border border-rose-200 bg-rose-50/50 space-y-3">
+                    <div className="flex items-center gap-2 text-rose-700">
+                      <AlertTriangle className="w-4 h-4" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider">위험 구역 (Danger Zone)</h4>
+                    </div>
+                    <p className="text-xs text-slate-600">
+                      회원 탈퇴 시 작성하신 <strong>모든 일정 데이터 및 개인정보가 영구적으로 삭제</strong>되며 복구할 수 없습니다.
+                    </p>
+
+                    {user.provider === 'local' ? (
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          탈퇴 확인을 위해 비밀번호를 입력해주세요
+                        </label>
+                        <input
+                          type="password"
+                          value={deletePassword}
+                          onChange={(e) => setDeletePassword(e.target.value)}
+                          placeholder="현재 비밀번호"
+                          className="w-full px-3 py-2 text-xs bg-white border border-rose-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          탈퇴를 확인하기 위해 아래에 <strong>"회원탈퇴"</strong>를 입력해주세요
+                        </label>
+                        <input
+                          type="text"
+                          value={deleteConfirmText}
+                          onChange={(e) => setDeleteConfirmText(e.target.value)}
+                          placeholder="회원탈퇴"
+                          className="w-full px-3 py-2 text-xs bg-white border border-rose-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                        />
+                      </div>
+                    )}
+
+                    {deleteError && <p className="text-xs text-rose-600 font-medium">{deleteError}</p>}
+
+                    <button
+                      type="button"
+                      onClick={handleDeleteAccount}
+                      disabled={deleteLoading}
+                      className="w-full py-2.5 bg-rose-600 text-white font-bold text-xs rounded-xl hover:bg-rose-700 transition disabled:opacity-50 cursor-pointer shadow-xs"
+                    >
+                      {deleteLoading ? '탈퇴 처리 중...' : '회원 탈퇴 및 모든 데이터 영구 삭제'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ================= TAB 4: ABOUT ================= */}
+          {activeTab === 'about' && (
+            <div className="space-y-4">
+              <div className="text-center py-5 bg-gradient-to-b from-indigo-50/60 to-white rounded-2xl border border-indigo-100">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mx-auto mb-2.5 shadow-md shadow-indigo-200">
+                  <Calendar className="w-6 h-6" />
+                </div>
+                <h3 className="font-extrabold text-base text-slate-900">To-Do 캘린더</h3>
+                <p className="text-xs text-slate-500 mt-0.5">나만의 스마트한 개인 일정 & 플래너</p>
+                <span className="inline-block mt-2 px-2.5 py-0.5 text-[11px] font-bold text-indigo-600 bg-indigo-100/80 rounded-full">
+                  버전 v1.1.0
+                </span>
+              </div>
+
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 space-y-2 text-xs text-slate-600">
+                <h4 className="font-bold text-slate-800">주요 탑재 기능</h4>
+                <ul className="list-disc pl-4 space-y-1 text-slate-500">
+                  <li>인터랙티브 월간 캘린더 (스와이프 & 오늘 바로가기)</li>
+                  <li>쉼표(,) 구분 다중 일정 동시 등록 & 상세 메모 에디터</li>
+                  <li>기간/요일 반복 일정 일괄 생성</li>
+                  <li>우선순위 관리 및 드래그 앤 드롭 순서 변경</li>
+                  <li>개인 보안 격리 & Google/카카오/네이버 소셜 연동</li>
+                  <li>생산성 통계 대시보드 & 엑셀/JSON 데이터 내보내기</li>
+                </ul>
+              </div>
+
+              <div className="p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
+                <div>
+                  <div className="font-bold text-slate-800">GitHub 저장소</div>
+                  <div className="text-[11px] text-slate-400">소스 코드 및 이슈 제보</div>
+                </div>
+                <a
+                  href="https://github.com/janguk-Hwang/todo-calendar-app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition"
+                >
+                  저장소 방문
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between flex-shrink-0 text-xs">
+          {user ? (
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                if (onLogout) onLogout()
+              }}
+              className="text-slate-500 hover:text-rose-600 flex items-center gap-1 cursor-pointer font-medium"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>로그아웃</span>
+            </button>
+          ) : (
+            <div />
+          )}
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition cursor-pointer"
+          >
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

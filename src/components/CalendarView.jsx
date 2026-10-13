@@ -7,6 +7,7 @@ export default function CalendarView({
   currentYearMonth,
   onChangeYearMonth,
   monthlyScheduleCounts = {},
+  startOfWeek = 'sunday',
 }) {
   const [year, month] = currentYearMonth.split('-').map(Number)
 
@@ -110,7 +111,9 @@ export default function CalendarView({
     onSelectDate(dateStr)
   }
 
-  const firstDay = new Date(year, month - 1, 1).getDay()
+  const isMondayStart = startOfWeek === 'monday'
+  const rawFirstDay = new Date(year, month - 1, 1).getDay()
+  const firstDay = isMondayStart ? (rawFirstDay + 6) % 7 : rawFirstDay
   const totalDays = new Date(year, month, 0).getDate()
   const prevTotal = new Date(year, month - 1, 0).getDate()
 
@@ -132,7 +135,9 @@ export default function CalendarView({
     days.push({ day: i, dateStr: null, current: false })
   }
 
-  const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+  const weekdays = isMondayStart
+    ? ['월', '화', '수', '목', '금', '토', '일']
+    : ['일', '월', '화', '수', '목', '금', '토']
 
   return (
     <div className="bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/80 mb-4 sm:mb-6">
@@ -230,16 +235,20 @@ export default function CalendarView({
         >
           {/* Weekday Labels */}
           <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
-            {weekdays.map((wd, i) => (
-              <div
-                key={wd}
-                className={`text-[11px] sm:text-xs font-semibold py-0.5 sm:py-1 ${
-                  i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-slate-400'
-                }`}
-              >
-                {wd}
-              </div>
-            ))}
+            {weekdays.map((wd, i) => {
+              const isSunday = isMondayStart ? i === 6 : i === 0
+              const isSaturday = isMondayStart ? i === 5 : i === 6
+              return (
+                <div
+                  key={wd}
+                  className={`text-[11px] sm:text-xs font-semibold py-0.5 sm:py-1 ${
+                    isSunday ? 'text-red-500' : isSaturday ? 'text-blue-500' : 'text-slate-400'
+                  }`}
+                >
+                  {wd}
+                </div>
+              )
+            })}
           </div>
 
           {/* Days Grid */}

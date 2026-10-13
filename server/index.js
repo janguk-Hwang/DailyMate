@@ -374,6 +374,51 @@ app.delete('/api/schedules/completed/:date', authMiddleware, async (req, res) =>
   }
 })
 
+// Export all schedules for current user
+app.get('/api/schedules/export', authMiddleware, async (req, res) => {
+  const userId = req.user.id
+  const pool = await getSafePool()
+  if (!pool) return res.status(503).json({ error: 'Database not connected' })
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, title, description, date, completed, priority, created_at FROM schedules WHERE user_id = ? ORDER BY date ASC, order_index ASC, id ASC',
+      [userId]
+    )
+    res.json({
+      exportedAt: new Date().toISOString(),
+      count: rows.length,
+      schedules: rows.map((r) => ({ ...r, completed: Boolean(r.completed) })),
+    })
+  } catch (err) {
+    console.error('[Export Schedules Error]:', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Delete ALL completed schedules for current user (cleanup across all dates)
+app.delete('/api/schedules/completed-all', authMiddleware, async (req, res) => {
+  const userId = req.user.id
+  const pool = await getSafePool()
+  if (!pool) return res.status(503).json({ error: 'Database not connected' })
+
+  try {
+    const [result] = await pool.query(
+      'DELETE FROM schedules WHERE user_id = ? AND completed = 1',
+      [userId]
+    )
+    res.json({
+      success: true,
+      deletedCount: result.affectedRows,
+      message: `${result.affectedRows}개의 완료된 일정이 삭제되었습니다.`,
+    })
+  } catch (err) {
+    console.error('[Clear All Completed Error]:', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+
 // Serve production frontend assets from Vite build
 const distPath = path.resolve(__dirname, '../dist')
 app.use(express.static(distPath))
