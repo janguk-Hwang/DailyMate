@@ -254,17 +254,31 @@ export default function App() {
     }
   }
 
-  const handleEdit = async (id, title) => {
+  const handleEdit = async (id, title, priority) => {
     if (!user) {
       handleOpenAuth('login')
       return
     }
 
     try {
-      const updated = await updateSchedule(id, { title })
+      const payload = { title }
+      if (priority !== undefined) {
+        payload.priority = priority
+      }
+      const updated = await updateSchedule(id, payload)
       const updatedTitle = updated.title || title
+      const updatedPriority = updated.priority || priority
       setAllMonthTodos((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, title: updatedTitle, text: updatedTitle } : t))
+        prev.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                title: updatedTitle,
+                text: updatedTitle,
+                priority: updatedPriority,
+              }
+            : t
+        )
       )
     } catch (e) {
       alert(e.message || '일정 수정 실패')

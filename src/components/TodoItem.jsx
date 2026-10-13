@@ -19,27 +19,31 @@ export default function TodoItem({
 }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(todo.text)
+  const [editPriority, setEditPriority] = useState(todo.priority || 'medium')
 
   useEffect(() => {
     if (!isEditing) {
       setEditText(todo.text)
+      setEditPriority(todo.priority || 'medium')
     }
-  }, [todo.text, isEditing])
+  }, [todo.text, todo.priority, isEditing])
 
   const handleStartEdit = () => {
     setEditText(todo.text)
+    setEditPriority(todo.priority || 'medium')
     setIsEditing(true)
   }
 
   const handleSave = () => {
     const trimmed = editText.trim()
     if (!trimmed) return
-    onEdit(todo.id, trimmed)
+    onEdit(todo.id, trimmed, editPriority)
     setIsEditing(false)
   }
 
   const handleCancel = () => {
     setEditText(todo.text)
+    setEditPriority(todo.priority || 'medium')
     setIsEditing(false)
   }
 
@@ -150,7 +154,7 @@ export default function TodoItem({
         {/* Content / Edit Form */}
         <div className="flex-1 min-w-0 pr-1">
           {isEditing ? (
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-2">
               <input
                 type="text"
                 value={editText}
@@ -160,24 +164,35 @@ export default function TodoItem({
                   if (e.key === 'Escape') handleCancel()
                 }}
                 autoFocus
-                className="w-full px-2.5 py-1.5 text-sm border border-indigo-400 rounded-lg focus:outline-none ring-2 ring-indigo-500/20 bg-white"
+                className="flex-1 min-w-0 px-2.5 py-1.5 text-sm border border-indigo-400 rounded-lg focus:outline-none ring-2 ring-indigo-500/20 bg-white"
               />
-              <button
-                type="button"
-                onClick={handleSave}
-                className="w-8 h-8 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer flex-shrink-0"
-                title="저장"
-              >
-                <Check className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer flex-shrink-0"
-                title="취소"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+                <select
+                  value={editPriority}
+                  onChange={(e) => setEditPriority(e.target.value)}
+                  className="px-2 py-1.5 text-xs font-medium border border-indigo-300 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                >
+                  <option value="high">높음 🔴</option>
+                  <option value="medium">보통 🟡</option>
+                  <option value="low">낮음 🟢</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="w-8 h-8 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer flex-shrink-0"
+                  title="저장"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer flex-shrink-0"
+                  title="취소"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           ) : (
             <div className="overflow-hidden">
