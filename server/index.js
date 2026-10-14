@@ -141,6 +141,60 @@ app.put('/api/schedules/toggle-all/:date', authMiddleware, async (req, res) => {
   }
 })
 
+// Batch update completion status for specified schedule IDs
+app.put('/api/schedules/batch-completed', authMiddleware, async (req, res) => {
+  const { ids, completed } = req.body
+  const userId = req.user.id
+  const pool = await getSafePool()
+
+  if (!pool) {
+    return res.status(503).json({ error: '데이터베이스에 연결되지 않았습니다.' })
+  }
+
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: '수정할 일정 ID 목록이 필요합니다.' })
+  }
+
+  try {
+    const placeholders = ids.map(() => '?').join(',')
+    await pool.query(
+      `UPDATE schedules SET completed = ? WHERE id IN (${placeholders}) AND (user_id = ? OR user_id IS NULL)`,
+      [completed ? 1 : 0, ...ids, userId]
+    )
+    res.json({ success: true, count: ids.length, completed: Boolean(completed) })
+  } catch (err) {
+    console.error('[Batch Completed Error]:', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Batch delete schedules for specified schedule IDs
+app.delete('/api/schedules/batch', authMiddleware, async (req, res) => {
+  const { ids } = req.body
+  const userId = req.user.id
+  const pool = await getSafePool()
+
+  if (!pool) {
+    return res.status(503).json({ error: '데이터베이스에 연결되지 않았습니다.' })
+  }
+
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: '삭제할 일정 ID 목록이 필요합니다.' })
+  }
+
+  try {
+    const placeholders = ids.map(() => '?').join(',')
+    await pool.query(
+      `DELETE FROM schedules WHERE id IN (${placeholders}) AND (user_id = ? OR user_id IS NULL)`,
+      [...ids, userId]
+    )
+    res.json({ success: true, count: ids.length })
+  } catch (err) {
+    console.error('[Batch Delete Error]:', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // Create schedule for current user
 app.post('/api/schedules', authMiddleware, async (req, res) => {
   const { title, description = null, date, priority = 'medium' } = req.body

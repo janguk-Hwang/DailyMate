@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { AlertCircle, CheckCheck, Lock, Sparkles, LogIn } from 'lucide-react'
+import { AlertCircle, CheckCheck, Lock, Sparkles, LogIn, Check, Trash2, Square, CheckSquare } from 'lucide-react'
 import Navbar from './components/Navbar'
 import Header from './components/Header'
 import CalendarView from './components/CalendarView'
@@ -23,6 +23,8 @@ import {
   reorderSchedules,
   toggleAllSchedulesForDate,
   updateUserSettings,
+  updateBatchSchedulesCompleted,
+  deleteBatchSchedules,
 } from './services/api'
 
 const getToday = () => {
@@ -57,6 +59,12 @@ export default function App() {
   const [draggedIndex, setDraggedIndex] = useState(null)
   const [dragOverInfo, setDragOverInfo] = useState(null) // { index, position: 'top' | 'bottom' }
   const [dbError, setDbError] = useState(null)
+  const [selectedIds, setSelectedIds] = useState([])
+
+  // Reset selected items when selected date changes
+  useEffect(() => {
+    setSelectedIds([])
+  }, [selectedDate])
 
   // Settings & Theme
   const [settings, setSettings] = useState(loadInitialSettings)
@@ -435,23 +443,61 @@ export default function App() {
   const activeCount = totalCount - completedCount
   const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100)
   const isAllCompleted = totalCount > 0 && currentDayTodos.every((t) => t.completed)
+  const isAllSelected = totalCount > 0 && currentDayTodos.every((t) => selectedIds.includes(t.id))
 
-  const handleToggleAll = async () => {
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(currentDayTodos.map((t) => t.id))
+    }
+  }
+
+  const handleToggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    )
+  }
+
+  const handleBatchCompleteSelected = async (targetCompleted) => {
     if (!user) {
       handleOpenAuth('login')
       return
     }
-    if (currentDayTodos.length === 0) return
+    if (selectedIds.length === 0) return
 
-    const targetCompleted = !isAllCompleted
+    const targetIds = [...selectedIds]
     setAllMonthTodos((prev) =>
-      prev.map((t) => (t.date === selectedDate ? { ...t, completed: targetCompleted } : t))
+      prev.map((t) => (targetIds.includes(t.id) ? { ...t, completed: targetCompleted } : t))
     )
     try {
-      await toggleAllSchedulesForDate(selectedDate, targetCompleted)
+      await updateBatchSchedulesCompleted(targetIds, targetCompleted)
     } catch (err) {
       await loadSchedules(currentYearMonth)
-      alert(err.message || '전체 일정 상태 변경 실패')
+      alert(err.message || '선택한 일정 상태 변경 실패')
+    }
+  }
+
+  const handleBatchDeleteSelected = async () => {
+    if (!user) {
+      handleOpenAuth('login')
+      return
+    }
+    if (selectedIds.length === 0) return
+
+    if (!window.confirm(`선택한 ${selectedIds.length}개의 일정을 삭제하시겠습니까?`)) {
+      return
+    }
+
+    const targetIds = [...selectedIds]
+    setAllMonthTodos((prev) => prev.filter((t) => !targetIds.includes(t.id)))
+    setSelectedIds([])
+
+    try {
+      await deleteBatchSchedules(targetIds)
+    } catch (err) {
+      await loadSchedules(currentYearMonth)
+      alert(err.message || '선택한 일정 삭제 실패')
     }
   }
 
@@ -679,38 +725,81 @@ export default function App() {
           counts={{ total: totalCount, active: activeCount, completed: completedCount }}
         />
 
-        {/* Selected Date Actions Header (선택된 날의 일정 모두 선택 바) */}
+        {/* Selected Date Actions Header (선택된 날의 일정 액션 바) */}
         {user && totalCount > 0 && (
-          <div className="flex items-center justify-between px-1.5 pb-2 pt-0.5 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1.5 pb-2 pt-0.5 text-xs">
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleToggleAll}
+                onClick={handleToggleSelectAll}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer active:scale-95 ${
-                  isAllCompleted
+                  isAllSelected
                     ? 'bg-indigo-600 text-white shadow-xs hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600'
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-slate-700'
                 }`}
-                title={isAllCompleted ? '선택된 날의 모든 일정 선택 해제' : '선택된 날의 모든 일정 선택'}
+                title={isAllSelected ? '모든 일정 선택 해제' : '모든 일정 선택'}
               >
-                <CheckCheck className={`w-3.5 h-3.5 ${isAllCompleted ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`} />
-                <span>{isAllCompleted ? '선택 해제' : '모두 선택'}</span>
+                {isAllSelected ? (
+                  <CheckSquare className="w-3.5 h-3.5 text-white" />
+                ) : (
+                  <Square className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                )}
+                <span>{isAllSelected ? '선택 해제' : '모두 선택'}</span>
               </button>
-              <span className="text-slate-400 dark:text-slate-500 text-[11px] font-medium">
-                {completedCount} / {totalCount}개 완료
-              </span>
+
+              {selectedIds.length > 0 ? (
+                <span className="text-indigo-600 dark:text-indigo-400 font-bold text-xs bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-900/40">
+                  {selectedIds.length}개 선택됨
+                </span>
+              ) : (
+                <span className="text-slate-400 dark:text-slate-500 text-[11px] font-medium">
+                  {completedCount} / {totalCount}개 완료
+                </span>
+              )}
             </div>
 
-            {completedCount > 0 && (
-              <button
-                type="button"
-                onClick={handleClearCompleted}
-                className="inline-flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2.5 py-1.5 rounded-xl border border-rose-200/80 dark:border-rose-900/60 transition-colors cursor-pointer bg-white/80 dark:bg-slate-900/80 shadow-2xs"
-                title="완료(선택)된 항목 일괄 삭제"
-              >
-                <CheckCheck className="w-3.5 h-3.5" />
-                <span>완료 항목 삭제 ({completedCount})</span>
-              </button>
+            {/* When items are selected, show selection action buttons */}
+            {selectedIds.length > 0 ? (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleBatchCompleteSelected(true)}
+                  className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 px-2.5 py-1.5 rounded-xl border border-emerald-200/80 dark:border-emerald-800 transition cursor-pointer bg-white/80 dark:bg-slate-900/80 shadow-2xs font-medium"
+                  title="선택한 항목 완료 처리"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>선택 완료</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBatchCompleteSelected(false)}
+                  className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 px-2.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700 transition cursor-pointer bg-white/80 dark:bg-slate-900/80 shadow-2xs font-medium"
+                  title="선택한 항목 미완료로 변경"
+                >
+                  <span>미완료로 변경</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBatchDeleteSelected}
+                  className="inline-flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2.5 py-1.5 rounded-xl border border-rose-200/80 dark:border-rose-900/60 transition cursor-pointer bg-white/80 dark:bg-slate-900/80 shadow-2xs font-medium"
+                  title="선택한 항목 삭제"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>선택 삭제</span>
+                </button>
+              </div>
+            ) : (
+              completedCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearCompleted}
+                  className="inline-flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2.5 py-1.5 rounded-xl border border-rose-200/80 dark:border-rose-900/60 transition-colors cursor-pointer bg-white/80 dark:bg-slate-900/80 shadow-2xs"
+                  title="완료된 항목 일괄 삭제"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>완료 항목 삭제 ({completedCount})</span>
+                </button>
+              )
             )}
           </div>
         )}
@@ -776,6 +865,8 @@ export default function App() {
                 isDragging={draggedIndex === index}
                 isDragOver={dragOverInfo?.index === index && draggedIndex !== index}
                 dragOverPosition={dragOverInfo?.index === index ? dragOverInfo?.position : null}
+                isSelected={selectedIds.includes(todo.id)}
+                onSelect={handleToggleSelect}
               />
             ))
           )}

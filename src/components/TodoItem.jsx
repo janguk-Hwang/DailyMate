@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { CheckCircle2, Circle, Trash2, Pencil, Check, X, GripVertical, FileText } from 'lucide-react'
+import { CheckCircle2, Circle, Trash2, Pencil, Check, X, GripVertical, FileText, Square, CheckSquare } from 'lucide-react'
 
 export default function TodoItem({
   todo,
@@ -17,6 +17,8 @@ export default function TodoItem({
   isDragging = false,
   isDragOver = false,
   dragOverPosition = null, // 'top' | 'bottom'
+  isSelected = false,
+  onSelect,
 }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(todo.text)
@@ -123,11 +125,32 @@ export default function TodoItem({
         className={`group flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl border transition-all duration-200 select-none ${
           isDragging
             ? 'border-dashed border-indigo-300 dark:border-indigo-600 bg-slate-50 dark:bg-slate-800 shadow-inner'
+            : isSelected
+            ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-xs ring-1 ring-indigo-400/50'
             : todo.completed
             ? 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/80 opacity-80'
             : 'bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-indigo-200 dark:hover:border-slate-700'
         }`}
       >
+        {/* Selection Checkbox (다중 선택/일괄 작업용) */}
+        {onSelect && !isEditing ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onSelect(todo.id)
+            }}
+            title={isSelected ? '항목 선택 해제' : '항목 선택'}
+            className="w-5 h-7 flex items-center justify-center text-slate-300 hover:text-indigo-600 dark:text-slate-600 dark:hover:text-indigo-400 -mr-0.5 cursor-pointer transition-colors focus:outline-none flex-shrink-0"
+          >
+            {isSelected ? (
+              <CheckSquare className="w-4.5 h-4.5 text-indigo-600 dark:text-indigo-400 fill-indigo-100 dark:fill-indigo-950/60" />
+            ) : (
+              <Square className="w-4.5 h-4.5" />
+            )}
+          </button>
+        ) : null}
+
         {/* Drag Handle */}
         {isDraggable && !isEditing ? (
           <div

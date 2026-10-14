@@ -266,6 +266,40 @@ export async function toggleAllSchedulesForDate(date, completed) {
   return res.json()
 }
 
+export async function updateBatchSchedulesCompleted(ids, completed) {
+  const res = await fetch('/api/schedules/batch-completed', {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ ids, completed }),
+  })
+  if (res.status === 401) {
+    removeToken()
+    throw new Error('AUTH_REQUIRED')
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.details || err.error || `HTTP ${res.status}: 선택 일정 상태 변경 실패`)
+  }
+  return res.json()
+}
+
+export async function deleteBatchSchedules(ids) {
+  const res = await fetch('/api/schedules/batch', {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ ids }),
+  })
+  if (res.status === 401) {
+    removeToken()
+    throw new Error('AUTH_REQUIRED')
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.details || err.error || `HTTP ${res.status}: 선택 일정 삭제 실패`)
+  }
+  return res.json()
+}
+
 // ---------------- MyPage & Profile APIs ----------------
 export async function updateProfile(payload) {
   const res = await fetch('/api/auth/profile', {
