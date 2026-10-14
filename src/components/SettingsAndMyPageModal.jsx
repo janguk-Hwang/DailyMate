@@ -15,7 +15,6 @@ import {
   Sparkles,
   Save,
   Check,
-  LayoutGrid,
   Eye,
   EyeOff,
   FileSpreadsheet,
@@ -129,10 +128,26 @@ export default function SettingsAndMyPageModal({
       setPasswordMsg(null)
       setCleanupMsg(null)
       setDeleteError(null)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setDeletePassword('')
+      setDeleteConfirmText('')
     }
     prevIsOpenRef.current = isOpen
     prevInitialTabRef.current = initialTab
   }, [isOpen, initialTab, user])
+
+  // Reset password fields whenever switching tabs or reopening modal
+  useEffect(() => {
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setDeletePassword('')
+    setDeleteConfirmText('')
+    setPasswordMsg(null)
+    setDeleteError(null)
+  }, [activeTab, isOpen])
 
   const loadStats = async () => {
     if (!user) return
@@ -925,41 +940,6 @@ export default function SettingsAndMyPageModal({
                   </label>
                 </div>
               </div>
-
-              {/* 5. Density */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
-                <label className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-1 block flex items-center gap-1.5">
-                  <LayoutGrid className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <span>화면 간격 (밀도)</span>
-                </label>
-                <p className="text-[11px] text-slate-400 dark:text-slate-400 mb-3">일정 카드의 크기와 여백을 취향에 맞게 조정합니다.</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onUpdateSettings({ ...settings, density: 'normal' })}
-                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${
-                      settings.density === 'normal'
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 shadow-2xs'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <span>기본 뷰 (편안하게)</span>
-                    {settings.density === 'normal' && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onUpdateSettings({ ...settings, density: 'compact' })}
-                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between cursor-pointer transition ${
-                      settings.density === 'compact'
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 shadow-2xs'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <span>컴팩트 뷰 (더 많은 항목)</span>
-                    {settings.density === 'compact' && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
-                  </button>
-                </div>
-              </div>
             </div>
           )}
 
@@ -990,7 +970,11 @@ export default function SettingsAndMyPageModal({
                 <>
                   {/* Password Change (Local User Only) */}
                   {user.provider === 'local' ? (
-                    <form onSubmit={handleSavePassword} className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3.5">
+                    <form onSubmit={handleSavePassword} autoComplete="off" className="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3.5">
+                      {/* Fake inputs to prevent browser aggressive credential autofill */}
+                      <input type="text" style={{ display: 'none' }} aria-hidden="true" tabIndex={-1} autoComplete="off" />
+                      <input type="password" style={{ display: 'none' }} aria-hidden="true" tabIndex={-1} autoComplete="new-password" />
+
                       <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-1">
                         <KeyRound className="w-4 h-4 text-indigo-600" />
                         <span>비밀번호 변경</span>
@@ -1004,6 +988,7 @@ export default function SettingsAndMyPageModal({
                             value={currentPassword}
                             onChange={(e) => setCurrentPassword(e.target.value)}
                             placeholder="현재 비밀번호를 입력하세요"
+                            autoComplete="new-password"
                             required
                             className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
@@ -1026,6 +1011,7 @@ export default function SettingsAndMyPageModal({
                             onChange={(e) => setNewPassword(e.target.value)}
                             placeholder="새 비밀번호를 입력하세요"
                             minLength={6}
+                            autoComplete="new-password"
                             required
                             className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
@@ -1046,6 +1032,7 @@ export default function SettingsAndMyPageModal({
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           placeholder="새 비밀번호를 한 번 더 입력하세요"
+                          autoComplete="new-password"
                           required
                           className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
@@ -1104,6 +1091,7 @@ export default function SettingsAndMyPageModal({
                           value={deletePassword}
                           onChange={(e) => setDeletePassword(e.target.value)}
                           placeholder="현재 비밀번호"
+                          autoComplete="new-password"
                           className="w-full px-3 py-2 text-xs bg-white border border-rose-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
                         />
                       </div>

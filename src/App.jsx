@@ -34,7 +34,6 @@ const DEFAULT_SETTINGS = {
   startOfWeek: 'sunday', // 'sunday' | 'monday'
   defaultPriority: 'medium', // 'high' | 'medium' | 'low'
   completedDisplay: 'show', // 'show' | 'hide' | 'bottom'
-  density: 'normal', // 'normal' | 'compact'
   darkMode: 'system', // 'light' | 'dark' | 'system'
 }
 
@@ -777,7 +776,6 @@ export default function App() {
                 isDragging={draggedIndex === index}
                 isDragOver={dragOverInfo?.index === index && draggedIndex !== index}
                 dragOverPosition={dragOverInfo?.index === index ? dragOverInfo?.position : null}
-                density={settings.density}
               />
             ))
           )}

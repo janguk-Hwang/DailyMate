@@ -17,7 +17,6 @@ export default function TodoItem({
   isDragging = false,
   isDragOver = false,
   dragOverPosition = null, // 'top' | 'bottom'
-  density = 'normal',
 }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(todo.text)
@@ -121,9 +120,7 @@ export default function TodoItem({
 
       {/* Todo Card */}
       <div
-        className={`group flex items-center gap-2 sm:gap-3 ${
-          density === 'compact' ? 'p-2 sm:p-2.5 rounded-lg' : 'p-3 sm:p-4 rounded-xl'
-        } border transition-all duration-200 select-none ${
+        className={`group flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl border transition-all duration-200 select-none ${
           isDragging
             ? 'border-dashed border-indigo-300 dark:border-indigo-600 bg-slate-50 dark:bg-slate-800 shadow-inner'
             : todo.completed
