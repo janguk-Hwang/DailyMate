@@ -120,7 +120,8 @@ export default function SettingsAndMyPageModal({
       }
       if (!prevIsOpenRef.current && user) {
         setName(user.name || '')
-        setSelectedAvatar(user.avatar || '🧑‍💻')
+        const currentAvatar = (!user.avatar || user.avatar === 'user') ? '🧑‍💻' : user.avatar
+        setSelectedAvatar(currentAvatar)
         loadStats()
       }
     } else {
@@ -175,7 +176,8 @@ export default function SettingsAndMyPageModal({
       if (onUserUpdated) onUserUpdated(res.user)
     } catch (err) {
       console.warn('Failed to update avatar:', err)
-      setSelectedAvatar(user.avatar || '🧑‍💻')
+      const currentAvatar = (!user.avatar || user.avatar === 'user') ? '🧑‍💻' : user.avatar
+      setSelectedAvatar(currentAvatar)
       setProfileMsg({ type: 'error', text: '아바타 변경 실패: ' + err.message })
     }
   }

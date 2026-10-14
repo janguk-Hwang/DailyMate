@@ -152,7 +152,7 @@ router.post('/signup', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10)
 
     const [result] = await pool.query(
-      'INSERT INTO users (username, password_hash, name, phone_number, phone_verified, provider) VALUES (?, ?, ?, ?, true, "local")',
+      'INSERT INTO users (username, password_hash, name, phone_number, phone_verified, provider, avatar) VALUES (?, ?, ?, ?, true, "local", "🧑‍💻")',
       [cleanUsername, passwordHash, name.trim(), cleanPhone]
     )
 
@@ -194,7 +194,7 @@ router.post('/login', async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      'SELECT id, username, password_hash, name, provider FROM users WHERE username = ? AND provider = "local"',
+      'SELECT id, username, password_hash, name, provider, avatar FROM users WHERE username = ? AND provider = "local"',
       [username.trim()]
     )
 
@@ -220,6 +220,7 @@ router.post('/login', async (req, res) => {
         username: user.username,
         name: user.name,
         provider: 'local',
+        avatar: (!user.avatar || user.avatar === 'user') ? '🧑‍💻' : user.avatar,
       },
       token,
     })
@@ -247,6 +248,7 @@ router.get('/me', authMiddleware, async (req, res) => {
     }
 
     const userData = { ...rows[0] }
+    userData.avatar = (!userData.avatar || userData.avatar === 'user') ? '🧑‍💻' : userData.avatar
     if (userData.settings && typeof userData.settings === 'string') {
       try {
         userData.settings = JSON.parse(userData.settings)
@@ -307,6 +309,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
     )
 
     const updatedUser = { ...rows[0] }
+    updatedUser.avatar = (!updatedUser.avatar || updatedUser.avatar === 'user') ? '🧑‍💻' : updatedUser.avatar
     if (updatedUser.settings && typeof updatedUser.settings === 'string') {
       try {
         updatedUser.settings = JSON.parse(updatedUser.settings)

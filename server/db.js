@@ -140,8 +140,11 @@ export async function initDatabase() {
       // Ensure avatar and settings columns exist on users table
       const [avatarCols] = await pool.query(`SHOW COLUMNS FROM users LIKE 'avatar'`)
       if (avatarCols.length === 0) {
-        await pool.query(`ALTER TABLE users ADD COLUMN avatar VARCHAR(50) DEFAULT 'user' AFTER name`)
+        await pool.query(`ALTER TABLE users ADD COLUMN avatar VARCHAR(50) DEFAULT '🧑‍💻' AFTER name`)
+      } else {
+        await pool.query(`ALTER TABLE users MODIFY COLUMN avatar VARCHAR(50) DEFAULT '🧑‍💻'`)
       }
+      await pool.query(`UPDATE users SET avatar = '🧑‍💻' WHERE avatar = 'user' OR avatar IS NULL OR avatar = ''`)
       const [settingsCols] = await pool.query(`SHOW COLUMNS FROM users LIKE 'settings'`)
       if (settingsCols.length === 0) {
         await pool.query(`ALTER TABLE users ADD COLUMN settings TEXT NULL AFTER email`)

@@ -94,10 +94,10 @@ export default function Navbar({
               className="flex items-center gap-1.5 text-left group cursor-pointer focus:outline-none"
             >
               <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:scale-105 transition">
-                {user.avatar ? (
+                {user.avatar && user.avatar !== 'user' ? (
                   <span className="text-xs">{user.avatar}</span>
                 ) : (
-                  <User className="w-3.5 h-3.5" />
+                  <span className="text-xs">🧑‍💻</span>
                 )}
               </div>
               <div className="max-w-[75px] xs:max-w-[110px] sm:max-w-[140px] truncate">

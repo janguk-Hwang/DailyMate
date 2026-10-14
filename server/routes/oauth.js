@@ -48,16 +48,20 @@ async function findOrCreateSocialUser(provider, providerId, name, email) {
       await pool.query('UPDATE users SET name = ? WHERE id = ?', [name, user.id])
       user.name = name
     }
+    if (!user.avatar || user.avatar === 'user') {
+      user.avatar = '🧑‍💻'
+      await pool.query('UPDATE users SET avatar = "🧑‍💻" WHERE id = ?', [user.id])
+    }
     return user
   }
 
   const displayName = name || `${provider}_사용자`
   const [result] = await pool.query(
-    'INSERT INTO users (provider, provider_id, name, email) VALUES (?, ?, ?, ?)',
+    'INSERT INTO users (provider, provider_id, name, email, avatar) VALUES (?, ?, ?, ?, "🧑‍💻")',
     [provider, String(providerId), displayName, email || null]
   )
 
-  return { id: result.insertId, username: null, name: displayName, email: email || null, provider }
+  return { id: result.insertId, username: null, name: displayName, email: email || null, provider, avatar: '🧑‍💻' }
 }
 
 // ---------------- Google OAuth ----------------
