@@ -71,6 +71,18 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
     setOauthNotice(null)
   }
 
+  const backdropMouseDownRef = useRef(false)
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (!isOpen) return
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = originalOverflow
+    }
+  }, [isOpen])
+
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode)
@@ -81,6 +93,21 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
   const handleClose = () => {
     resetForms()
     onClose()
+  }
+
+  const handleBackdropMouseDown = (e) => {
+    if (e.target === e.currentTarget) {
+      backdropMouseDownRef.current = true
+    } else {
+      backdropMouseDownRef.current = false
+    }
+  }
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget && backdropMouseDownRef.current) {
+      handleClose()
+    }
+    backdropMouseDownRef.current = false
   }
 
   if (!isOpen) return null
@@ -241,32 +268,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
     }
   }
 
-  const backdropMouseDownRef = useRef(false)
-
-  // Prevent background scrolling when modal is open
-  useEffect(() => {
-    if (!isOpen) return
-    const originalOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = originalOverflow
-    }
-  }, [isOpen])
-
-  const handleBackdropMouseDown = (e) => {
-    if (e.target === e.currentTarget) {
-      backdropMouseDownRef.current = true
-    } else {
-      backdropMouseDownRef.current = false
-    }
-  }
-
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget && backdropMouseDownRef.current) {
-      handleClose()
-    }
-    backdropMouseDownRef.current = false
-  }
 
   return (
     <div

@@ -32,6 +32,18 @@ export default function TodoDetailModal({
     }
   }, [todo, isOpen])
 
+  const backdropMouseDownRef = useRef(false)
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (!isOpen) return
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = originalOverflow
+    }
+  }, [isOpen])
+
   if (!isOpen || !todo) return null
 
   const handleSave = async (e) => {
@@ -84,17 +96,6 @@ export default function TodoDetailModal({
     }
   })()
 
-  const backdropMouseDownRef = useRef(false)
-
-  // Prevent background scrolling when modal is open
-  useEffect(() => {
-    if (!isOpen) return
-    const originalOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = originalOverflow
-    }
-  }, [isOpen])
 
   const handleBackdropMouseDown = (e) => {
     if (e.target === e.currentTarget) {

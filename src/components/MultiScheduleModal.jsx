@@ -130,8 +130,6 @@ export default function MultiScheduleModal({
     return []
   }, [tab, startDate, endDate, weeklyStart, weeklyEnd, selectedDays, customDates])
 
-  if (!isOpen) return null
-
   // Handle Day toggle for weekly repeat
   const toggleDay = (dayVal) => {
     setSelectedDays((prev) =>
@@ -218,6 +216,8 @@ export default function MultiScheduleModal({
     }
     backdropMouseDownRef.current = false
   }
+
+  if (!isOpen) return null
 
   return (
     <div
