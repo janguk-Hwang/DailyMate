@@ -765,10 +765,10 @@ export default function App() {
                   type="button"
                   onClick={() => handleBatchCompleteSelected(true)}
                   className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 px-2.5 py-1.5 rounded-xl border border-emerald-200/80 dark:border-emerald-800 transition cursor-pointer bg-white/80 dark:bg-slate-900/80 shadow-2xs font-medium"
-                  title="선택한 항목 완료 처리"
+                  title="선택한 항목 완료로 변경"
                 >
                   <Check className="w-3.5 h-3.5" />
-                  <span>선택 완료</span>
+                  <span>완료로 변경</span>
                 </button>
                 <button
                   type="button"
