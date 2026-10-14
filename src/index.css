@@ -19,7 +19,8 @@ html {
   scroll-behavior: smooth;
 }
 
-html.dark {
+html.dark,
+body.dark {
   color-scheme: dark;
-  background-color: #0f172a;
+  background-color: #020617;
 }

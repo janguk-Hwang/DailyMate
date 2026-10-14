@@ -618,7 +618,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 dark:from-slate-950 dark:via-indigo-950/30 dark:to-slate-900 py-3.5 sm:py-10 px-3 sm:px-6 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 dark:bg-none dark:bg-slate-950 py-3.5 sm:py-10 px-3 sm:px-6 transition-colors duration-300">
       <div className="max-w-2xl mx-auto">
         {/* Top Navbar with Brand Logo Button & Settings */}
         <Navbar

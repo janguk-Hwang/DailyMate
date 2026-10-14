@@ -512,9 +512,9 @@ export default function SettingsAndMyPageModal({
               ) : (
                 <>
                   {/* Profile Edit Card */}
-                  <form onSubmit={handleSaveProfile} className="bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200/80">
+                  <form onSubmit={handleSaveProfile} className="bg-slate-50/80 dark:bg-slate-800/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700/80">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                         <Sparkles className="w-4 h-4 text-indigo-600" />
                         <span>프로필 정보</span>
                       </h3>
@@ -656,19 +656,19 @@ export default function SettingsAndMyPageModal({
 
                     {/* Monthly Summary Box */}
                     {stats?.currentMonth && (
-                      <div className="bg-gradient-to-r from-indigo-50 to-indigo-100/60 rounded-2xl p-3.5 border border-indigo-200/70 flex items-center justify-between text-xs">
+                      <div className="bg-gradient-to-r from-indigo-50 to-indigo-100/60 dark:from-indigo-950/50 dark:to-indigo-900/40 rounded-2xl p-3.5 border border-indigo-200/70 dark:border-indigo-900/50 flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-indigo-600" />
+                          <Calendar className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                           <div>
-                            <span className="font-bold text-indigo-950">
+                            <span className="font-bold text-indigo-950 dark:text-indigo-200">
                               {stats.currentMonth.yearMonth} 이번 달 완수율
                             </span>
-                            <span className="text-indigo-600 ml-2 font-extrabold">
+                            <span className="text-indigo-600 dark:text-indigo-400 ml-2 font-extrabold">
                               {stats.currentMonth.rate}%
                             </span>
                           </div>
                         </div>
-                        <span className="text-indigo-700 text-[11px] font-medium">
+                        <span className="text-indigo-700 dark:text-indigo-300 text-[11px] font-medium">
                           {stats.currentMonth.completed} / {stats.currentMonth.total}개 완료
                         </span>
                       </div>
