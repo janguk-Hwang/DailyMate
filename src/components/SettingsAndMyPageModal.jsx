@@ -522,9 +522,8 @@ export default function SettingsAndMyPageModal({
                     <div className="space-y-4">
                       {/* Avatar Selector */}
                       <div>
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="mb-1.5">
                           <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">내 아바타 아이콘</label>
-                          <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">선택 시 즉시 변경</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {AVATAR_OPTIONS.map((av) => (
