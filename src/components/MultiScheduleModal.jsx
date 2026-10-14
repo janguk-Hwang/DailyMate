@@ -191,6 +191,7 @@ export default function MultiScheduleModal({
   }
 
   const backdropMouseDownRef = useRef(false)
+  const backdropMouseUpRef = useRef(false)
 
   // Prevent background scrolling when modal is open
   useEffect(() => {
@@ -203,18 +204,19 @@ export default function MultiScheduleModal({
   }, [isOpen])
 
   const handleBackdropMouseDown = (e) => {
-    if (e.target === e.currentTarget) {
-      backdropMouseDownRef.current = true
-    } else {
-      backdropMouseDownRef.current = false
-    }
+    backdropMouseDownRef.current = e.target === e.currentTarget
+  }
+
+  const handleBackdropMouseUp = (e) => {
+    backdropMouseUpRef.current = e.target === e.currentTarget
   }
 
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget && backdropMouseDownRef.current) {
+    if (e.target === e.currentTarget && backdropMouseDownRef.current && backdropMouseUpRef.current) {
       onClose()
     }
     backdropMouseDownRef.current = false
+    backdropMouseUpRef.current = false
   }
 
   if (!isOpen) return null
@@ -223,6 +225,7 @@ export default function MultiScheduleModal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
       onMouseDown={handleBackdropMouseDown}
+      onMouseUp={handleBackdropMouseUp}
       onClick={handleBackdropClick}
     >
       <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all">
