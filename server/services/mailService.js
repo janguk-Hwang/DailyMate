@@ -149,6 +149,39 @@ export async function sendVerificationEmail(to, code) {
   const subject = '[dailymate] 회원가입 이메일 인증번호 안내'
   const html = generateVerificationEmailHtml(code)
 
+  // 1. Resend API 우선 지원 (Railway 등 클라우드 호스팅의 SMTP 포트 25/465/587 차단 완전 우회 - HTTPS 443 포트 사용)
+  const resendApiKey = cleanEnv(process.env.RESEND_API_KEY)
+  if (resendApiKey) {
+    try {
+      const resendSender = cleanEnv(process.env.EMAIL_FROM) || 'dailymate <onboarding@resend.dev>'
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: resendSender,
+          to: [to],
+          subject,
+          html,
+        }),
+      })
+
+      const resData = await resendRes.json()
+      if (!resendRes.ok) {
+        throw new Error(resData.message || 'Resend 메일 발송 실패')
+      }
+
+      console.log(`[dailymate EMAIL via Resend API] Sent to ${to} (Id: ${resData.id})`)
+      return { sent: true, devMock: false }
+    } catch (resendErr) {
+      console.error('[dailymate Resend Error]:', resendErr)
+      throw new Error(`이메일 발송 실패: ${resendErr.message}`)
+    }
+  }
+
+  // 2. 일반 SMTP 전송 (로컬 PC 및 SMTP 포트가 열린 서버용)
   const transporter = createTransporter()
 
   if (transporter) {
@@ -165,7 +198,7 @@ export async function sendVerificationEmail(to, code) {
     } catch (err) {
       console.error(`[dailymate EMAIL Error] SMTP 전송 실패:`, err.message)
       if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout') || err.message?.includes('Greeting')) {
-        throw new Error('이메일 서버 연결 시간 초과입니다. 네이버 계정의 [해외 로그인 차단] 설정을 해제했는지 확인해주세요.')
+        throw new Error('클라우드 서버(Railway)에서 SMTP 포트(587/465)가 차단되었습니다. HTTPS 기반의 Resend API 연동을 권장합니다.')
       }
       throw new Error(`이메일 발송 실패 (${err.message})`)
     }
