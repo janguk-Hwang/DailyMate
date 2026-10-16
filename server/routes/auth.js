@@ -52,7 +52,7 @@ router.post('/email/send-code', async (req, res) => {
     })
   } catch (err) {
     console.error('[Send Email Code Error]:', err)
-    res.status(500).json({ error: '인증번호 이메일 발송 중 오류가 발생했습니다.' })
+    res.status(500).json({ error: err.message || '인증번호 이메일 발송 중 오류가 발생했습니다.' })
   }
 })
 
