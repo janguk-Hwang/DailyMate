@@ -631,16 +631,11 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                 )}
               </div>
 
-              {/* Email Verification Section (dailymate) */}
+              {/* Email Verification Section */}
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
-                    이메일 인증 <span className="text-red-500">*</span>
-                  </label>
-                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
-                    발신: dailymate
-                  </span>
-                </div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
+                  이메일 인증 <span className="text-red-500">*</span>
+                </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -681,7 +676,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                 {codeSent && !emailVerified && (
                   <div className="mt-2.5 p-3.5 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-xl space-y-2.5">
                     <div className="flex items-center justify-between text-[11px] text-indigo-700 dark:text-indigo-300">
-                      <span>📩 dailymate에서 발송한 6자리 인증코드를 입력해주세요.</span>
+                      <span>📩 발송된 6자리 인증코드를 입력해주세요.</span>
                       {countdown > 0 && (
                         <span className="flex items-center gap-1 font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">
                           <Clock className="w-3 h-3" />
