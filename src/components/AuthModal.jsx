@@ -49,6 +49,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
   const [sendingCode, setSendingCode] = useState(false)
   const [verifyingCode, setVerifyingCode] = useState(false)
   const [countdown, setCountdown] = useState(0)
+  const [emailErrorMsg, setEmailErrorMsg] = useState('')
 
   // OAuth notice modal / message
   const [oauthNotice, setOauthNotice] = useState(null)
@@ -70,6 +71,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
     setSendingCode(false)
     setVerifyingCode(false)
     setCountdown(0)
+    setEmailErrorMsg('')
     setErrorMsg('')
     setSuccessMsg('')
     setOauthNotice(null)
@@ -196,15 +198,21 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
 
   const handleSendEmailCode = async () => {
     const cleanEmail = signupEmail.trim().toLowerCase()
+    setEmailErrorMsg('')
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!cleanEmail) {
+      setEmailErrorMsg('이메일 주소를 입력해주세요.')
+      return
+    }
     if (!emailRegex.test(cleanEmail)) {
-      setErrorMsg('올바른 이메일 주소(예: user@example.com)를 입력해주세요.')
+      setEmailErrorMsg('올바른 이메일 주소(예: user@example.com)를 입력해주세요.')
       return
     }
 
     try {
       setSendingCode(true)
       setErrorMsg('')
+      setEmailErrorMsg('')
       const res = await sendEmailCode(cleanEmail)
       setCodeSent(true)
       setCountdown(180) // 3분 타이머 시작
@@ -212,8 +220,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
         setDevCodeHint(res.devCode)
         setEmailCode(res.devCode) // 편리한 자동 입력 지원
       }
-      setSuccessMsg(`dailymate 인증번호가 발송되었습니다.${res.devCode ? ` [임시 테스트 인증번호: ${res.devCode}]` : ''}`)
+      setSuccessMsg(`인증번호가 발송되었습니다.${res.devCode ? ` [임시 테스트 인증번호: ${res.devCode}]` : ''}`)
     } catch (err) {
+      setEmailErrorMsg(err.message)
       setErrorMsg(err.message)
     } finally {
       setSendingCode(false)
@@ -222,6 +231,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
 
   const handleVerifyEmailCode = async () => {
     const cleanEmail = signupEmail.trim().toLowerCase()
+    setEmailErrorMsg('')
     if (!emailCode.trim()) {
       setErrorMsg('인증번호 6자리를 입력해주세요.')
       return
@@ -235,10 +245,11 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
     try {
       setVerifyingCode(true)
       setErrorMsg('')
+      setEmailErrorMsg('')
       await verifyEmailCode(cleanEmail, emailCode.trim())
       setEmailVerified(true)
       setCountdown(0)
-      setSuccessMsg('dailymate 이메일 인증이 성공적으로 완료되었습니다.')
+      setSuccessMsg('이메일 인증이 성공적으로 완료되었습니다.')
     } catch (err) {
       setErrorMsg(err.message)
     } finally {
@@ -633,9 +644,17 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
 
               {/* Email Verification Section */}
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
-                  이메일 인증 <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    이메일 인증 <span className="text-red-500">*</span>
+                  </label>
+                  {emailErrorMsg && (
+                    <span className="text-[11px] font-semibold text-rose-500 dark:text-rose-400 flex items-center gap-1 animate-pulse">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      {emailErrorMsg}
+                    </span>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -648,10 +667,15 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                         setCodeSent(false)
                         setDevCodeHint('')
                         setCountdown(0)
+                        setEmailErrorMsg('')
                       }}
                       placeholder="user@example.com"
                       disabled={emailVerified}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 disabled:bg-slate-100 dark:disabled:bg-slate-800/40"
+                      className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 disabled:bg-slate-100 dark:disabled:bg-slate-800/40 ${
+                        emailErrorMsg
+                          ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500'
+                          : 'border-slate-200 dark:border-slate-700 focus:ring-indigo-500'
+                      }`}
                       required
                     />
                   </div>
@@ -671,6 +695,13 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                     )}
                   </button>
                 </div>
+
+                {emailErrorMsg && (
+                  <p className="mt-1.5 text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>{emailErrorMsg}</span>
+                  </p>
+                )}
 
                 {/* Verification Code Input */}
                 {codeSent && !emailVerified && (
