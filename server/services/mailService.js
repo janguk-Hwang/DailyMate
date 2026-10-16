@@ -170,6 +170,17 @@ export async function sendVerificationEmail(to, code) {
 
       const resData = await resendRes.json()
       if (!resendRes.ok) {
+        // Resend 무료 샌드박스 제한(도메인 구매/인증 전에는 가입한 본인 이메일로만 실제 전송 가능) 감지
+        const isDomainRestricted = resData.message && resData.message.includes('only send testing emails')
+        if (isDomainRestricted) {
+          console.warn('[Resend Sandbox Notice]:', resData.message)
+          return {
+            sent: true,
+            devMock: true,
+            devCode: code,
+            notice: '도메인 등록 전 단계이므로 테스트 인증코드가 발급되었습니다. Resend 가입 이메일로 입력 시 실제 메일이 발송됩니다.',
+          }
+        }
         throw new Error(resData.message || 'Resend 메일 발송 실패')
       }
 
