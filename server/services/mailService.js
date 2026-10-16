@@ -3,25 +3,50 @@ import nodemailer from 'nodemailer'
 /**
  * Creates and returns a Nodemailer transporter instance if SMTP configs are available.
  */
-function createTransporter() {
-  const host = process.env.SMTP_HOST
-  const port = Number(process.env.SMTP_PORT) || 465
-  const user = process.env.SMTP_USER
-  const pass = process.env.SMTP_PASS
+function cleanEnv(val) {
+  if (!val) return ''
+  return String(val).trim().replace(/^["']|["']$/g, '')
+}
 
-  if (host && user && pass) {
-    return nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465 || process.env.SMTP_SECURE === 'true',
-      auth: {
-        user,
-        pass,
-      },
-      connectionTimeout: 5000, // 5초 초과 시 즉시 타임아웃 (무한 로딩 방지)
-      greetingTimeout: 5000,
-      socketTimeout: 7000,
-    })
+/**
+ * Creates and returns a Nodemailer transporter instance if SMTP configs are available.
+ */
+function createTransporter() {
+  const host = cleanEnv(process.env.SMTP_HOST)
+  const port = Number(cleanEnv(process.env.SMTP_PORT)) || 587
+  const user = cleanEnv(process.env.SMTP_USER)
+  // 비밀번호의 따옴표 및 앱 비밀번호 내부 공백(예: 'xjcd ycbo sdpk vcly') 자동 제거
+  const pass = cleanEnv(process.env.SMTP_PASS).replace(/\s+/g, '')
+
+  if (user && pass) {
+    // Gmail일 경우 service: 'gmail' 프리셋을 사용하여 클라우드(Railway)에서도 최적의 연결 보장
+    if (host.includes('gmail') || user.includes('@gmail.com')) {
+      return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user,
+          pass,
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+      })
+    }
+
+    if (host) {
+      return nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465 || cleanEnv(process.env.SMTP_SECURE) === 'true',
+        auth: {
+          user,
+          pass,
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+      })
+    }
   }
 
   return null
@@ -115,9 +140,9 @@ function generateVerificationEmailHtml(code) {
  * @returns {Promise<{ sent: boolean, devMock: boolean, devCode?: string }>}
  */
 export async function sendVerificationEmail(to, code) {
-  // 발신자 이름 및 주소: dailymate (네이버 등 SMTP 서비스의 발신자 일치 정책 지원)
-  let senderEmail = process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@dailymate.today'
-  if (senderEmail && !senderEmail.includes('@') && process.env.SMTP_HOST?.includes('naver')) {
+  // 발신자 이름 및 주소: dailymate (네이버 및 Gmail 등 발신자 정책 호환)
+  let senderEmail = cleanEnv(process.env.EMAIL_FROM) || cleanEnv(process.env.SMTP_USER) || 'noreply@dailymate.today'
+  if (senderEmail && !senderEmail.includes('@') && cleanEnv(process.env.SMTP_HOST).includes('naver')) {
     senderEmail = `${senderEmail}@naver.com`
   }
   const from = `dailymate <${senderEmail}>`
