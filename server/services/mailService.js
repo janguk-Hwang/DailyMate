@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer'
  */
 function createTransporter() {
   const host = process.env.SMTP_HOST
-  const port = Number(process.env.SMTP_PORT) || 587
+  const port = Number(process.env.SMTP_PORT) || 465
   const user = process.env.SMTP_USER
   const pass = process.env.SMTP_PASS
 
@@ -18,6 +18,9 @@ function createTransporter() {
         user,
         pass,
       },
+      connectionTimeout: 5000, // 5초 초과 시 즉시 타임아웃 (무한 로딩 방지)
+      greetingTimeout: 5000,
+      socketTimeout: 7000,
     })
   }
 
@@ -135,8 +138,11 @@ export async function sendVerificationEmail(to, code) {
       console.log(`[dailymate EMAIL] Sent to ${to} (MessageId: ${info.messageId})`)
       return { sent: true, devMock: false }
     } catch (err) {
-      console.warn(`[dailymate EMAIL Warning] SMTP 전송 실패, 개발 모드 Fallback 동작:`, err.message)
-      // SMTP 전송 실패 시 개발 모드로 fallback하여 테스트가 중단되지 않도록 지원
+      console.error(`[dailymate EMAIL Error] SMTP 전송 실패:`, err.message)
+      if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout') || err.message?.includes('Greeting')) {
+        throw new Error('이메일 서버 연결 시간 초과입니다. 네이버 계정의 [해외 로그인 차단] 설정을 해제했는지 확인해주세요.')
+      }
+      throw new Error(`이메일 발송 실패 (${err.message})`)
     }
   }
 
