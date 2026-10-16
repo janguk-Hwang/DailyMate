@@ -112,8 +112,11 @@ function generateVerificationEmailHtml(code) {
  * @returns {Promise<{ sent: boolean, devMock: boolean, devCode?: string }>}
  */
 export async function sendVerificationEmail(to, code) {
-  // 발신자 이름 및 주소: dailymate (사용자 요구사항 반영)
-  const senderEmail = process.env.EMAIL_FROM || 'noreply@dailymate.today'
+  // 발신자 이름 및 주소: dailymate (네이버 등 SMTP 서비스의 발신자 일치 정책 지원)
+  let senderEmail = process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@dailymate.today'
+  if (senderEmail && !senderEmail.includes('@') && process.env.SMTP_HOST?.includes('naver')) {
+    senderEmail = `${senderEmail}@naver.com`
+  }
   const from = `dailymate <${senderEmail}>`
   const subject = '[dailymate] 회원가입 이메일 인증번호 안내'
   const html = generateVerificationEmailHtml(code)
