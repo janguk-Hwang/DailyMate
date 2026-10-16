@@ -1,6 +1,6 @@
 # 📅 To-Do 캘린더 (Todo Calendar App)
 
-[![Live Demo](https://img.shields.io/badge/Demo-Railway-success?style=flat&logo=railway)](https://daliymate.up.railway.app/)
+[![Live Demo](https://img.shields.io/badge/Demo-Railway-success?style=flat&logo=railway)](https://todo-calendar-app-production.up.railway.app/)
 [![React](https://img.shields.io/badge/React-19-blue?style=flat&logo=react)](https://react.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![Express](https://img.shields.io/badge/Express-5.x-lightgrey?style=flat&logo=express)](https://expressjs.com/)
@@ -8,7 +8,7 @@
 
 > **스마트한 개인 맞춤형 일정 & 플래너 웹 애플리케이션**  
 > React 19, Tailwind CSS v4, Express, MySQL을 기반으로 제작된 날짜별 할 일 관리 및 캘린더 서비스입니다.  
-> 🔗 **서비스 바로가기**: [https://daliymate.up.railway.app/](https://daliymate.up.railway.app/)
+> 🔗 **서비스 바로가기**: [https://todo-calendar-app-production.up.railway.app/](https://todo-calendar-app-production.up.railway.app/)
 
 ---
 
