@@ -3,19 +3,20 @@ import {
   X,
   Lock,
   User,
-  Phone,
+  Mail,
   CheckCircle2,
   AlertCircle,
   KeyRound,
   ShieldCheck,
   Send,
   Loader2,
+  Clock,
 } from 'lucide-react'
 import {
   loginUser,
   signupUser,
-  sendPhoneCode,
-  verifyPhoneCode,
+  sendEmailCode,
+  verifyEmailCode,
   checkUsernameAvailability,
   getOAuthUrl,
 } from '../services/api'
@@ -39,13 +40,15 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
   const [signupPassword, setSignupPassword] = useState('')
   const [signupPasswordConfirm, setSignupPasswordConfirm] = useState('')
 
-  const [signupPhone, setSignupPhone] = useState('')
-  const [phoneCode, setPhoneCode] = useState('')
+  // Email verification state (dailymate)
+  const [signupEmail, setSignupEmail] = useState('')
+  const [emailCode, setEmailCode] = useState('')
   const [codeSent, setCodeSent] = useState(false)
   const [devCodeHint, setDevCodeHint] = useState('')
-  const [phoneVerified, setPhoneVerified] = useState(false)
+  const [emailVerified, setEmailVerified] = useState(false)
   const [sendingCode, setSendingCode] = useState(false)
   const [verifyingCode, setVerifyingCode] = useState(false)
+  const [countdown, setCountdown] = useState(0)
 
   // OAuth notice modal / message
   const [oauthNotice, setOauthNotice] = useState(null)
@@ -59,13 +62,14 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
     setSignupName('')
     setSignupPassword('')
     setSignupPasswordConfirm('')
-    setSignupPhone('')
-    setPhoneCode('')
+    setSignupEmail('')
+    setEmailCode('')
     setCodeSent(false)
     setDevCodeHint('')
-    setPhoneVerified(false)
+    setEmailVerified(false)
     setSendingCode(false)
     setVerifyingCode(false)
+    setCountdown(0)
     setErrorMsg('')
     setSuccessMsg('')
     setOauthNotice(null)
@@ -83,6 +87,31 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
       document.body.style.overflow = originalOverflow
     }
   }, [isOpen])
+
+  // Countdown timer for email verification code (3 minutes)
+  useEffect(() => {
+    let timer = null
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+    return () => {
+      if (timer) clearInterval(timer)
+    }
+  }, [countdown])
+
+  const formatCountdown = (seconds) => {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m}:${s < 10 ? '0' : ''}${s}`
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -138,7 +167,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
     }
   }
 
-  // ---------------- Handlers: Signup ----------------
+  // ---------------- Handlers: Signup (dailymate Email Verification) ----------------
   const handleCheckUsername = async () => {
     const trimmed = signupUsername.trim()
     if (!trimmed || trimmed.length < 3) {
@@ -165,23 +194,25 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
     }
   }
 
-  const handleSendCode = async () => {
-    const cleanPhone = signupPhone.replace(/[^0-9]/g, '')
-    if (!/^01[0-9]{8,9}$/.test(cleanPhone)) {
-      setErrorMsg('올바른 휴대폰 번호(예: 01012345678)를 입력해주세요.')
+  const handleSendEmailCode = async () => {
+    const cleanEmail = signupEmail.trim().toLowerCase()
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(cleanEmail)) {
+      setErrorMsg('올바른 이메일 주소(예: user@example.com)를 입력해주세요.')
       return
     }
 
     try {
       setSendingCode(true)
       setErrorMsg('')
-      const res = await sendPhoneCode(cleanPhone)
+      const res = await sendEmailCode(cleanEmail)
       setCodeSent(true)
+      setCountdown(180) // 3분 타이머 시작
       if (res.devCode) {
         setDevCodeHint(res.devCode)
-        setPhoneCode(res.devCode) // 편리한 자동 입력 지원
+        setEmailCode(res.devCode) // 편리한 자동 입력 지원
       }
-      setSuccessMsg(`인증번호가 발송되었습니다.${res.devCode ? ` [임시 테스트 인증번호: ${res.devCode}]` : ''}`)
+      setSuccessMsg(`dailymate 인증번호가 발송되었습니다.${res.devCode ? ` [임시 테스트 인증번호: ${res.devCode}]` : ''}`)
     } catch (err) {
       setErrorMsg(err.message)
     } finally {
@@ -189,19 +220,25 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
     }
   }
 
-  const handleVerifyCode = async () => {
-    const cleanPhone = signupPhone.replace(/[^0-9]/g, '')
-    if (!phoneCode.trim()) {
+  const handleVerifyEmailCode = async () => {
+    const cleanEmail = signupEmail.trim().toLowerCase()
+    if (!emailCode.trim()) {
       setErrorMsg('인증번호 6자리를 입력해주세요.')
+      return
+    }
+
+    if (countdown === 0 && !devCodeHint) {
+      setErrorMsg('인증번호 유효시간(3분)이 만료되었습니다. 재전송을 요청해주세요.')
       return
     }
 
     try {
       setVerifyingCode(true)
       setErrorMsg('')
-      await verifyPhoneCode(cleanPhone, phoneCode.trim())
-      setPhoneVerified(true)
-      setSuccessMsg('휴대폰 번호 인증이 성공적으로 완료되었습니다.')
+      await verifyEmailCode(cleanEmail, emailCode.trim())
+      setEmailVerified(true)
+      setCountdown(0)
+      setSuccessMsg('dailymate 이메일 인증이 성공적으로 완료되었습니다.')
     } catch (err) {
       setErrorMsg(err.message)
     } finally {
@@ -228,8 +265,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
     if (signupPassword !== signupPasswordConfirm) {
       return setErrorMsg('비밀번호 확인이 일치하지 않습니다.')
     }
-    if (!phoneVerified) {
-      return setErrorMsg('전화번호 인증을 완료해주세요.')
+    if (!emailVerified) {
+      return setErrorMsg('dailymate 이메일 인증을 완료해주세요.')
     }
 
     try {
@@ -238,7 +275,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
         username: signupUsername.trim(),
         password: signupPassword,
         name: signupName.trim(),
-        phoneNumber: signupPhone.replace(/[^0-9]/g, ''),
+        email: signupEmail.trim().toLowerCase(),
       })
       resetForms()
       onAuthSuccess(res.user)
@@ -594,33 +631,40 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                 )}
               </div>
 
-              {/* Phone Verification Section */}
+              {/* Email Verification Section (dailymate) */}
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
-                  전화번호 인증 <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    이메일 인증 <span className="text-red-500">*</span>
+                  </label>
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
+                    발신: dailymate
+                  </span>
+                </div>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
-                      type="tel"
-                      value={signupPhone}
+                      type="email"
+                      value={signupEmail}
                       onChange={(e) => {
-                        setSignupPhone(e.target.value)
-                        setPhoneVerified(false)
+                        setSignupEmail(e.target.value)
+                        setEmailVerified(false)
                         setCodeSent(false)
+                        setDevCodeHint('')
+                        setCountdown(0)
                       }}
-                      placeholder="01012345678"
-                      disabled={phoneVerified}
+                      placeholder="user@example.com"
+                      disabled={emailVerified}
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 disabled:bg-slate-100 dark:disabled:bg-slate-800/40"
                       required
                     />
                   </div>
                   <button
                     type="button"
-                    onClick={handleSendCode}
-                    disabled={sendingCode || phoneVerified || !signupPhone.trim()}
-                    className="px-3 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium rounded-xl flex items-center gap-1 transition-all cursor-pointer disabled:opacity-50 flex-shrink-0"
+                    onClick={handleSendEmailCode}
+                    disabled={sendingCode || emailVerified || !signupEmail.trim()}
+                    className="px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-xl flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 flex-shrink-0 shadow-sm"
                   >
                     {sendingCode ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -634,38 +678,58 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
                 </div>
 
                 {/* Verification Code Input */}
-                {codeSent && !phoneVerified && (
-                  <div className="mt-2.5 p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-2">
+                {codeSent && !emailVerified && (
+                  <div className="mt-2.5 p-3.5 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-xl space-y-2.5">
+                    <div className="flex items-center justify-between text-[11px] text-indigo-700 dark:text-indigo-300">
+                      <span>📩 dailymate에서 발송한 6자리 인증코드를 입력해주세요.</span>
+                      {countdown > 0 && (
+                        <span className="flex items-center gap-1 font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">
+                          <Clock className="w-3 h-3" />
+                          {formatCountdown(countdown)}
+                        </span>
+                      )}
+                    </div>
+
                     {devCodeHint && (
-                      <div className="text-[11px] text-indigo-700 bg-white/80 px-2.5 py-1.5 rounded-lg border border-indigo-200 font-medium">
-                        💡 <strong>[개발 모드 테스트용]</strong> 인증번호: <span className="font-mono text-indigo-900 font-bold tracking-wider">{devCodeHint}</span>
+                      <div className="text-[11px] text-indigo-800 dark:text-indigo-200 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 font-medium flex items-center justify-between">
+                        <span>💡 [개발 테스트용] 인증번호:</span>
+                        <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold tracking-wider text-xs">
+                          {devCodeHint}
+                        </span>
                       </div>
                     )}
+
                     <div className="flex gap-2">
                       <input
                         type="text"
-                        value={phoneCode}
-                        onChange={(e) => setPhoneCode(e.target.value)}
+                        value={emailCode}
+                        onChange={(e) => setEmailCode(e.target.value)}
                         placeholder="인증번호 6자리"
                         maxLength={6}
-                        className="flex-1 px-3 py-2 bg-white border border-indigo-200 rounded-lg text-xs font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 rounded-lg text-xs font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100"
                       />
                       <button
                         type="button"
-                        onClick={handleVerifyCode}
-                        disabled={verifyingCode || !phoneCode.trim()}
+                        onClick={handleVerifyEmailCode}
+                        disabled={verifyingCode || !emailCode.trim()}
                         className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                       >
                         {verifyingCode ? '확인 중...' : '인증 확인'}
                       </button>
                     </div>
+
+                    {countdown === 0 && !devCodeHint && (
+                      <p className="text-[11px] text-rose-500 dark:text-rose-400 font-medium">
+                        인증 유효시간이 만료되었습니다. 인증번호를 재발송해주세요.
+                      </p>
+                    )}
                   </div>
                 )}
 
-                {phoneVerified && (
-                  <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-600 font-semibold bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>전화번호 인증이 완료되었습니다.</span>
+                {emailVerified && (
+                  <div className="mt-2.5 flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900/60">
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                    <span>dailymate 이메일 인증이 완료되었습니다.</span>
                   </div>
                 )}
               </div>
@@ -673,8 +737,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, initialMode 
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || !phoneVerified || usernameChecked !== true}
-                className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                disabled={loading || !emailVerified || usernameChecked !== true}
+                className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm shadow-md shadow-indigo-200 dark:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
                   <>

@@ -570,7 +570,7 @@ export default function SettingsAndMyPageModal({
                       </div>
 
                       {/* Account info badges */}
-                      {(user.username || user.phone_number) && (
+                      {(user.username || user.email || user.phone_number) && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
                           {user.username && (
                             <div className="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700">
@@ -578,9 +578,15 @@ export default function SettingsAndMyPageModal({
                               <span className="text-slate-600 dark:text-slate-300">{user.username}</span>
                             </div>
                           )}
+                          {user.email && (
+                            <div className="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700">
+                              <span className="font-bold text-slate-700 dark:text-slate-300">인증 이메일: </span>
+                              <span className="text-slate-600 dark:text-slate-300 truncate" title={user.email}>{user.email}</span>
+                            </div>
+                          )}
                           {user.phone_number && (
                             <div className="bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700">
-                              <span className="font-bold text-slate-700 dark:text-slate-300">인증 휴대폰: </span>
+                              <span className="font-bold text-slate-700 dark:text-slate-300">휴대폰 번호: </span>
                               <span className="text-slate-600 dark:text-slate-300">{user.phone_number}</span>
                             </div>
                           )}

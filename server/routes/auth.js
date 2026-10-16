@@ -3,11 +3,96 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { getSafePool } from '../db.js'
 import { authMiddleware } from '../middleware/auth.js'
+import { sendVerificationEmail } from '../services/mailService.js'
 
 const router = express.Router()
 const JWT_SECRET = process.env.JWT_SECRET || 'todo_calendar_jwt_secret_key_2026'
 
-// 1. Phone Verification: Send code (Mock / Dev Mode)
+// 1. Email Verification: Send code (dailymate Sender)
+router.post('/email/send-code', async (req, res) => {
+  const { email } = req.body
+  if (!email || !email.trim()) {
+    return res.status(400).json({ error: '이메일 주소를 입력해주세요.' })
+  }
+
+  const cleanEmail = email.trim().toLowerCase()
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(cleanEmail)) {
+    return res.status(400).json({ error: '올바른 이메일 주소 형식이 아닙니다.' })
+  }
+
+  const pool = await getSafePool()
+  if (!pool) {
+    return res.status(503).json({ error: '데이터베이스에 연결되지 않았습니다.' })
+  }
+
+  try {
+    // Check if email already registered
+    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [cleanEmail])
+    if (existing.length > 0) {
+      return res.status(400).json({ error: '이미 가입된 이메일 주소입니다. 다른 이메일을 입력해주세요.' })
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiresAt = new Date(Date.now() + 3 * 60 * 1000) // 3분 유효
+
+    await pool.query('DELETE FROM email_verifications WHERE email = ?', [cleanEmail])
+    await pool.query(
+      'INSERT INTO email_verifications (email, code, expires_at, verified) VALUES (?, ?, ?, false)',
+      [cleanEmail, code, expiresAt]
+    )
+
+    // Send email using dailymate mail service
+    const mailResult = await sendVerificationEmail(cleanEmail, code)
+
+    res.json({
+      success: true,
+      message: '인증번호가 이메일로 발송되었습니다. (3분 이내 입력)',
+      devCode: mailResult.devCode || (process.env.NODE_ENV !== 'production' ? code : undefined),
+    })
+  } catch (err) {
+    console.error('[Send Email Code Error]:', err)
+    res.status(500).json({ error: '인증번호 이메일 발송 중 오류가 발생했습니다.' })
+  }
+})
+
+// 2. Email Verification: Verify code
+router.post('/email/verify-code', async (req, res) => {
+  const { email, code } = req.body
+  if (!email || !code) {
+    return res.status(400).json({ error: '이메일과 인증번호를 모두 입력해주세요.' })
+  }
+
+  const cleanEmail = email.trim().toLowerCase()
+  const pool = await getSafePool()
+  if (!pool) {
+    return res.status(503).json({ error: '데이터베이스에 연결되지 않았습니다.' })
+  }
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, expires_at FROM email_verifications WHERE email = ? AND code = ? ORDER BY id DESC LIMIT 1',
+      [cleanEmail, code.trim()]
+    )
+
+    if (rows.length === 0) {
+      return res.status(400).json({ error: '인증번호가 일치하지 않습니다.' })
+    }
+
+    const verification = rows[0]
+    if (new Date() > new Date(verification.expires_at)) {
+      return res.status(400).json({ error: '인증번호가 만료되었습니다. 다시 발송 요청해주세요.' })
+    }
+
+    await pool.query('UPDATE email_verifications SET verified = true WHERE id = ?', [verification.id])
+    res.json({ success: true, message: '이메일 인증이 완료되었습니다.' })
+  } catch (err) {
+    console.error('[Verify Email Code Error]:', err)
+    res.status(500).json({ error: '인증번호 확인 중 오류가 발생했습니다.' })
+  }
+})
+
+// 3. Phone Verification: Send code (Mock / Dev Mode - Legacy compatibility)
 router.post('/phone/send-code', async (req, res) => {
   const { phoneNumber } = req.body
   if (!phoneNumber) {
@@ -39,7 +124,7 @@ router.post('/phone/send-code', async (req, res) => {
     res.json({
       success: true,
       message: '인증번호가 발송되었습니다. (3분 이내 입력)',
-      devCode: code, // 개발/테스트용 임시 인증번호 반환
+      devCode: code,
     })
   } catch (err) {
     console.error('[Send Code Error]:', err)
@@ -47,7 +132,7 @@ router.post('/phone/send-code', async (req, res) => {
   }
 })
 
-// 2. Phone Verification: Verify code
+// 4. Phone Verification: Verify code (Legacy compatibility)
 router.post('/phone/verify-code', async (req, res) => {
   const { phoneNumber, code } = req.body
   if (!phoneNumber || !code) {
@@ -83,7 +168,7 @@ router.post('/phone/verify-code', async (req, res) => {
   }
 })
 
-// 3. Check Username Availability
+// 5. Check Username Availability
 router.post('/check-username', async (req, res) => {
   const { username } = req.body
   if (!username || username.trim().length < 3) {
@@ -108,19 +193,25 @@ router.post('/check-username', async (req, res) => {
   }
 })
 
-// 4. Local Sign Up
+// 6. Local Sign Up (Email Verification required)
 router.post('/signup', async (req, res) => {
-  const { username, password, name, phoneNumber } = req.body
+  const { username, password, name, email, phoneNumber } = req.body
 
-  if (!username || !password || !name || !phoneNumber) {
-    return res.status(400).json({ error: '모든 필수 항목(아이디, 비밀번호, 닉네임, 전화번호)을 입력해주세요.' })
+  if (!username || !password || !name || !email) {
+    return res.status(400).json({ error: '모든 필수 항목(아이디, 비밀번호, 닉네임, 이메일)을 입력해주세요.' })
   }
 
   const cleanUsername = username.trim()
-  const cleanPhone = phoneNumber.replace(/[^0-9]/g, '')
+  const cleanEmail = email.trim().toLowerCase()
+  const cleanPhone = phoneNumber ? phoneNumber.replace(/[^0-9]/g, '') : null
 
   if (cleanUsername.length < 3 || cleanUsername.length > 20) {
     return res.status(400).json({ error: '아이디는 3~20자 사이여야 합니다.' })
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(cleanEmail)) {
+    return res.status(400).json({ error: '올바른 이메일 주소 형식이 아닙니다.' })
   }
 
   if (password.length < 6) {
@@ -133,32 +224,38 @@ router.post('/signup', async (req, res) => {
   }
 
   try {
-    // 휴대폰 인증 여부 확인
+    // 1) 이메일 인증 여부 확인
     const [verifyRows] = await pool.query(
-      'SELECT id FROM phone_verifications WHERE phone_number = ? AND verified = true ORDER BY id DESC LIMIT 1',
-      [cleanPhone]
+      'SELECT id FROM email_verifications WHERE email = ? AND verified = true ORDER BY id DESC LIMIT 1',
+      [cleanEmail]
     )
 
     if (verifyRows.length === 0) {
-      return res.status(400).json({ error: '전화번호 인증이 완료되지 않았습니다. 인증번호를 확인해주세요.' })
+      return res.status(400).json({ error: '이메일 인증이 완료되지 않았습니다. 인증번호를 확인해주세요.' })
     }
 
-    // 아이디 중복 확인
+    // 2) 아이디 중복 확인
     const [userRows] = await pool.query('SELECT id FROM users WHERE username = ?', [cleanUsername])
     if (userRows.length > 0) {
       return res.status(400).json({ error: '이미 사용 중인 아이디입니다.' })
     }
 
+    // 3) 이메일 중복 확인
+    const [emailRows] = await pool.query('SELECT id FROM users WHERE email = ?', [cleanEmail])
+    if (emailRows.length > 0) {
+      return res.status(400).json({ error: '이미 가입된 이메일 주소입니다.' })
+    }
+
     const passwordHash = await bcrypt.hash(password, 10)
 
     const [result] = await pool.query(
-      'INSERT INTO users (username, password_hash, name, phone_number, phone_verified, provider, avatar) VALUES (?, ?, ?, ?, true, "local", "🧑‍💻")',
-      [cleanUsername, passwordHash, name.trim(), cleanPhone]
+      'INSERT INTO users (username, password_hash, name, email, email_verified, phone_number, provider, avatar) VALUES (?, ?, ?, ?, true, ?, "local", "🧑‍💻")',
+      [cleanUsername, passwordHash, name.trim(), cleanEmail, cleanPhone]
     )
 
     const userId = result.insertId
     const token = jwt.sign(
-      { id: userId, username: cleanUsername, name: name.trim(), provider: 'local' },
+      { id: userId, username: cleanUsername, name: name.trim(), email: cleanEmail, provider: 'local' },
       JWT_SECRET,
       { expiresIn: '30d' }
     )
@@ -168,6 +265,7 @@ router.post('/signup', async (req, res) => {
         id: userId,
         username: cleanUsername,
         name: name.trim(),
+        email: cleanEmail,
         phoneNumber: cleanPhone,
         provider: 'local',
       },

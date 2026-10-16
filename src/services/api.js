@@ -43,7 +43,31 @@ export async function reconnectDb() {
 
 // ---------------- Authentication APIs ----------------
 
-// 1. Phone SMS Code (Mock / Dev)
+// 1. Email Verification Code (dailymate Sender)
+export async function sendEmailCode(email) {
+  const res = await fetch('/api/auth/email/send-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || '이메일 인증번호 발송에 실패했습니다.')
+  return data
+}
+
+// 2. Verify Email Code
+export async function verifyEmailCode(email, code) {
+  const res = await fetch('/api/auth/email/verify-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || '인증번호 확인에 실패했습니다.')
+  return data
+}
+
+// 3. Phone SMS Code (Mock / Dev - Legacy)
 export async function sendPhoneCode(phoneNumber) {
   const res = await fetch('/api/auth/phone/send-code', {
     method: 'POST',
@@ -55,7 +79,7 @@ export async function sendPhoneCode(phoneNumber) {
   return data
 }
 
-// 2. Verify Phone SMS Code
+// 4. Verify Phone SMS Code (Legacy)
 export async function verifyPhoneCode(phoneNumber, code) {
   const res = await fetch('/api/auth/phone/verify-code', {
     method: 'POST',
@@ -67,7 +91,7 @@ export async function verifyPhoneCode(phoneNumber, code) {
   return data
 }
 
-// 3. Check Username Availability
+// 5. Check Username Availability
 export async function checkUsernameAvailability(username) {
   const res = await fetch('/api/auth/check-username', {
     method: 'POST',
@@ -79,12 +103,12 @@ export async function checkUsernameAvailability(username) {
   return data
 }
 
-// 4. Local Sign Up
-export async function signupUser({ username, password, name, phoneNumber }) {
+// 6. Local Sign Up (Email Verification)
+export async function signupUser({ username, password, name, email, phoneNumber }) {
   const res = await fetch('/api/auth/signup', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password, name, phoneNumber }),
+    body: JSON.stringify({ username, password, name, email, phoneNumber }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || '회원가입에 실패했습니다.')

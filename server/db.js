@@ -108,6 +108,18 @@ export async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `)
 
+    // Create email_verifications table (dailymate email auth)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS email_verifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(100) NOT NULL,
+        code VARCHAR(6) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        verified BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `)
+
     // Create schedules table if not exists
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS schedules (
@@ -148,6 +160,11 @@ export async function initDatabase() {
       const [settingsCols] = await pool.query(`SHOW COLUMNS FROM users LIKE 'settings'`)
       if (settingsCols.length === 0) {
         await pool.query(`ALTER TABLE users ADD COLUMN settings TEXT NULL AFTER email`)
+      }
+
+      const [emailVerifiedCols] = await pool.query(`SHOW COLUMNS FROM users LIKE 'email_verified'`)
+      if (emailVerifiedCols.length === 0) {
+        await pool.query(`ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT FALSE AFTER email`)
       }
 
       // Create feedbacks table if not exists
