@@ -1,12 +1,5 @@
 import nodemailer from 'nodemailer'
-
-/**
- * Creates and returns a Nodemailer transporter instance if SMTP configs are available.
- */
-function cleanEnv(val) {
-  if (!val) return ''
-  return String(val).trim().replace(/^["']|["']$/g, '')
-}
+import { cleanEnv } from '../utils/env.js'
 
 /**
  * Creates and returns a Nodemailer transporter instance if SMTP configs are available.

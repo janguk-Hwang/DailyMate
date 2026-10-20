@@ -4,9 +4,10 @@ import jwt from 'jsonwebtoken'
 import { getSafePool } from '../db.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { sendVerificationEmail } from '../services/mailService.js'
+import { cleanEnv } from '../utils/env.js'
 
 const router = express.Router()
-const JWT_SECRET = process.env.JWT_SECRET || 'todo_calendar_jwt_secret_key_2026'
+const JWT_SECRET = cleanEnv(process.env.JWT_SECRET) || 'todo_calendar_jwt_secret_key_2026'
 
 // 1. Email Verification: Send code (dailymate Sender)
 router.post('/email/send-code', async (req, res) => {

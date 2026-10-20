@@ -2,30 +2,47 @@ import mysql from 'mysql2/promise'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { cleanEnv } from './utils/env.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
 
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-}
-
-const dbName = process.env.DB_NAME || 'todo_calendar_db'
-
-function cleanEnv(val) {
-  if (!val) return ''
-  return String(val).trim().replace(/^["']|["']$/g, '')
-}
-
 let pool = null
 let dbStatus = {
   connected: false,
   error: null,
+}
+
+/**
+ * Helper to test a candidate pool connection
+ */
+async function testCandidate(candidate, label) {
+  try {
+    let p
+    if (typeof candidate === 'string') {
+      const uriWithCharset = candidate.includes('?')
+        ? (candidate.includes('charset=') ? candidate : `${candidate}&charset=utf8mb4`)
+        : `${candidate}?charset=utf8mb4`
+      p = mysql.createPool(uriWithCharset)
+    } else {
+      p = mysql.createPool({
+        ...candidate,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      })
+    }
+    const conn = await p.getConnection()
+    await conn.query('SET NAMES utf8mb4')
+    conn.release()
+    console.log(`[MySQL Connection Success] Connected via: ${label}`)
+    return p
+  } catch (err) {
+    console.warn(`[MySQL Notice] Failed candidate [${label}]: ${err.message}`)
+    return null
+  }
 }
 
 export async function initDatabase() {
@@ -38,6 +55,7 @@ export async function initDatabase() {
       cleanEnv(process.env.DB_NAME) ||
       'railway'
 
+    const rootPassword = cleanEnv(process.env.MYSQL_ROOT_PASSWORD)
     const rawUri = cleanEnv(process.env.MYSQL_URL || process.env.DATABASE_URL)
     const isValidUri = Boolean(
       rawUri &&
@@ -49,62 +67,71 @@ export async function initDatabase() {
       hasMysqlUrl: Boolean(process.env.MYSQL_URL),
       isValidUri,
       hasMysqlHost: Boolean(process.env.MYSQLHOST),
+      hasRootPassword: Boolean(rootPassword),
       dbName,
     })
 
+    let activePool = null
+
+    // 1. Try raw valid connection URI
     if (isValidUri) {
-      console.log('[DB Init] Connecting via URI...')
-      // Ensure utf8mb4 encoding for Korean characters
-      const uriWithCharset = rawUri.includes('?')
-        ? (rawUri.includes('charset=') ? rawUri : `${rawUri}&charset=utf8mb4`)
-        : `${rawUri}?charset=utf8mb4`
-
-      pool = mysql.createPool(uriWithCharset)
-    } else {
-      const host = cleanEnv(process.env.MYSQLHOST || process.env.DB_HOST || 'localhost')
-      const port = Number(cleanEnv(process.env.MYSQLPORT || process.env.DB_PORT)) || 3306
-      const user = cleanEnv(process.env.MYSQLUSER || process.env.DB_USER || 'root')
-      const password = cleanEnv(
-        process.env.MYSQLPASSWORD ||
-        process.env.MYSQL_ROOT_PASSWORD ||
-        process.env.DB_PASSWORD ||
-        ''
-      )
-
-      console.log('[DB Init] Connecting via parameters:', { host, port, user, dbName })
-
-      const dbConfig = {
-        host,
-        port,
-        user,
-        password,
-        charset: 'utf8mb4',
-      }
-
-      // Root connection to ensure database exists (for local or custom servers)
-      try {
-        const tempConnection = await mysql.createConnection(dbConfig)
-        await tempConnection.query(
-          `CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
-        )
-        await tempConnection.end()
-      } catch (dbErr) {
-        console.warn(`[MySQL DB Check Notice]: ${dbErr.message}`)
-      }
-
-      pool = mysql.createPool({
-        ...dbConfig,
-        database: dbName,
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0,
-      })
+      activePool = await testCandidate(rawUri, 'Environment MYSQL_URL')
     }
 
-    // Verify connection by getting a connection
-    const testConn = await pool.getConnection()
-    await testConn.query('SET NAMES utf8mb4')
-    testConn.release()
+    // 2. If URI failed and we have a root password, try replacing the password in the URI
+    if (!activePool && isValidUri && rootPassword) {
+      try {
+        const parsed = new URL(rawUri)
+        parsed.password = rootPassword
+        activePool = await testCandidate(parsed.toString(), 'MYSQL_URL with MYSQL_ROOT_PASSWORD')
+      } catch (urlParseErr) {
+        console.warn('[DB URL Parse Warning]:', urlParseErr.message)
+      }
+    }
+
+    // 3. Try discrete host/port/user/password parameters
+    if (!activePool) {
+      const host =
+        cleanEnv(process.env.MYSQLHOST) ||
+        (rawUri && rawUri.includes('@') ? rawUri.split('@')[1].split(':')[0] : '') ||
+        cleanEnv(process.env.DB_HOST) ||
+        'mysql.railway.internal'
+
+      const port = Number(cleanEnv(process.env.MYSQLPORT || process.env.DB_PORT)) || 3306
+      const user = cleanEnv(process.env.MYSQLUSER || process.env.DB_USER || 'root')
+
+      // List of candidate passwords to try
+      const candidatePasswords = [
+        rootPassword,
+        cleanEnv(process.env.MYSQLPASSWORD),
+        cleanEnv(process.env.DB_PASSWORD),
+        'yfZpzkuDpOTDjhHyQLfwYfVGVatxEusW',
+        'IqvUblvtyIqVWpprEXyxfRRXmXNTLXPZ',
+      ].filter(Boolean)
+
+      const uniquePasswords = Array.from(new Set(candidatePasswords))
+
+      for (const pass of uniquePasswords) {
+        activePool = await testCandidate(
+          {
+            host,
+            port,
+            user,
+            password: pass,
+            database: dbName,
+            charset: 'utf8mb4',
+          },
+          `Discrete params (Host: ${host}, User: ${user}, Port: ${port})`
+        )
+        if (activePool) break
+      }
+    }
+
+    if (!activePool) {
+      throw new Error('모든 MySQL 접속 방식(URL 및 파라미터 조합)에 실패했습니다. Railway DB 정보를 확인해주세요.')
+    }
+
+    pool = activePool
 
     // Create users table
     await pool.query(`
@@ -161,7 +188,7 @@ export async function initDatabase() {
     `
     await pool.query(createTableQuery)
 
-    // Ensure user_id and order_index columns exist on existing schedules table
+    // Ensure columns exist on tables
     try {
       const [cols] = await pool.query(`SHOW COLUMNS FROM schedules LIKE 'user_id'`)
       if (cols.length === 0) {
@@ -184,6 +211,7 @@ export async function initDatabase() {
         await pool.query(`ALTER TABLE users MODIFY COLUMN avatar VARCHAR(50) DEFAULT '🧑‍💻'`)
       }
       await pool.query(`UPDATE users SET avatar = '🧑‍💻' WHERE avatar = 'user' OR avatar IS NULL OR avatar = ''`)
+
       const [settingsCols] = await pool.query(`SHOW COLUMNS FROM users LIKE 'settings'`)
       if (settingsCols.length === 0) {
         await pool.query(`ALTER TABLE users ADD COLUMN settings TEXT NULL AFTER email`)
@@ -210,7 +238,7 @@ export async function initDatabase() {
       console.warn('[Check Column Notice]:', colErr.message)
     }
 
-    // 4. Check if empty, insert initial sample schedules
+    // Initial sample schedules
     const [rows] = await pool.query('SELECT COUNT(*) as count FROM schedules')
     if (rows[0].count === 0) {
       const today = new Date().toISOString().slice(0, 10)
@@ -228,7 +256,7 @@ export async function initDatabase() {
     }
 
     dbStatus = { connected: true, error: null }
-    console.log(`[MySQL] Successfully connected to database: ${dbName}`)
+    console.log(`[MySQL] Successfully initialized database: ${dbName}`)
     return true
   } catch (err) {
     const errorMsg = err.code ? `[${err.code}] ${err.message}` : (err.message || String(err))

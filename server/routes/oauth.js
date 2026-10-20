@@ -2,13 +2,9 @@ import express from 'express'
 import axios from 'axios'
 import jwt from 'jsonwebtoken'
 import { getSafePool, getDbStatus } from '../db.js'
+import { cleanEnv, cleanUrl } from '../utils/env.js'
 
 const router = express.Router()
-
-function cleanEnv(val) {
-  if (!val) return ''
-  return String(val).trim().replace(/^["']|["']$/g, '')
-}
 
 const JWT_SECRET = cleanEnv(process.env.JWT_SECRET) || 'todo_calendar_jwt_secret_key_2026'
 
@@ -19,13 +15,13 @@ const cleanHost = (val) => {
 }
 
 const getRedirectBase = (req) => {
-  const custom = cleanEnv(process.env.REDIRECT_BASE_URL)
+  const custom = cleanUrl(process.env.REDIRECT_BASE_URL)
   if (custom) {
-    return custom.replace(/\/$/, '')
+    return custom
   }
-  const railwayDomain = cleanEnv(process.env.RAILWAY_PUBLIC_DOMAIN)
+  const railwayDomain = cleanUrl(process.env.RAILWAY_PUBLIC_DOMAIN)
   if (railwayDomain) {
-    return `https://${railwayDomain.replace(/\/$/, '')}`
+    return `https://${railwayDomain}`
   }
   const rawHost = req.get('x-forwarded-host') || req.get('host') || 'dailymate.up.railway.app'
   const host = cleanHost(rawHost)
@@ -36,13 +32,13 @@ const getRedirectBase = (req) => {
 }
 
 const getClientUrl = (req) => {
-  const custom = cleanEnv(process.env.CLIENT_URL)
+  const custom = cleanUrl(process.env.CLIENT_URL)
   if (custom) {
-    return custom.replace(/\/$/, '')
+    return custom
   }
-  const railwayDomain = cleanEnv(process.env.RAILWAY_PUBLIC_DOMAIN)
+  const railwayDomain = cleanUrl(process.env.RAILWAY_PUBLIC_DOMAIN)
   if (railwayDomain) {
-    return `https://${railwayDomain.replace(/\/$/, '')}`
+    return `https://${railwayDomain}`
   }
   const rawHost = req.get('x-forwarded-host') || req.get('host') || 'dailymate.up.railway.app'
   const host = cleanHost(rawHost)
