@@ -6,6 +6,11 @@ import { getSafePool } from '../db.js'
 const router = express.Router()
 const JWT_SECRET = process.env.JWT_SECRET || 'todo_calendar_jwt_secret_key_2026'
 
+const cleanValue = (val) => {
+  if (!val) return ''
+  return String(val).split(',')[0].trim()
+}
+
 const getRedirectBase = (req) => {
   if (process.env.REDIRECT_BASE_URL) {
     return process.env.REDIRECT_BASE_URL.replace(/\/$/, '')
@@ -13,9 +18,11 @@ const getRedirectBase = (req) => {
   if (process.env.RAILWAY_PUBLIC_DOMAIN) {
     return `https://${process.env.RAILWAY_PUBLIC_DOMAIN.replace(/\/$/, '')}`
   }
-  const host = req.get('x-forwarded-host') || req.get('host') || 'dailymate.up.railway.app'
+  const rawHost = req.get('x-forwarded-host') || req.get('host') || 'dailymate.up.railway.app'
+  const host = cleanValue(rawHost)
   const isRailway = host.includes('railway.app')
-  const proto = isRailway ? 'https' : (req.get('x-forwarded-proto') || req.protocol)
+  const rawProto = cleanValue(req.get('x-forwarded-proto')) || req.protocol || 'http'
+  const proto = isRailway ? 'https' : rawProto
   return `${proto}://${host}`
 }
 
@@ -26,10 +33,23 @@ const getClientUrl = (req) => {
   if (process.env.RAILWAY_PUBLIC_DOMAIN) {
     return `https://${process.env.RAILWAY_PUBLIC_DOMAIN.replace(/\/$/, '')}`
   }
-  const host = req.get('x-forwarded-host') || req.get('host') || 'dailymate.up.railway.app'
+  const rawHost = req.get('x-forwarded-host') || req.get('host') || 'dailymate.up.railway.app'
+  const host = cleanValue(rawHost)
   const isRailway = host.includes('railway.app')
-  const proto = isRailway ? 'https' : (req.get('x-forwarded-proto') || req.protocol)
+  const rawProto = cleanValue(req.get('x-forwarded-proto')) || req.protocol || 'http'
+  const proto = isRailway ? 'https' : rawProto
   return `${proto}://${host}`
+}
+
+function extractOAuthError(err, prefix) {
+  const data = err.response?.data
+  if (data) {
+    if (typeof data === 'string') return `${prefix}: ${data}`
+    const desc = data.error_description || data.error_desc || data.message || data.error
+    if (desc) return `${prefix}: ${desc}`
+    return `${prefix}: ${JSON.stringify(data)}`
+  }
+  return `${prefix}: ${err.message || '알 수 없는 오류'}`
 }
 
 async function findOrCreateSocialUser(provider, providerId, name, email) {
@@ -83,6 +103,7 @@ router.get('/google/url', (req, res) => {
   }
 
   const redirectUri = `${getRedirectBase(req)}/api/auth/google/callback`
+  console.log('[Google OAuth] Generated redirectUri:', redirectUri)
   const scope = encodeURIComponent('openid profile email')
   const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline`
 
@@ -90,8 +111,14 @@ router.get('/google/url', (req, res) => {
 })
 
 router.get('/google/callback', async (req, res) => {
-  const { code } = req.query
+  const { code, error, error_description } = req.query
   const clientUrl = getClientUrl(req)
+
+  if (error) {
+    const detail = error_description || error
+    console.error('[Google OAuth Callback Error Parameter]:', detail)
+    return res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(`구글 로그인 실패: ${detail}`)}`)
+  }
 
   if (!code) {
     return res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent('Google 인증 코드가 전달되지 않았습니다.')}`)
@@ -99,6 +126,7 @@ router.get('/google/callback', async (req, res) => {
 
   try {
     const redirectUri = `${getRedirectBase(req)}/api/auth/google/callback`
+    console.log('[Google OAuth Callback] Token request redirectUri:', redirectUri)
     const tokenRes = await axios.post('https://oauth2.googleapis.com/token', {
       code,
       client_id: process.env.GOOGLE_CLIENT_ID,
@@ -121,8 +149,9 @@ router.get('/google/callback', async (req, res) => {
 
     res.redirect(`${clientUrl}/?token=${token}`)
   } catch (err) {
+    const errorDetail = extractOAuthError(err, '구글 로그인 실패')
     console.error('[Google OAuth Error]:', err.response?.data || err.message)
-    res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent('구글 로그인 처리에 실패했습니다.')}`)
+    res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(errorDetail)}`)
   }
 })
 
@@ -137,14 +166,21 @@ router.get('/kakao/url', (req, res) => {
   }
 
   const redirectUri = `${getRedirectBase(req)}/api/auth/kakao/callback`
+  console.log('[Kakao OAuth] Generated redirectUri:', redirectUri)
   const url = `https://kauth.kakao.com/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
 
   res.json({ configured: true, url })
 })
 
 router.get('/kakao/callback', async (req, res) => {
-  const { code } = req.query
+  const { code, error, error_description } = req.query
   const clientUrl = getClientUrl(req)
+
+  if (error) {
+    const detail = error_description || error
+    console.error('[Kakao OAuth Callback Error Parameter]:', detail)
+    return res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(`카카오 로그인 실패: ${detail}`)}`)
+  }
 
   if (!code) {
     return res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent('카카오 인증 코드가 전달되지 않았습니다.')}`)
@@ -152,6 +188,7 @@ router.get('/kakao/callback', async (req, res) => {
 
   try {
     const redirectUri = `${getRedirectBase(req)}/api/auth/kakao/callback`
+    console.log('[Kakao OAuth Callback] Token request redirectUri:', redirectUri)
     const params = new URLSearchParams()
     params.append('grant_type', 'authorization_code')
     params.append('client_id', process.env.KAKAO_CLIENT_ID)
@@ -187,8 +224,9 @@ router.get('/kakao/callback', async (req, res) => {
 
     res.redirect(`${clientUrl}/?token=${token}`)
   } catch (err) {
+    const errorDetail = extractOAuthError(err, '카카오 로그인 실패')
     console.error('[Kakao OAuth Error]:', err.response?.data || err.message)
-    res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent('카카오 로그인 처리에 실패했습니다.')}`)
+    res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(errorDetail)}`)
   }
 })
 
@@ -203,6 +241,7 @@ router.get('/naver/url', (req, res) => {
   }
 
   const redirectUri = `${getRedirectBase(req)}/api/auth/naver/callback`
+  console.log('[Naver OAuth] Generated redirectUri:', redirectUri)
   const state = Math.random().toString(36).substring(2, 12)
   const url = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
 
@@ -210,8 +249,14 @@ router.get('/naver/url', (req, res) => {
 })
 
 router.get('/naver/callback', async (req, res) => {
-  const { code, state } = req.query
+  const { code, state, error, error_description } = req.query
   const clientUrl = getClientUrl(req)
+
+  if (error) {
+    const detail = error_description || error
+    console.error('[Naver OAuth Callback Error Parameter]:', detail)
+    return res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(`네이버 로그인 실패: ${detail}`)}`)
+  }
 
   if (!code) {
     return res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent('네이버 인증 코드가 전달되지 않았습니다.')}`)
@@ -249,8 +294,9 @@ router.get('/naver/callback', async (req, res) => {
 
     res.redirect(`${clientUrl}/?token=${token}`)
   } catch (err) {
+    const errorDetail = extractOAuthError(err, '네이버 로그인 실패')
     console.error('[Naver OAuth Error]:', err.response?.data || err.message)
-    res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent('네이버 로그인 처리에 실패했습니다.')}`)
+    res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(errorDetail)}`)
   }
 })
 
