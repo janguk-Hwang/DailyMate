@@ -38,7 +38,7 @@ export default function Navbar({
         <div>
           <div className="flex items-center gap-1.5">
             <span className="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100 tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-              To-Do 캘린더
+              DailyMate
             </span>
             <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 rounded-md">
               v1.1

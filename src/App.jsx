@@ -890,12 +890,12 @@ export default function App() {
         <footer className="mt-8 pt-6 border-t border-slate-200/80 dark:border-slate-800 text-center space-y-3 pb-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400 dark:text-slate-500">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-600 dark:text-slate-300">To-Do 캘린더</span>
+              <span className="font-bold text-slate-600 dark:text-slate-300">DailyMate</span>
               <span className="text-slate-300 dark:text-slate-700">•</span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400">스마트한 개인 일정 관리 플래너</span>
             </div>
             <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-              © {new Date().getFullYear()} To-Do 캘린더. All rights reserved.
+              © {new Date().getFullYear()} DailyMate. All rights reserved.
             </p>
           </div>
         </footer>

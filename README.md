@@ -1,4 +1,4 @@
-# 📅 To-Do 캘린더 (Todo Calendar App)
+# 📅 DailyMate (Todo Calendar App)
 
 [![Live Demo](https://img.shields.io/badge/Demo-Railway-success?style=flat&logo=railway)](https://dailymate.up.railway.app/)
 [![React](https://img.shields.io/badge/React-19-blue?style=flat&logo=react)](https://react.dev/)

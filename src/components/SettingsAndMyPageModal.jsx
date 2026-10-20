@@ -1141,7 +1141,7 @@ export default function SettingsAndMyPageModal({
                 <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mx-auto mb-2.5 shadow-md shadow-indigo-200 dark:shadow-none">
                   <Calendar className="w-6 h-6" />
                 </div>
-                <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100">To-Do 캘린더</h3>
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100">DailyMate</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">나만의 스마트한 개인 일정 & 플래너</p>
                 <span className="inline-block mt-2 px-2.5 py-0.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100/80 dark:bg-indigo-950/80 rounded-full">
                   버전 v1.2.0
