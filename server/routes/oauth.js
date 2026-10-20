@@ -4,39 +4,50 @@ import jwt from 'jsonwebtoken'
 import { getSafePool } from '../db.js'
 
 const router = express.Router()
-const JWT_SECRET = process.env.JWT_SECRET || 'todo_calendar_jwt_secret_key_2026'
 
-const cleanValue = (val) => {
+function cleanEnv(val) {
   if (!val) return ''
-  return String(val).split(',')[0].trim()
+  return String(val).trim().replace(/^["']|["']$/g, '')
+}
+
+const JWT_SECRET = cleanEnv(process.env.JWT_SECRET) || 'todo_calendar_jwt_secret_key_2026'
+
+const cleanHost = (val) => {
+  if (!val) return ''
+  const first = String(val).split(',')[0].trim()
+  return cleanEnv(first)
 }
 
 const getRedirectBase = (req) => {
-  if (process.env.REDIRECT_BASE_URL) {
-    return process.env.REDIRECT_BASE_URL.replace(/\/$/, '')
+  const custom = cleanEnv(process.env.REDIRECT_BASE_URL)
+  if (custom) {
+    return custom.replace(/\/$/, '')
   }
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN.replace(/\/$/, '')}`
+  const railwayDomain = cleanEnv(process.env.RAILWAY_PUBLIC_DOMAIN)
+  if (railwayDomain) {
+    return `https://${railwayDomain.replace(/\/$/, '')}`
   }
   const rawHost = req.get('x-forwarded-host') || req.get('host') || 'dailymate.up.railway.app'
-  const host = cleanValue(rawHost)
+  const host = cleanHost(rawHost)
   const isRailway = host.includes('railway.app')
-  const rawProto = cleanValue(req.get('x-forwarded-proto')) || req.protocol || 'http'
+  const rawProto = cleanHost(req.get('x-forwarded-proto')) || req.protocol || 'http'
   const proto = isRailway ? 'https' : rawProto
   return `${proto}://${host}`
 }
 
 const getClientUrl = (req) => {
-  if (process.env.CLIENT_URL) {
-    return process.env.CLIENT_URL.replace(/\/$/, '')
+  const custom = cleanEnv(process.env.CLIENT_URL)
+  if (custom) {
+    return custom.replace(/\/$/, '')
   }
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN.replace(/\/$/, '')}`
+  const railwayDomain = cleanEnv(process.env.RAILWAY_PUBLIC_DOMAIN)
+  if (railwayDomain) {
+    return `https://${railwayDomain.replace(/\/$/, '')}`
   }
   const rawHost = req.get('x-forwarded-host') || req.get('host') || 'dailymate.up.railway.app'
-  const host = cleanValue(rawHost)
+  const host = cleanHost(rawHost)
   const isRailway = host.includes('railway.app')
-  const rawProto = cleanValue(req.get('x-forwarded-proto')) || req.protocol || 'http'
+  const rawProto = cleanHost(req.get('x-forwarded-proto')) || req.protocol || 'http'
   const proto = isRailway ? 'https' : rawProto
   return `${proto}://${host}`
 }
@@ -94,11 +105,11 @@ async function findOrCreateSocialUser(provider, providerId, name, email) {
 
 // ---------------- Google OAuth ----------------
 router.get('/google/url', (req, res) => {
-  const clientId = process.env.GOOGLE_CLIENT_ID
-  if (!clientId || clientId.trim() === '') {
+  const clientId = cleanEnv(process.env.GOOGLE_CLIENT_ID)
+  if (!clientId) {
     return res.status(200).json({
       configured: false,
-      message: 'Google Client ID가 .env에 설정되지 않았습니다. 구글 클라우드 콘솔에서 발급받은 키를 .env에 입력해주세요.',
+      message: 'Google Client ID가 설정되지 않았습니다. 구글 클라우드 콘솔에서 발급받은 키를 환경 변수에 입력해주세요.',
     })
   }
 
@@ -126,11 +137,14 @@ router.get('/google/callback', async (req, res) => {
 
   try {
     const redirectUri = `${getRedirectBase(req)}/api/auth/google/callback`
+    const clientId = cleanEnv(process.env.GOOGLE_CLIENT_ID)
+    const clientSecret = cleanEnv(process.env.GOOGLE_CLIENT_SECRET)
     console.log('[Google OAuth Callback] Token request redirectUri:', redirectUri)
+
     const tokenRes = await axios.post('https://oauth2.googleapis.com/token', {
       code,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      client_id: clientId,
+      client_secret: clientSecret,
       redirect_uri: redirectUri,
       grant_type: 'authorization_code',
     })
@@ -157,11 +171,11 @@ router.get('/google/callback', async (req, res) => {
 
 // ---------------- Kakao OAuth ----------------
 router.get('/kakao/url', (req, res) => {
-  const clientId = process.env.KAKAO_CLIENT_ID
-  if (!clientId || clientId.trim() === '') {
+  const clientId = cleanEnv(process.env.KAKAO_CLIENT_ID)
+  if (!clientId) {
     return res.status(200).json({
       configured: false,
-      message: 'Kakao REST API 키가 .env에 설정되지 않았습니다. 카카오 디벨로퍼스에서 발급받은 REST API 키를 .env에 입력해주세요.',
+      message: 'Kakao REST API 키가 설정되지 않았습니다. 카카오 디벨로퍼스에서 발급받은 REST API 키를 환경 변수에 입력해주세요.',
     })
   }
 
@@ -188,12 +202,15 @@ router.get('/kakao/callback', async (req, res) => {
 
   try {
     const redirectUri = `${getRedirectBase(req)}/api/auth/kakao/callback`
+    const clientId = cleanEnv(process.env.KAKAO_CLIENT_ID)
+    const clientSecret = cleanEnv(process.env.KAKAO_CLIENT_SECRET)
     console.log('[Kakao OAuth Callback] Token request redirectUri:', redirectUri)
+
     const params = new URLSearchParams()
     params.append('grant_type', 'authorization_code')
-    params.append('client_id', process.env.KAKAO_CLIENT_ID)
-    if (process.env.KAKAO_CLIENT_SECRET) {
-      params.append('client_secret', process.env.KAKAO_CLIENT_SECRET)
+    params.append('client_id', clientId)
+    if (clientSecret) {
+      params.append('client_secret', clientSecret)
     }
     params.append('redirect_uri', redirectUri)
     params.append('code', code)
@@ -232,11 +249,11 @@ router.get('/kakao/callback', async (req, res) => {
 
 // ---------------- Naver OAuth ----------------
 router.get('/naver/url', (req, res) => {
-  const clientId = process.env.NAVER_CLIENT_ID
-  if (!clientId || clientId.trim() === '') {
+  const clientId = cleanEnv(process.env.NAVER_CLIENT_ID)
+  if (!clientId) {
     return res.status(200).json({
       configured: false,
-      message: 'Naver Client ID가 .env에 설정되지 않았습니다. 네이버 개발자 센터에서 발급받은 Client ID를 .env에 입력해주세요.',
+      message: 'Naver Client ID가 설정되지 않았습니다. 네이버 개발자 센터에서 발급받은 Client ID를 환경 변수에 입력해주세요.',
     })
   }
 
@@ -263,11 +280,14 @@ router.get('/naver/callback', async (req, res) => {
   }
 
   try {
+    const clientId = cleanEnv(process.env.NAVER_CLIENT_ID)
+    const clientSecret = cleanEnv(process.env.NAVER_CLIENT_SECRET)
+
     const tokenRes = await axios.get('https://nid.naver.com/oauth2.0/token', {
       params: {
         grant_type: 'authorization_code',
-        client_id: process.env.NAVER_CLIENT_ID,
-        client_secret: process.env.NAVER_CLIENT_SECRET,
+        client_id: clientId,
+        client_secret: clientSecret,
         code,
         state,
       },

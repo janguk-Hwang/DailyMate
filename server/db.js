@@ -17,6 +17,11 @@ const dbConfig = {
 
 const dbName = process.env.DB_NAME || 'todo_calendar_db'
 
+function cleanEnv(val) {
+  if (!val) return ''
+  return String(val).trim().replace(/^["']|["']$/g, '')
+}
+
 let pool = null
 let dbStatus = {
   connected: false,
@@ -27,30 +32,52 @@ export async function initDatabase() {
   try {
     dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true })
 
-    const dbName = process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || process.env.DB_NAME || 'todo_calendar_db'
-    const connectionUri = process.env.MYSQL_URL || process.env.DATABASE_URL
+    const dbName =
+      cleanEnv(process.env.MYSQLDATABASE) ||
+      cleanEnv(process.env.MYSQL_DATABASE) ||
+      cleanEnv(process.env.DB_NAME) ||
+      'railway'
+
+    const rawUri = cleanEnv(process.env.MYSQL_URL || process.env.DATABASE_URL)
+    const isValidUri = Boolean(
+      rawUri &&
+      !rawUri.includes('${{') &&
+      (rawUri.startsWith('mysql://') || rawUri.startsWith('mysql2://'))
+    )
 
     console.log('[DB Config Check]', {
       hasMysqlUrl: Boolean(process.env.MYSQL_URL),
-      hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+      isValidUri,
       hasMysqlHost: Boolean(process.env.MYSQLHOST),
       dbName,
     })
 
-    if (connectionUri) {
+    if (isValidUri) {
       console.log('[DB Init] Connecting via URI...')
       // Ensure utf8mb4 encoding for Korean characters
-      const uriWithCharset = connectionUri.includes('?')
-        ? (connectionUri.includes('charset=') ? connectionUri : `${connectionUri}&charset=utf8mb4`)
-        : `${connectionUri}?charset=utf8mb4`
+      const uriWithCharset = rawUri.includes('?')
+        ? (rawUri.includes('charset=') ? rawUri : `${rawUri}&charset=utf8mb4`)
+        : `${rawUri}?charset=utf8mb4`
 
       pool = mysql.createPool(uriWithCharset)
     } else {
+      const host = cleanEnv(process.env.MYSQLHOST || process.env.DB_HOST || 'localhost')
+      const port = Number(cleanEnv(process.env.MYSQLPORT || process.env.DB_PORT)) || 3306
+      const user = cleanEnv(process.env.MYSQLUSER || process.env.DB_USER || 'root')
+      const password = cleanEnv(
+        process.env.MYSQLPASSWORD ||
+        process.env.MYSQL_ROOT_PASSWORD ||
+        process.env.DB_PASSWORD ||
+        ''
+      )
+
+      console.log('[DB Init] Connecting via parameters:', { host, port, user, dbName })
+
       const dbConfig = {
-        host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
-        port: Number(process.env.MYSQLPORT || process.env.DB_PORT) || 3306,
-        user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
-        password: process.env.MYSQLPASSWORD || process.env.MYSQL_ROOT_PASSWORD || process.env.DB_PASSWORD || '',
+        host,
+        port,
+        user,
+        password,
         charset: 'utf8mb4',
       }
 
