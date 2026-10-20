@@ -22,140 +22,63 @@ const isValidEnv = (val) => {
 }
 
 export async function initDatabase() {
-  const failureLogs = []
-
-  async function testCandidate(candidate, label) {
-    try {
-      let p
-      if (typeof candidate === 'string') {
-        const uriWithCharset = candidate.includes('?')
-          ? (candidate.includes('charset=') ? candidate : `${candidate}&charset=utf8mb4`)
-          : `${candidate}?charset=utf8mb4`
-        p = mysql.createPool({
-          uri: uriWithCharset,
-          connectTimeout: 5000,
-          waitForConnections: true,
-          connectionLimit: 10,
-        })
-      } else {
-        p = mysql.createPool({
-          ...candidate,
-          connectTimeout: 5000,
-          waitForConnections: true,
-          connectionLimit: 10,
-          queueLimit: 0,
-        })
-      }
-      const conn = await p.getConnection()
-      await conn.query('SET NAMES utf8mb4')
-      conn.release()
-      console.log(`[MySQL Connection Success] Connected via: ${label}`)
-      return p
-    } catch (err) {
-      const errDetail = err.code ? `[${err.code}] ${err.message}` : err.message
-      const log = `${label} -> ${errDetail}`
-      failureLogs.push(log)
-      console.warn(`[MySQL Notice] Failed candidate ${log}`)
-      return null
-    }
-  }
-
   try {
     dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true })
 
-    const rawDbName = cleanEnv(process.env.MYSQLDATABASE) || cleanEnv(process.env.MYSQL_DATABASE) || cleanEnv(process.env.DB_NAME)
+    const rawDbName =
+      cleanEnv(process.env.MYSQLDATABASE) ||
+      cleanEnv(process.env.MYSQL_DATABASE) ||
+      cleanEnv(process.env.DB_NAME)
     const dbName = isValidEnv(rawDbName) ? rawDbName : 'railway'
 
-    const rootPassword = cleanEnv(process.env.MYSQL_ROOT_PASSWORD)
     const rawUri = cleanEnv(process.env.MYSQL_URL || process.env.DATABASE_URL)
     const isValidUri = isValidEnv(rawUri) && (rawUri.startsWith('mysql://') || rawUri.startsWith('mysql2://'))
 
-    console.log('[DB Config Check]', {
-      hasMysqlUrl: Boolean(process.env.MYSQL_URL),
-      isValidUri,
-      hasMysqlHost: Boolean(process.env.MYSQLHOST),
-      hasRootPassword: Boolean(rootPassword),
-      dbName,
-    })
-
     let activePool = null
 
-    // 1. Try raw valid connection URI from environment
+    // 1. Connect via MYSQL_URL / DATABASE_URL
     if (isValidUri) {
-      activePool = await testCandidate(rawUri, `Env URI (${rawUri.replace(/:[^:@]+@/, ':***@')})`)
+      const uriWithCharset = rawUri.includes('?')
+        ? (rawUri.includes('charset=') ? rawUri : `${rawUri}&charset=utf8mb4`)
+        : `${rawUri}?charset=utf8mb4`
+
+      activePool = mysql.createPool({
+        uri: uriWithCharset,
+        waitForConnections: true,
+        connectionLimit: 10,
+      })
+    } else {
+      // 2. Connect via discrete parameters
+      const host =
+        (isValidEnv(cleanEnv(process.env.MYSQLHOST)) && cleanEnv(process.env.MYSQLHOST)) ||
+        (isValidEnv(cleanEnv(process.env.DB_HOST)) && cleanEnv(process.env.DB_HOST)) ||
+        'localhost'
+
+      const port = Number(cleanEnv(process.env.MYSQLPORT || process.env.DB_PORT)) || 3306
+      const user = cleanEnv(process.env.MYSQLUSER || process.env.DB_USER) || 'root'
+      const password =
+        cleanEnv(process.env.MYSQLPASSWORD) ||
+        cleanEnv(process.env.MYSQL_ROOT_PASSWORD) ||
+        cleanEnv(process.env.DB_PASSWORD) ||
+        ''
+
+      activePool = mysql.createPool({
+        host,
+        port,
+        user,
+        password,
+        database: dbName,
+        charset: 'utf8mb4',
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      })
     }
 
-    // 2. Try URI with substituted root password
-    if (!activePool && isValidUri && rootPassword && isValidEnv(rootPassword)) {
-      try {
-        const parsed = new URL(rawUri)
-        parsed.password = rootPassword
-        const subUri = parsed.toString()
-        activePool = await testCandidate(subUri, `Env URI with root password`)
-      } catch (urlParseErr) {
-        console.warn('[DB URL Parse Warning]:', urlParseErr.message)
-      }
-    }
-
-    // 3. Try discrete host/port/user/password parameters
-    if (!activePool) {
-      let uriHost = ''
-      if (rawUri && rawUri.includes('@')) {
-        const afterAt = rawUri.split('@')[1]
-        uriHost = afterAt.split(':')[0].split('/')[0]
-      }
-
-      const envHost = cleanEnv(process.env.MYSQLHOST)
-      const dbHost = cleanEnv(process.env.DB_HOST)
-
-      const candidateHosts = [
-        isValidEnv(uriHost) ? uriHost : null,
-        isValidEnv(envHost) ? envHost : null,
-        'mysql.railway.internal',
-        isValidEnv(dbHost) && dbHost !== 'localhost' ? dbHost : null,
-        '127.0.0.1',
-      ].filter(Boolean)
-
-      const uniqueHosts = Array.from(new Set(candidateHosts))
-
-      const rawPort = cleanEnv(process.env.MYSQLPORT || process.env.DB_PORT)
-      const port = (isValidEnv(rawPort) && Number(rawPort)) || 3306
-
-      const rawUser = cleanEnv(process.env.MYSQLUSER || process.env.DB_USER)
-      const user = isValidEnv(rawUser) ? rawUser : 'root'
-
-      const candidatePasswords = [
-        isValidEnv(rootPassword) ? rootPassword : null,
-        isValidEnv(cleanEnv(process.env.MYSQLPASSWORD)) ? cleanEnv(process.env.MYSQLPASSWORD) : null,
-        isValidEnv(cleanEnv(process.env.DB_PASSWORD)) ? cleanEnv(process.env.DB_PASSWORD) : null,
-        'yfZpzkuDpOTDjhHyQLfwYfVGVatxEusW',
-        'IqvUblvtyIqVWpprEXyxfRRXmXNTLXPZ',
-      ].filter(Boolean)
-
-      const uniquePasswords = Array.from(new Set(candidatePasswords))
-
-      for (const host of uniqueHosts) {
-        for (const pass of uniquePasswords) {
-          activePool = await testCandidate(
-            {
-              host,
-              port,
-              user,
-              password: pass,
-              database: dbName,
-              charset: 'utf8mb4',
-            },
-            `Host: ${host}:${port}, User: ${user}, DB: ${dbName}`
-          )
-          if (activePool) break
-        }
-        if (activePool) break
-      }
-    }
-
-    if (!activePool) {
-      throw new Error(`모든 MySQL 접속 시도 실패:\n${failureLogs.join('\n')}`)
-    }
+    // Verify connection
+    const testConn = await activePool.getConnection()
+    await testConn.query('SET NAMES utf8mb4')
+    testConn.release()
 
     pool = activePool
 
@@ -282,7 +205,7 @@ export async function initDatabase() {
     }
 
     dbStatus = { connected: true, error: null }
-    console.log(`[MySQL] Successfully initialized database: ${dbName}`)
+    console.log(`[MySQL] Successfully connected to database: ${dbName}`)
     return true
   } catch (err) {
     const errorMsg = err.code ? `[${err.code}] ${err.message}` : (err.message || String(err))

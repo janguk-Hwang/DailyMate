@@ -1,7 +1,7 @@
 import express from 'express'
 import axios from 'axios'
 import jwt from 'jsonwebtoken'
-import { getSafePool, getDbStatus } from '../db.js'
+import { getSafePool } from '../db.js'
 import { cleanEnv, cleanUrl } from '../utils/env.js'
 
 const router = express.Router()
@@ -51,19 +51,17 @@ const getClientUrl = (req) => {
 function extractOAuthError(err, prefix) {
   const data = err.response?.data
   if (data) {
-    if (typeof data === 'string') return `${prefix}: ${data}`
+    if (typeof data === 'string') return `${prefix} (${data})`
     const desc = data.error_description || data.error_desc || data.message || data.error
-    if (desc) return `${prefix}: ${desc}`
-    return `${prefix}: ${JSON.stringify(data)}`
+    if (desc) return `${prefix} (${desc})`
   }
-  return `${prefix}: ${err.message || '알 수 없는 오류'}`
+  return `${prefix} (${err.message || '로그인 처리에 실패했습니다.'})`
 }
 
 async function findOrCreateSocialUser(provider, providerId, name, email) {
   const pool = await getSafePool()
   if (!pool) {
-    const errorDetails = getDbStatus().error || 'MySQL 연결 정보가 올바르지 않습니다.'
-    throw new Error(`데이터베이스 연결 실패 (${errorDetails})`)
+    throw new Error('데이터베이스에 연결되지 않았습니다.')
   }
 
   const [existing] = await pool.query(
@@ -81,7 +79,6 @@ async function findOrCreateSocialUser(provider, providerId, name, email) {
 
   if (existing.length > 0) {
     const user = existing[0]
-    // If the saved name was a placeholder but we now have a real nickname/name, update DB
     if (name && !isPlaceholder(name) && isPlaceholder(user.name)) {
       await pool.query('UPDATE users SET name = ? WHERE id = ?', [name, user.id])
       user.name = name
@@ -113,7 +110,6 @@ router.get('/google/url', (req, res) => {
   }
 
   const redirectUri = `${getRedirectBase(req)}/api/auth/google/callback`
-  console.log('[Google OAuth] Generated redirectUri:', redirectUri)
   const scope = encodeURIComponent('openid profile email')
   const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&access_type=offline`
 
@@ -126,7 +122,6 @@ router.get('/google/callback', async (req, res) => {
 
   if (error) {
     const detail = error_description || error
-    console.error('[Google OAuth Callback Error Parameter]:', detail)
     return res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(`구글 로그인 실패: ${detail}`)}`)
   }
 
@@ -138,7 +133,6 @@ router.get('/google/callback', async (req, res) => {
     const redirectUri = `${getRedirectBase(req)}/api/auth/google/callback`
     const clientId = cleanEnv(process.env.GOOGLE_CLIENT_ID)
     const clientSecret = cleanEnv(process.env.GOOGLE_CLIENT_SECRET)
-    console.log('[Google OAuth Callback] Token request redirectUri:', redirectUri)
 
     const tokenRes = await axios.post('https://oauth2.googleapis.com/token', {
       code,
@@ -162,7 +156,7 @@ router.get('/google/callback', async (req, res) => {
 
     res.redirect(`${clientUrl}/?token=${token}`)
   } catch (err) {
-    const errorDetail = extractOAuthError(err, '구글 로그인 실패')
+    const errorDetail = extractOAuthError(err, '구글 로그인 처리에 실패했습니다.')
     console.error('[Google OAuth Error]:', err.response?.data || err.message)
     res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(errorDetail)}`)
   }
@@ -179,7 +173,6 @@ router.get('/kakao/url', (req, res) => {
   }
 
   const redirectUri = `${getRedirectBase(req)}/api/auth/kakao/callback`
-  console.log('[Kakao OAuth] Generated redirectUri:', redirectUri)
   const url = `https://kauth.kakao.com/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
 
   res.json({ configured: true, url })
@@ -191,7 +184,6 @@ router.get('/kakao/callback', async (req, res) => {
 
   if (error) {
     const detail = error_description || error
-    console.error('[Kakao OAuth Callback Error Parameter]:', detail)
     return res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(`카카오 로그인 실패: ${detail}`)}`)
   }
 
@@ -203,7 +195,6 @@ router.get('/kakao/callback', async (req, res) => {
     const redirectUri = `${getRedirectBase(req)}/api/auth/kakao/callback`
     const clientId = cleanEnv(process.env.KAKAO_CLIENT_ID)
     const clientSecret = cleanEnv(process.env.KAKAO_CLIENT_SECRET)
-    console.log('[Kakao OAuth Callback] Token request redirectUri:', redirectUri)
 
     const params = new URLSearchParams()
     params.append('grant_type', 'authorization_code')
@@ -223,7 +214,6 @@ router.get('/kakao/callback', async (req, res) => {
     })
 
     const profile = userRes.data
-    console.log('[Kakao User Profile Data]:', JSON.stringify(profile))
     const nickname =
       profile.kakao_account?.profile?.nickname ||
       profile.properties?.nickname ||
@@ -240,7 +230,7 @@ router.get('/kakao/callback', async (req, res) => {
 
     res.redirect(`${clientUrl}/?token=${token}`)
   } catch (err) {
-    const errorDetail = extractOAuthError(err, '카카오 로그인 실패')
+    const errorDetail = extractOAuthError(err, '카카오 로그인 처리에 실패했습니다.')
     console.error('[Kakao OAuth Error]:', err.response?.data || err.message)
     res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(errorDetail)}`)
   }
@@ -257,7 +247,6 @@ router.get('/naver/url', (req, res) => {
   }
 
   const redirectUri = `${getRedirectBase(req)}/api/auth/naver/callback`
-  console.log('[Naver OAuth] Generated redirectUri:', redirectUri)
   const state = Math.random().toString(36).substring(2, 12)
   const url = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
 
@@ -270,7 +259,6 @@ router.get('/naver/callback', async (req, res) => {
 
   if (error) {
     const detail = error_description || error
-    console.error('[Naver OAuth Callback Error Parameter]:', detail)
     return res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(`네이버 로그인 실패: ${detail}`)}`)
   }
 
@@ -297,7 +285,6 @@ router.get('/naver/callback', async (req, res) => {
     })
 
     const profile = userRes.data.response || {}
-    console.log('[Naver User Profile Data]:', JSON.stringify(profile))
     const nickname =
       profile.name ||
       profile.nickname ||
@@ -313,7 +300,7 @@ router.get('/naver/callback', async (req, res) => {
 
     res.redirect(`${clientUrl}/?token=${token}`)
   } catch (err) {
-    const errorDetail = extractOAuthError(err, '네이버 로그인 실패')
+    const errorDetail = extractOAuthError(err, '네이버 로그인 처리에 실패했습니다.')
     console.error('[Naver OAuth Error]:', err.response?.data || err.message)
     res.redirect(`${clientUrl}/?auth_error=${encodeURIComponent(errorDetail)}`)
   }
