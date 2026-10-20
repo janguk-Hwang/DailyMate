@@ -1,7 +1,7 @@
 import express from 'express'
 import axios from 'axios'
 import jwt from 'jsonwebtoken'
-import { getSafePool } from '../db.js'
+import { getSafePool, getDbStatus } from '../db.js'
 
 const router = express.Router()
 
@@ -65,7 +65,10 @@ function extractOAuthError(err, prefix) {
 
 async function findOrCreateSocialUser(provider, providerId, name, email) {
   const pool = await getSafePool()
-  if (!pool) throw new Error('Database not connected')
+  if (!pool) {
+    const errorDetails = getDbStatus().error || 'MySQL 연결 정보가 올바르지 않습니다.'
+    throw new Error(`데이터베이스 연결 실패 (${errorDetails})`)
+  }
 
   const [existing] = await pool.query(
     'SELECT id, username, name, email, provider FROM users WHERE provider = ? AND provider_id = ?',
