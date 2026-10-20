@@ -120,7 +120,7 @@ function generateVerificationEmailHtml(code) {
                 © 2026 dailymate. All rights reserved.
               </p>
               <p style="font-size: 11px; color: #cbd5e1; margin: 0;">
-                https://dailymate.today · 일상과 일정을 가장 완벽하게
+                https://dailymate.up.railway.app · 일상과 일정을 가장 완벽하게
               </p>
             </td>
           </tr>
@@ -201,7 +201,7 @@ export async function sendVerificationEmail(to, code) {
         from,
         to,
         subject,
-        text: `[dailymate] 회원가입 인증번호는 [${code}] 입니다. 3분 이내에 입력해주세요. (https://dailymate.today)`,
+        text: `[dailymate] 회원가입 인증번호는 [${code}] 입니다. 3분 이내에 입력해주세요. (https://dailymate.up.railway.app)`,
         html,
       })
       console.log(`[dailymate EMAIL] Sent to ${to} (MessageId: ${info.messageId})`)

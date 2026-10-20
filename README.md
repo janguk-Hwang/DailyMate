@@ -1,14 +1,14 @@
 # 📅 To-Do 캘린더 (Todo Calendar App)
 
-[![Live Demo](https://img.shields.io/badge/Demo-Railway-success?style=flat&logo=railway)](https://todo-calendar-app-production.up.railway.app/)
+[![Live Demo](https://img.shields.io/badge/Demo-Railway-success?style=flat&logo=railway)](https://dailymate.up.railway.app/)
 [![React](https://img.shields.io/badge/React-19-blue?style=flat&logo=react)](https://react.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![Express](https://img.shields.io/badge/Express-5.x-lightgrey?style=flat&logo=express)](https://expressjs.com/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat&logo=mysql)](https://www.mysql.com/)
 
-> **스마트한 개인 맞춤형 일정 & 플래너 웹 애플리케이션**  
+> **스마트한 개인 맞춤형 일정 & 플래너 웹 애플리케이션 (dailymate)**  
 > React 19, Tailwind CSS v4, Express, MySQL을 기반으로 제작된 날짜별 할 일 관리 및 캘린더 서비스입니다.  
-> 🔗 **서비스 바로가기**: [https://todo-calendar-app-production.up.railway.app/](https://todo-calendar-app-production.up.railway.app/)
+> 🔗 **서비스 바로가기**: [https://dailymate.up.railway.app/](https://dailymate.up.railway.app/)
 
 ---
 
@@ -139,6 +139,22 @@ KAKAO_CLIENT_SECRET=
 NAVER_CLIENT_ID=
 NAVER_CLIENT_SECRET=
 ```
+
+#### 🌐 소셜 로그인(OAuth 2.0) 콘솔 등록 정보 (`dailymate.up.railway.app`)
+
+| 제공자 | 설정 위치 | 설정 항목 | 입력할 URL |
+|---|---|---|---|
+| **Google Cloud Console** | 사용자 인증 정보 > OAuth 2.0 클라이언트 ID | 승인된 자바스크립트 원본 | `https://dailymate.up.railway.app` |
+| | | 승인된 리디렉션 URI | `https://dailymate.up.railway.app/api/auth/google/callback` |
+| **Kakao Developers** | 앱 설정 > 플랫폼 > Web | 사이트 도메인 | `https://dailymate.up.railway.app` |
+| | 제품 설정 > 카카오 로그인 | Redirect URI | `https://dailymate.up.railway.app/api/auth/kakao/callback` |
+| **Naver Developers** | Application > API 설정 | 서비스 URL | `https://dailymate.up.railway.app` |
+| | | Callback URL | `https://dailymate.up.railway.app/api/auth/naver/callback` |
+
+> 💡 **Railway 환경 변수 설정 권장 사항**  
+> Railway 대시보드의 **Variables** 탭에 다음 환경변수를 지정해주시면 안전하게 동작합니다:  
+> - `CLIENT_URL`: `https://dailymate.up.railway.app`  
+> - `REDIRECT_BASE_URL`: `https://dailymate.up.railway.app`  
 
 ### 3. 애플리케이션 실행
 - **프론트엔드 개발 서버:**

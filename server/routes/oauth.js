@@ -10,8 +10,12 @@ const getRedirectBase = (req) => {
   if (process.env.REDIRECT_BASE_URL) {
     return process.env.REDIRECT_BASE_URL.replace(/\/$/, '')
   }
-  const proto = req.get('x-forwarded-proto') || req.protocol
-  const host = req.get('x-forwarded-host') || req.get('host')
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN.replace(/\/$/, '')}`
+  }
+  const host = req.get('x-forwarded-host') || req.get('host') || 'dailymate.up.railway.app'
+  const isRailway = host.includes('railway.app')
+  const proto = isRailway ? 'https' : (req.get('x-forwarded-proto') || req.protocol)
   return `${proto}://${host}`
 }
 
@@ -19,8 +23,12 @@ const getClientUrl = (req) => {
   if (process.env.CLIENT_URL) {
     return process.env.CLIENT_URL.replace(/\/$/, '')
   }
-  const proto = req.get('x-forwarded-proto') || req.protocol
-  const host = req.get('x-forwarded-host') || req.get('host')
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN.replace(/\/$/, '')}`
+  }
+  const host = req.get('x-forwarded-host') || req.get('host') || 'dailymate.up.railway.app'
+  const isRailway = host.includes('railway.app')
+  const proto = isRailway ? 'https' : (req.get('x-forwarded-proto') || req.protocol)
   return `${proto}://${host}`
 }
 
