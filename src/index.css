@@ -53,27 +53,40 @@ body, #root, div, nav, header, main, section, footer, button, input, textarea {
 }
 
 /* Electron 바탕화면 위젯 전용 투명 배경 및 스크롤바 완전 제거 */
+html.is-electron-widget,
 body.is-electron-widget {
   background-color: transparent !important;
   background: transparent !important;
+  overflow: hidden !important;
+  height: 100% !important;
+  width: 100% !important;
 }
 
 body.is-electron-widget #root {
   background-color: transparent !important;
   background: transparent !important;
+  height: 100% !important;
+  width: 100% !important;
+  overflow: hidden !important;
 }
 
-/* 위젯 내의 모든 스크롤바 완전 숨김 (스크롤 기능은 유지하면서 스크롤바 그래픽만 제거) */
+/* 위젯 및 no-scrollbar 영역 내의 모든 스크롤바 완전 숨김 (마우스 휠 스크롤은 부드럽게 작동) */
+html.is-electron-widget::-webkit-scrollbar,
+body.is-electron-widget::-webkit-scrollbar,
 body.is-electron-widget *::-webkit-scrollbar,
-.no-scrollbar::-webkit-scrollbar {
+.no-scrollbar::-webkit-scrollbar,
+.no-scrollbar *::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
   background: transparent !important;
 }
 
+html.is-electron-widget,
+body.is-electron-widget,
 body.is-electron-widget *,
-.no-scrollbar {
+.no-scrollbar,
+.no-scrollbar * {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
 }

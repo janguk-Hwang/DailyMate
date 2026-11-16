@@ -17,8 +17,8 @@ const configPath = path.join(app.getPath('userData'), 'dailymate-widget-config.j
 const defaultConfig = {
   isWidget: true,
   widgetView: 'grid', // 'grid' (바탕화면 대형 달력) | 'compact' (슬림 위젯)
+  opacity: 90,
   isLocked: false,
-  alwaysOnBottom: false,
   autoStart: false,
   bounds: {
     width: 1080,
@@ -114,14 +114,6 @@ function updateTrayMenu() {
       checked: appConfig.isLocked,
       click: (item) => {
         setLocked(item.checked);
-      }
-    },
-    {
-      label: '바탕화면 고정 (항상 맨 아래)',
-      type: 'checkbox',
-      checked: appConfig.alwaysOnBottom,
-      click: (item) => {
-        setAlwaysOnBottom(item.checked);
       }
     },
     {
@@ -353,8 +345,8 @@ ipcMain.handle('get-app-state', () => {
     isElectron: true,
     isWidget: appConfig.isWidget,
     widgetView: appConfig.widgetView || 'grid',
+    widgetOpacity: appConfig.opacity || 90,
     isLocked: appConfig.isLocked,
-    alwaysOnBottom: appConfig.alwaysOnBottom,
     autoStart: loginSettings.openAtLogin ?? appConfig.autoStart
   };
 });
@@ -365,6 +357,11 @@ ipcMain.on('set-widget-mode', (event, enabled) => {
 
 ipcMain.on('set-widget-view', (event, viewType) => {
   setWidgetView(viewType);
+});
+
+ipcMain.on('set-widget-opacity', (event, opacity) => {
+  appConfig.opacity = opacity;
+  saveConfig(appConfig);
 });
 
 ipcMain.on('set-locked', (event, locked) => {

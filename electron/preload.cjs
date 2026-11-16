@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAppState: () => ipcRenderer.invoke('get-app-state'),
   setWidgetMode: (enabled) => ipcRenderer.send('set-widget-mode', enabled),
   setWidgetView: (viewType) => ipcRenderer.send('set-widget-view', viewType),
+  setWidgetOpacity: (opacity) => ipcRenderer.send('set-widget-opacity', opacity),
   setLocked: (locked) => ipcRenderer.send('set-locked', locked),
   setAlwaysOnBottom: (bottom) => ipcRenderer.send('set-always-on-bottom', bottom),
   setAutoStart: (enabled) => ipcRenderer.send('set-auto-start', enabled),

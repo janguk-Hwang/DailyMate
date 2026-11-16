@@ -432,56 +432,62 @@ export default function SettingsAndMyPageModal({
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 sm:px-5 gap-1.5 sm:gap-2 flex-shrink-0 overflow-x-auto no-scrollbar py-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab('profile')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
-              activeTab === 'profile'
-                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold shadow-2xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            <User className="w-4 h-4" />
-            <span>내 정보 & 통계</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('settings')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
-              activeTab === 'settings'
-                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold shadow-2xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            <SettingsIcon className="w-4 h-4" />
-            <span>환경설정</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('security')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
-              activeTab === 'security'
-                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold shadow-2xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Shield className="w-4 h-4" />
-            <span>계정 & 보안</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('about')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
-              activeTab === 'about'
-                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold shadow-2xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            <MessageSquarePlus className="w-4 h-4" />
-            <span>서비스 안내 & 제보</span>
-          </button>
+        {/* Tab Navigation (슬림 모드 440px에서도 잘리지 않는 4분할 반응형 탭) */}
+        <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 p-1.5 sm:p-2 flex-shrink-0">
+          <div className="grid grid-cols-4 gap-1 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('profile')}
+              title="내 정보 & 통계"
+              className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                activeTab === 'profile'
+                  ? 'bg-white dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-300 font-bold shadow-xs border border-slate-200/60 dark:border-indigo-800/60'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/60'
+              }`}
+            >
+              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 text-indigo-500" />
+              <span className="truncate">내 정보<span className="hidden sm:inline"> & 통계</span></span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('settings')}
+              title="환경설정"
+              className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                activeTab === 'settings'
+                  ? 'bg-white dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-300 font-bold shadow-xs border border-slate-200/60 dark:border-indigo-800/60'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/60'
+              }`}
+            >
+              <SettingsIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 text-indigo-500" />
+              <span className="truncate">환경설정</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('security')}
+              title="계정 및 보안"
+              className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                activeTab === 'security'
+                  ? 'bg-white dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-300 font-bold shadow-xs border border-slate-200/60 dark:border-indigo-800/60'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/60'
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 text-indigo-500" />
+              <span className="truncate">계정<span className="hidden sm:inline"> & 보안</span></span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('about')}
+              title="서비스 안내 및 제보"
+              className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                activeTab === 'about'
+                  ? 'bg-white dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-300 font-bold shadow-xs border border-slate-200/60 dark:border-indigo-800/60'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/60'
+              }`}
+            >
+              <MessageSquarePlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 text-indigo-500" />
+              <span className="truncate">안내<span className="hidden sm:inline"> & 제보</span></span>
+            </button>
+          </div>
         </div>
 
         {/* Modal Body Content (Scrollable) */}

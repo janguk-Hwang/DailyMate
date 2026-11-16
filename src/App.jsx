@@ -79,9 +79,26 @@ export default function App() {
   const [isElectron, setIsElectron] = useState(() => Boolean(window.electronAPI?.isElectron))
   const [isWidget, setIsWidget] = useState(true)
   const [widgetView, setWidgetView] = useState('grid') // 'grid' (DesktopCal 대형 달력) | 'compact' (슬림 위젯)
+  const [widgetOpacity, setWidgetOpacity] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dailymate_widget_opacity')
+      return saved ? Number(saved) : 90
+    } catch {
+      return 90
+    }
+  })
   const [isLocked, setIsLocked] = useState(false)
-  const [alwaysOnBottom, setAlwaysOnBottom] = useState(false)
   const [autoStart, setAutoStart] = useState(false)
+
+  const handleChangeOpacity = (newOpacity) => {
+    setWidgetOpacity(newOpacity)
+    try {
+      localStorage.setItem('dailymate_widget_opacity', String(newOpacity))
+    } catch {}
+    if (window.electronAPI?.setWidgetOpacity) {
+      window.electronAPI.setWidgetOpacity(newOpacity)
+    }
+  }
 
   // Electron IPC Listeners
   useEffect(() => {
@@ -90,8 +107,8 @@ export default function App() {
         if (state) {
           setIsWidget(state.isWidget)
           if (state.widgetView) setWidgetView(state.widgetView)
+          if (state.widgetOpacity) setWidgetOpacity(state.widgetOpacity)
           setIsLocked(state.isLocked)
-          setAlwaysOnBottom(state.alwaysOnBottom)
           setAutoStart(state.autoStart)
         }
       }).catch(console.error)
@@ -99,14 +116,12 @@ export default function App() {
       const unbindWidget = window.electronAPI.onWidgetModeChanged?.(setIsWidget)
       const unbindView = window.electronAPI.onWidgetViewChanged?.(setWidgetView)
       const unbindLocked = window.electronAPI.onLockedChanged?.(setIsLocked)
-      const unbindBottom = window.electronAPI.onAlwaysOnBottomChanged?.(setAlwaysOnBottom)
       const unbindAuto = window.electronAPI.onAutoStartChanged?.(setAutoStart)
 
       return () => {
         unbindWidget?.()
         unbindView?.()
         unbindLocked?.()
-        unbindBottom?.()
         unbindAuto?.()
       }
     }
@@ -116,8 +131,10 @@ export default function App() {
   useEffect(() => {
     if (isElectron && isWidget) {
       document.body.classList.add('is-electron-widget')
+      document.documentElement.classList.add('is-electron-widget')
     } else {
       document.body.classList.remove('is-electron-widget')
+      document.documentElement.classList.remove('is-electron-widget')
     }
   }, [isElectron, isWidget])
 
@@ -722,12 +739,6 @@ export default function App() {
     window.electronAPI?.setWidgetMode(next)
   }
 
-  const handleToggleAlwaysOnBottom = () => {
-    const next = !alwaysOnBottom
-    setAlwaysOnBottom(next)
-    window.electronAPI?.setAlwaysOnBottom(next)
-  }
-
   const handleMinimizeToTray = () => {
     window.electronAPI?.minimizeToTray()
   }
@@ -747,18 +758,21 @@ export default function App() {
     if (widgetView === 'grid') {
       // 1-A. 바탕화면 대형 달력 뷰 (DesktopCal 스타일: 달력 안에 일정이 보이고 취소선 표시)
       return (
-        <div className="w-full h-screen p-2 select-none flex flex-col justify-start bg-transparent no-scrollbar">
-          <div className="w-full h-full bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300">
+        <div className="w-full h-screen p-2 select-none flex flex-col justify-start bg-transparent overflow-hidden no-scrollbar">
+          <div
+            className="w-full h-full bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300"
+            style={{ opacity: widgetOpacity / 100 }}
+          >
             {/* Top Window Drag & Controller Bar */}
             <DesktopWidgetBar
               isWidget={isWidget}
               widgetView={widgetView}
               isLocked={isLocked}
-              alwaysOnBottom={alwaysOnBottom}
               onToggleLock={handleToggleLock}
               onToggleWidgetMode={handleToggleWidgetMode}
               onToggleViewType={handleToggleViewType}
-              onToggleAlwaysOnBottom={handleToggleAlwaysOnBottom}
+              widgetOpacity={widgetOpacity}
+              onChangeOpacity={handleChangeOpacity}
               onMinimizeToTray={handleMinimizeToTray}
               onClose={handleCloseApp}
               onOpenSettings={() => {
@@ -825,18 +839,21 @@ export default function App() {
 
     // 1-B. 슬림 사이드 위젯 모드 (기존 위젯 유지, 스크롤바 완전 숨김)
     return (
-      <div className="w-full min-h-screen p-2 select-none flex flex-col justify-start bg-transparent no-scrollbar">
-        <div className="w-full max-w-md mx-auto bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border border-white/50 dark:border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300">
+      <div className="w-full h-screen p-2 select-none flex flex-col justify-start bg-transparent overflow-hidden no-scrollbar">
+        <div
+          className="w-full max-w-md mx-auto h-full bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border border-white/50 dark:border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300"
+          style={{ opacity: widgetOpacity / 100 }}
+        >
           {/* Top Window Drag & Controller Bar */}
           <DesktopWidgetBar
             isWidget={isWidget}
             widgetView={widgetView}
             isLocked={isLocked}
-            alwaysOnBottom={alwaysOnBottom}
             onToggleLock={handleToggleLock}
             onToggleWidgetMode={handleToggleWidgetMode}
             onToggleViewType={handleToggleViewType}
-            onToggleAlwaysOnBottom={handleToggleAlwaysOnBottom}
+            widgetOpacity={widgetOpacity}
+            onChangeOpacity={handleChangeOpacity}
             onMinimizeToTray={handleMinimizeToTray}
             onClose={handleCloseApp}
             onOpenSettings={() => {
@@ -845,7 +862,7 @@ export default function App() {
             }}
           />
 
-          <div className="p-3 sm:p-4 space-y-3 overflow-y-auto max-h-[calc(100vh-50px)] no-scrollbar">
+          <div className="flex-1 p-3 sm:p-4 space-y-3 overflow-y-auto overflow-x-hidden no-scrollbar">
             {/* Header & Date status */}
             <Header
               selectedDate={selectedDate}
@@ -1032,11 +1049,11 @@ export default function App() {
               isWidget={isWidget}
               widgetView={widgetView}
               isLocked={isLocked}
-              alwaysOnBottom={alwaysOnBottom}
               onToggleLock={handleToggleLock}
               onToggleWidgetMode={handleToggleWidgetMode}
               onToggleViewType={handleToggleViewType}
-              onToggleAlwaysOnBottom={handleToggleAlwaysOnBottom}
+              widgetOpacity={widgetOpacity}
+              onChangeOpacity={handleChangeOpacity}
               onMinimizeToTray={handleMinimizeToTray}
               onClose={handleCloseApp}
               onOpenSettings={() => {
