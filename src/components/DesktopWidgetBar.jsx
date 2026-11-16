@@ -8,15 +8,19 @@ import {
   X,
   Calendar,
   Layers,
-  Settings
+  Settings,
+  LayoutGrid,
+  Square
 } from 'lucide-react'
 
 export default function DesktopWidgetBar({
   isWidget,
+  widgetView = 'grid', // 'grid' (DesktopCal 대형) | 'compact' (슬림 위젯)
   isLocked,
   alwaysOnBottom,
   onToggleLock,
   onToggleWidgetMode,
+  onToggleViewType,
   onToggleAlwaysOnBottom,
   onMinimizeToTray,
   onClose,
@@ -39,7 +43,7 @@ export default function DesktopWidgetBar({
         <span className="text-xs font-bold tracking-tight">DailyMate</span>
         {isWidget && (
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-medium">
-            위젯
+            {widgetView === 'grid' ? '바탕화면 달력' : '미니 위젯'}
           </span>
         )}
       </div>
@@ -49,6 +53,28 @@ export default function DesktopWidgetBar({
         className="flex items-center gap-1"
         style={{ WebkitAppRegion: 'no-drag' }}
       >
+        {/* 대형 캘린더 (DesktopCal) ↔ 슬림 위젯 토글 */}
+        {isWidget && onToggleViewType && (
+          <button
+            type="button"
+            onClick={onToggleViewType}
+            title={widgetView === 'grid' ? '슬림 사이드 위젯 모드로 전환' : '바탕화면 대형 달력 모드(DesktopCal)로 전환'}
+            className="p-1 text-slate-300 hover:text-white hover:bg-white/10 dark:hover:bg-slate-800 rounded-md transition-colors flex items-center gap-1 text-[11px] font-semibold px-2 bg-white/5"
+          >
+            {widgetView === 'grid' ? (
+              <>
+                <Square className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden sm:inline">슬림 뷰</span>
+              </>
+            ) : (
+              <>
+                <LayoutGrid className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden sm:inline">대형 달력</span>
+              </>
+            )}
+          </button>
+        )}
+
         {/* 위치 고정 / 잠금 토글 */}
         <button
           type="button"
@@ -81,7 +107,7 @@ export default function DesktopWidgetBar({
         <button
           type="button"
           onClick={onToggleWidgetMode}
-          title={isWidget ? '일반 창 모드로 전환' : '바탕화면 미니 위젯 모드로 전환'}
+          title={isWidget ? '일반 웹 창 모드로 전환' : '바탕화면 위젯 모드로 전환'}
           className="p-1 text-slate-400 hover:text-white hover:bg-white/10 dark:hover:bg-slate-800 rounded-md transition-colors"
         >
           {isWidget ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}

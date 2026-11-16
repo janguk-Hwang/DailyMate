@@ -12,6 +12,7 @@ import TodoDetailModal from './components/TodoDetailModal'
 import SettingsAndMyPageModal from './components/SettingsAndMyPageModal'
 import DesktopWidgetBar from './components/DesktopWidgetBar'
 import AppDownloadModal from './components/AppDownloadModal'
+import DesktopWallpaperCalendar from './components/DesktopWallpaperCalendar'
 import {
   getMonthSchedules,
   createSchedule,
@@ -77,6 +78,7 @@ export default function App() {
   // Electron Desktop Widget States
   const [isElectron, setIsElectron] = useState(() => Boolean(window.electronAPI?.isElectron))
   const [isWidget, setIsWidget] = useState(true)
+  const [widgetView, setWidgetView] = useState('grid') // 'grid' (DesktopCal 대형 달력) | 'compact' (슬림 위젯)
   const [isLocked, setIsLocked] = useState(false)
   const [alwaysOnBottom, setAlwaysOnBottom] = useState(false)
   const [autoStart, setAutoStart] = useState(false)
@@ -87,6 +89,7 @@ export default function App() {
       window.electronAPI.getAppState().then((state) => {
         if (state) {
           setIsWidget(state.isWidget)
+          if (state.widgetView) setWidgetView(state.widgetView)
           setIsLocked(state.isLocked)
           setAlwaysOnBottom(state.alwaysOnBottom)
           setAutoStart(state.autoStart)
@@ -94,12 +97,14 @@ export default function App() {
       }).catch(console.error)
 
       const unbindWidget = window.electronAPI.onWidgetModeChanged?.(setIsWidget)
+      const unbindView = window.electronAPI.onWidgetViewChanged?.(setWidgetView)
       const unbindLocked = window.electronAPI.onLockedChanged?.(setIsLocked)
       const unbindBottom = window.electronAPI.onAlwaysOnBottomChanged?.(setAlwaysOnBottom)
       const unbindAuto = window.electronAPI.onAutoStartChanged?.(setAutoStart)
 
       return () => {
         unbindWidget?.()
+        unbindView?.()
         unbindLocked?.()
         unbindBottom?.()
         unbindAuto?.()
@@ -731,18 +736,106 @@ export default function App() {
     window.electronAPI?.minimizeToTray()
   }
 
-  // 1. Electron 바탕화면 미니멀 위젯 모드
+  const handleToggleViewType = () => {
+    const nextView = widgetView === 'grid' ? 'compact' : 'grid'
+    setWidgetView(nextView)
+    window.electronAPI?.setWidgetView(nextView)
+  }
+
+  // 1. Electron 바탕화면 위젯 모드 (DesktopCal 대형 그리드 또는 슬림 위젯)
   if (isElectron && isWidget) {
+    if (widgetView === 'grid') {
+      // 1-A. 바탕화면 대형 달력 뷰 (DesktopCal 스타일: 달력 안에 일정이 보이고 취소선 표시)
+      return (
+        <div className="w-full h-screen p-2 select-none flex flex-col justify-start bg-transparent no-scrollbar">
+          <div className="w-full h-full bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300">
+            {/* Top Window Drag & Controller Bar */}
+            <DesktopWidgetBar
+              isWidget={isWidget}
+              widgetView={widgetView}
+              isLocked={isLocked}
+              alwaysOnBottom={alwaysOnBottom}
+              onToggleLock={handleToggleLock}
+              onToggleWidgetMode={handleToggleWidgetMode}
+              onToggleViewType={handleToggleViewType}
+              onToggleAlwaysOnBottom={handleToggleAlwaysOnBottom}
+              onMinimizeToTray={handleMinimizeToTray}
+              onClose={handleCloseApp}
+              onOpenSettings={() => {
+                setSettingsModalTab('settings')
+                setSettingsModalOpen(true)
+              }}
+            />
+
+            {/* DesktopCal Wallpaper Calendar Grid */}
+            <div className="flex-1 overflow-hidden no-scrollbar">
+              <DesktopWallpaperCalendar
+                currentYearMonth={currentYearMonth}
+                onChangeYearMonth={setCurrentYearMonth}
+                selectedDate={selectedDate}
+                onSelectDate={setSelectedDate}
+                allMonthTodos={allMonthTodos}
+                onToggleTodo={handleToggle}
+                onAddTodo={handleAddTodo}
+                onDeleteTodo={handleDelete}
+                onOpenDetail={handleOpenDetail}
+                user={user}
+                onOpenAuth={() => handleOpenAuth('login')}
+                startOfWeek={settings.startOfWeek}
+              />
+            </div>
+          </div>
+
+          {/* Modals */}
+          <AuthModal
+            isOpen={authModalOpen}
+            onClose={() => setAuthModalOpen(false)}
+            onAuthSuccess={handleAuthSuccess}
+            initialMode={authModalMode}
+          />
+          <MultiScheduleModal
+            isOpen={multiModalOpen}
+            onClose={() => setMultiModalOpen(false)}
+            initialDate={selectedDate}
+            onSubmitBatch={handleBatchAddTodo}
+          />
+          <TodoDetailModal
+            isOpen={Boolean(selectedDetailTodo)}
+            onClose={() => setSelectedDetailTodo(null)}
+            todo={selectedDetailTodo}
+            onSave={handleSaveDetail}
+            onDelete={handleDelete}
+            onToggle={handleDetailToggle}
+          />
+          <SettingsAndMyPageModal
+            isOpen={settingsModalOpen}
+            initialTab={settingsModalTab}
+            onClose={() => setSettingsModalOpen(false)}
+            user={user}
+            onUserUpdated={handleUserUpdated}
+            onLogout={handleLogout}
+            onOpenAuth={handleOpenAuth}
+            settings={settings}
+            onUpdateSettings={handleUpdateSettings}
+            onRefreshSchedules={() => loadSchedules(currentYearMonth)}
+          />
+        </div>
+      )
+    }
+
+    // 1-B. 슬림 사이드 위젯 모드 (기존 위젯 유지, 스크롤바 완전 숨김)
     return (
-      <div className="w-full min-h-screen p-2 select-none flex flex-col justify-start bg-transparent">
+      <div className="w-full min-h-screen p-2 select-none flex flex-col justify-start bg-transparent no-scrollbar">
         <div className="w-full max-w-md mx-auto bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border border-white/50 dark:border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300">
           {/* Top Window Drag & Controller Bar */}
           <DesktopWidgetBar
             isWidget={isWidget}
+            widgetView={widgetView}
             isLocked={isLocked}
             alwaysOnBottom={alwaysOnBottom}
             onToggleLock={handleToggleLock}
             onToggleWidgetMode={handleToggleWidgetMode}
+            onToggleViewType={handleToggleViewType}
             onToggleAlwaysOnBottom={handleToggleAlwaysOnBottom}
             onMinimizeToTray={handleMinimizeToTray}
             onClose={handleCloseApp}
@@ -937,10 +1030,12 @@ export default function App() {
           <div className="mb-3 rounded-2xl overflow-hidden shadow-md">
             <DesktopWidgetBar
               isWidget={isWidget}
+              widgetView={widgetView}
               isLocked={isLocked}
               alwaysOnBottom={alwaysOnBottom}
               onToggleLock={handleToggleLock}
               onToggleWidgetMode={handleToggleWidgetMode}
+              onToggleViewType={handleToggleViewType}
               onToggleAlwaysOnBottom={handleToggleAlwaysOnBottom}
               onMinimizeToTray={handleMinimizeToTray}
               onClose={handleCloseApp}

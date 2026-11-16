@@ -52,7 +52,7 @@ body, #root, div, nav, header, main, section, footer, button, input, textarea {
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Electron 바탕화면 위젯 전용 투명 배경 */
+/* Electron 바탕화면 위젯 전용 투명 배경 및 스크롤바 완전 제거 */
 body.is-electron-widget {
   background-color: transparent !important;
   background: transparent !important;
@@ -61,6 +61,21 @@ body.is-electron-widget {
 body.is-electron-widget #root {
   background-color: transparent !important;
   background: transparent !important;
+}
+
+/* 위젯 내의 모든 스크롤바 완전 숨김 (스크롤 기능은 유지하면서 스크롤바 그래픽만 제거) */
+body.is-electron-widget *::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+body.is-electron-widget *,
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
 .drag-region {

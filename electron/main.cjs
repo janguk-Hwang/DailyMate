@@ -16,12 +16,13 @@ const configPath = path.join(app.getPath('userData'), 'dailymate-widget-config.j
 
 const defaultConfig = {
   isWidget: true,
+  widgetView: 'grid', // 'grid' (바탕화면 대형 달력) | 'compact' (슬림 위젯)
   isLocked: false,
   alwaysOnBottom: false,
   autoStart: false,
   bounds: {
-    width: 440,
-    height: 720,
+    width: 1080,
+    height: 740,
     x: undefined,
     y: undefined
   }
@@ -83,12 +84,29 @@ function updateTrayMenu() {
       }
     },
     {
-      label: '위젯 모드 (미니멀)',
+      label: '위젯 모드 (바탕화면)',
       type: 'checkbox',
       checked: appConfig.isWidget,
       click: (item) => {
         setWidgetMode(item.checked);
       }
+    },
+    {
+      label: '뷰 스타일',
+      submenu: [
+        {
+          label: '바탕화면 대형 달력 (DesktopCal)',
+          type: 'radio',
+          checked: appConfig.widgetView === 'grid',
+          click: () => setWidgetView('grid')
+        },
+        {
+          label: '슬림 사이드 위젯',
+          type: 'radio',
+          checked: appConfig.widgetView === 'compact',
+          click: () => setWidgetView('compact')
+        }
+      ]
     },
     {
       label: '위치 고정 (잠금)',
@@ -168,12 +186,13 @@ function createWindow() {
 
   // 기본 위치: 우측 상단/중앙 바탕화면
   if (x === undefined || y === undefined) {
-    x = Math.max(0, screenWidth - (appConfig.isWidget ? 460 : 1000));
+    const defaultW = appConfig.isWidget ? (appConfig.widgetView === 'compact' ? 460 : 1100) : 1150;
+    x = Math.max(0, screenWidth - defaultW - 20);
     y = 50;
   }
 
-  const initialWidth = appConfig.isWidget ? 440 : 1024;
-  const initialHeight = appConfig.isWidget ? 720 : 768;
+  const initialWidth = appConfig.isWidget ? (appConfig.widgetView === 'compact' ? 440 : 1080) : 1150;
+  const initialHeight = appConfig.isWidget ? (appConfig.widgetView === 'compact' ? 720 : 740) : 800;
 
   mainWindow = new BrowserWindow({
     width: appConfig.bounds.width || initialWidth,
@@ -260,11 +279,30 @@ function setWidgetMode(enabled) {
   if (mainWindow) {
     mainWindow.setSkipTaskbar(enabled);
     if (enabled) {
-      mainWindow.setSize(440, 720);
+      if (appConfig.widgetView === 'compact') {
+        mainWindow.setSize(440, 720);
+      } else {
+        mainWindow.setSize(1080, 740);
+      }
     } else {
-      mainWindow.setSize(1024, 768);
+      mainWindow.setSize(1150, 800);
     }
     mainWindow.webContents.send('widget-mode-changed', enabled);
+  }
+  updateTrayMenu();
+}
+
+function setWidgetView(viewType) {
+  appConfig.widgetView = viewType;
+  saveConfig(appConfig);
+
+  if (mainWindow && appConfig.isWidget) {
+    if (viewType === 'compact') {
+      mainWindow.setSize(440, 720);
+    } else {
+      mainWindow.setSize(1080, 740);
+    }
+    mainWindow.webContents.send('widget-view-changed', viewType);
   }
   updateTrayMenu();
 }
@@ -314,6 +352,7 @@ ipcMain.handle('get-app-state', () => {
   return {
     isElectron: true,
     isWidget: appConfig.isWidget,
+    widgetView: appConfig.widgetView || 'grid',
     isLocked: appConfig.isLocked,
     alwaysOnBottom: appConfig.alwaysOnBottom,
     autoStart: loginSettings.openAtLogin ?? appConfig.autoStart
@@ -322,6 +361,10 @@ ipcMain.handle('get-app-state', () => {
 
 ipcMain.on('set-widget-mode', (event, enabled) => {
   setWidgetMode(enabled);
+});
+
+ipcMain.on('set-widget-view', (event, viewType) => {
+  setWidgetView(viewType);
 });
 
 ipcMain.on('set-locked', (event, locked) => {

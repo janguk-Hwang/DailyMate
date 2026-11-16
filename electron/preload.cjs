@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
   getAppState: () => ipcRenderer.invoke('get-app-state'),
   setWidgetMode: (enabled) => ipcRenderer.send('set-widget-mode', enabled),
+  setWidgetView: (viewType) => ipcRenderer.send('set-widget-view', viewType),
   setLocked: (locked) => ipcRenderer.send('set-locked', locked),
   setAlwaysOnBottom: (bottom) => ipcRenderer.send('set-always-on-bottom', bottom),
   setAutoStart: (enabled) => ipcRenderer.send('set-auto-start', enabled),
@@ -14,6 +15,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const handler = (_event, val) => callback(val);
     ipcRenderer.on('widget-mode-changed', handler);
     return () => ipcRenderer.removeListener('widget-mode-changed', handler);
+  },
+  onWidgetViewChanged: (callback) => {
+    const handler = (_event, val) => callback(val);
+    ipcRenderer.on('widget-view-changed', handler);
+    return () => ipcRenderer.removeListener('widget-view-changed', handler);
   },
   onLockedChanged: (callback) => {
     const handler = (_event, val) => callback(val);
