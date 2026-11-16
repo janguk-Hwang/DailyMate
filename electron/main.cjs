@@ -203,11 +203,23 @@ function createWindow() {
   const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
-    // 개발자 도구 디버깅 필요 시:
-    // mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    const indexPath = path.join(__dirname, '../dist/index.html');
+    mainWindow.loadFile(indexPath).catch((err) => {
+      console.error('Failed to load index.html:', err);
+    });
   }
+
+  // 로딩 실패 디버깅 핸들러
+  mainWindow.webContents.on('did-fail-load', (_e, code, desc) => {
+    console.error('did-fail-load:', code, desc);
+  });
+
+  // 준비되면 즉시 표시 및 포커스
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    mainWindow.focus();
+  });
 
   // 창 닫기 시 실제 종료 대신 트레이로 숨김
   mainWindow.on('close', (event) => {
