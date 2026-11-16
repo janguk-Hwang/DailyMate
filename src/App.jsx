@@ -760,7 +760,7 @@ export default function App() {
       return (
         <div className="w-full h-screen p-2 select-none flex flex-col justify-start bg-transparent overflow-hidden no-scrollbar">
           <div
-            className="w-full h-full bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300"
+            className="w-full h-full bg-black/20 dark:bg-black/35 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300"
             style={{ opacity: widgetOpacity / 100 }}
           >
             {/* Top Window Drag & Controller Bar */}
@@ -841,7 +841,7 @@ export default function App() {
     return (
       <div className="w-full h-screen p-2 select-none flex flex-col justify-start bg-transparent overflow-hidden no-scrollbar">
         <div
-          className="w-full max-w-md mx-auto h-full bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border border-white/50 dark:border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300"
+          className="w-full max-w-md mx-auto h-full bg-white/35 dark:bg-slate-900/40 backdrop-blur-2xl border border-white/30 dark:border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300"
           style={{ opacity: widgetOpacity / 100 }}
         >
           {/* Top Window Drag & Controller Bar */}

@@ -46,11 +46,10 @@ export default function DesktopWidgetBar({
 
   return (
     <div
-      className={`w-full flex items-center justify-between px-3 py-2 select-none border-b transition-colors relative z-40 ${
-        isWidget
-          ? 'bg-slate-900/80 dark:bg-slate-950/80 text-white border-white/10 backdrop-blur-md rounded-t-2xl'
-          : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800'
-      } ${isLocked ? '' : 'cursor-move'}`}
+      className={`w-full flex items-center justify-between px-3 py-2 select-none border-b transition-colors relative z-40 ${isWidget
+        ? 'bg-black/25 dark:bg-black/40 text-white border-white/15 backdrop-blur-md rounded-t-2xl'
+        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800'
+        } ${isLocked ? '' : 'cursor-move'}`}
       style={{ WebkitAppRegion: isLocked ? 'no-drag' : 'drag' }}
     >
       {/* Left: Brand / Title */}
@@ -100,11 +99,10 @@ export default function DesktopWidgetBar({
               type="button"
               onClick={() => setShowOpacityPopover(!showOpacityPopover)}
               title={`위젯 투명도 조절 (현재: ${widgetOpacity}%)`}
-              className={`p-1 px-2 rounded-md transition-colors flex items-center gap-1 text-[11px] font-semibold ${
-                showOpacityPopover
-                  ? 'text-white bg-indigo-600/40'
-                  : 'text-slate-300 hover:text-white hover:bg-white/10 dark:hover:bg-slate-800 bg-white/5'
-              }`}
+              className={`p-1 px-2 rounded-md transition-colors flex items-center gap-1 text-[11px] font-semibold ${showOpacityPopover
+                ? 'text-white bg-indigo-600/40'
+                : 'text-slate-300 hover:text-white hover:bg-white/10 dark:hover:bg-slate-800 bg-white/5'
+                }`}
             >
               <Droplets className="w-3.5 h-3.5 text-indigo-400" />
               <span>{widgetOpacity}%</span>
@@ -144,11 +142,10 @@ export default function DesktopWidgetBar({
                       key={val}
                       type="button"
                       onClick={() => onChangeOpacity(val)}
-                      className={`py-1 text-[10px] font-bold rounded-lg transition-colors ${
-                        widgetOpacity === val
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                      }`}
+                      className={`py-1 text-[10px] font-bold rounded-lg transition-colors ${widgetOpacity === val
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        }`}
                     >
                       {val}%
                     </button>
@@ -164,11 +161,10 @@ export default function DesktopWidgetBar({
           type="button"
           onClick={onToggleLock}
           title={isLocked ? '위치 고정 해제 (드래그 가능)' : '위치 고정 (잠금)'}
-          className={`p-1 rounded-md transition-colors ${
-            isLocked
-              ? 'text-indigo-400 bg-indigo-500/20'
-              : 'text-slate-400 hover:text-white hover:bg-white/10 dark:hover:bg-slate-800'
-          }`}
+          className={`p-1 rounded-md transition-colors ${isLocked
+            ? 'text-indigo-400 bg-indigo-500/20'
+            : 'text-slate-400 hover:text-white hover:bg-white/10 dark:hover:bg-slate-800'
+            }`}
         >
           {isLocked ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
         </button>

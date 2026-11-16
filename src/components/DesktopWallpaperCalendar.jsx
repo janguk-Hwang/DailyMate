@@ -99,8 +99,9 @@ export default function DesktopWallpaperCalendar({
   const todosByDate = useMemo(() => {
     const map = {}
     allMonthTodos.forEach((item) => {
-      if (!map[item.date]) map[item.date] = []
-      map[item.date].push(item)
+      const d = item.date
+      if (!map[d]) map[d] = []
+      map[d].push(item)
     })
     return map
   }, [allMonthTodos])
@@ -110,24 +111,28 @@ export default function DesktopWallpaperCalendar({
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   }, [])
 
-  // 빠른 일정 추가 핸들러
+  // 인라인 빠른 일정 추가
   const handleQuickAdd = (dateStr) => {
     if (!quickInputText.trim()) {
       setQuickInputDate(null)
       return
     }
-    onAddTodo(quickInputText.trim(), 'medium', dateStr)
+    onAddTodo?.({
+      title: quickInputText.trim(),
+      date: dateStr,
+      priority: 'medium'
+    })
     setQuickInputText('')
     setQuickInputDate(null)
   }
 
   return (
-    <div className="w-full h-full flex flex-col select-none no-scrollbar">
-      {/* 1. Header Toolbar (DesktopCal 스타일 툴바) */}
-      <div className="flex items-center justify-between px-3 py-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-b border-white/20 dark:border-slate-800/80">
+    <div className="w-full h-full flex flex-col select-none no-scrollbar bg-transparent">
+      {/* 1. Header Toolbar (DesktopCal 스타일 투명 유리 툴바) */}
+      <div className="flex items-center justify-between px-3 py-2 bg-black/20 dark:bg-black/35 backdrop-blur-md border-b border-white/15 text-white">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <span className="text-lg sm:text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
+            <span className="text-lg sm:text-xl font-black text-white tracking-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
               {year}년 {month}월
             </span>
           </div>
@@ -137,7 +142,7 @@ export default function DesktopWallpaperCalendar({
               type="button"
               onClick={handlePrevMonth}
               title="이전 달"
-              className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-800 transition cursor-pointer"
+              className="p-1.5 rounded-lg text-white/80 hover:text-white bg-white/10 hover:bg-white/20 border border-white/10 transition cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -145,7 +150,7 @@ export default function DesktopWallpaperCalendar({
               type="button"
               onClick={handleNextMonth}
               title="다음 달"
-              className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-800 transition cursor-pointer"
+              className="p-1.5 rounded-lg text-white/80 hover:text-white bg-white/10 hover:bg-white/20 border border-white/10 transition cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -154,7 +159,7 @@ export default function DesktopWallpaperCalendar({
           <button
             type="button"
             onClick={handleGoToday}
-            className="px-2.5 py-1 text-xs font-bold rounded-lg text-indigo-600 dark:text-indigo-400 bg-indigo-50/80 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition cursor-pointer"
+            className="px-2.5 py-1 text-xs font-bold rounded-lg text-white bg-indigo-600/80 hover:bg-indigo-600 border border-indigo-400/30 transition cursor-pointer shadow-xs"
           >
             오늘
           </button>
@@ -166,33 +171,33 @@ export default function DesktopWallpaperCalendar({
             <button
               type="button"
               onClick={onOpenAuth}
-              className="flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition cursor-pointer shadow-xs"
+              className="flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-indigo-600/90 text-white rounded-lg hover:bg-indigo-600 transition cursor-pointer shadow-xs border border-indigo-400/30"
             >
               <Lock className="w-3 h-3" />
               <span>로그인하여 동기화</span>
             </button>
           ) : (
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
+            <span className="text-[11px] text-white/70 font-medium hidden sm:inline drop-shadow-[0_1px_1px_rgba(0,0,0,0.7)]">
               날짜를 더블클릭하여 바로 일정을 추가할 수 있습니다
             </span>
           )}
         </div>
       </div>
 
-      {/* 2. Weekday Header Grid */}
-      <div className="grid grid-cols-7 border-b border-white/20 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xs text-center text-xs font-bold">
+      {/* 2. Weekday Header Grid (반투명 유리 요일 바) */}
+      <div className="grid grid-cols-7 border-b border-white/15 bg-black/15 dark:bg-black/30 backdrop-blur-xs text-center text-xs font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.7)]">
         {weekdays.map((wd, idx) => {
           const isSun = startOfWeek === 'monday' ? idx === 6 : idx === 0
           const isSat = startOfWeek === 'monday' ? idx === 5 : idx === 6
           return (
             <div
               key={wd}
-              className={`py-1.5 border-r border-white/10 dark:border-slate-800/60 last:border-r-0 ${
+              className={`py-1.5 border-r border-white/10 last:border-r-0 ${
                 isSun
-                  ? 'text-rose-500'
+                  ? 'text-rose-400 font-extrabold'
                   : isSat
-                  ? 'text-blue-500'
-                  : 'text-slate-600 dark:text-slate-400'
+                  ? 'text-sky-400 font-extrabold'
+                  : 'text-white/90'
               }`}
             >
               {wd}
@@ -201,8 +206,8 @@ export default function DesktopWallpaperCalendar({
         })}
       </div>
 
-      {/* 3. Wallpaper Calendar Day Grid (DesktopCal 핵심 대형 그리드) */}
-      <div className="flex-1 grid grid-cols-7 auto-rows-fr overflow-hidden no-scrollbar bg-slate-900/10 dark:bg-black/30 backdrop-blur-md">
+      {/* 3. Wallpaper Calendar Day Grid (DesktopCal 핵심: 바탕화면이 유리처럼 그대로 투과되는 대형 그리드) */}
+      <div className="flex-1 grid grid-cols-7 auto-rows-fr overflow-hidden no-scrollbar bg-black/10 dark:bg-black/25 backdrop-blur-md">
         {days.map((cell, idx) => {
           const cellTodos = todosByDate[cell.fullDate] || []
           const isToday = cell.fullDate === todayStr
@@ -221,25 +226,25 @@ export default function DesktopWallpaperCalendar({
                   onOpenAuth?.()
                 }
               }}
-              className={`min-h-[90px] p-1.5 border-b border-r border-white/15 dark:border-slate-800/60 last:border-r-0 flex flex-col justify-start transition-colors relative group ${
+              className={`min-h-[90px] p-1.5 border-b border-r border-white/15 last:border-r-0 flex flex-col justify-start transition-colors relative group ${
                 cell.isCurrentMonth
-                  ? 'bg-white/40 dark:bg-slate-900/40 hover:bg-white/60 dark:hover:bg-slate-800/60'
-                  : 'bg-white/15 dark:bg-slate-950/30 opacity-60'
-              } ${isSelected ? 'ring-2 ring-indigo-500/60 inset-0 z-10' : ''}`}
+                  ? 'bg-white/5 hover:bg-white/15 dark:bg-white/5 dark:hover:bg-white/10'
+                  : 'bg-black/25 dark:bg-black/40 opacity-40'
+              } ${isSelected ? 'ring-2 ring-indigo-400/90 inset-0 z-10 bg-white/10' : ''}`}
             >
               {/* Day Header (날짜 번호 & 추가 버튼) */}
               <div className="flex items-center justify-between mb-1">
                 <span
-                  className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full transition-transform ${
+                  className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full transition-transform drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] ${
                     isToday
-                      ? 'bg-indigo-600 text-white shadow-xs font-black'
+                      ? 'bg-indigo-600 text-white shadow-md font-black'
                       : isSunCol
-                      ? 'text-rose-500'
+                      ? 'text-rose-400 font-extrabold'
                       : isSatCol
-                      ? 'text-blue-500'
+                      ? 'text-sky-400 font-extrabold'
                       : cell.isCurrentMonth
-                      ? 'text-slate-800 dark:text-slate-200'
-                      : 'text-slate-400 dark:text-slate-600'
+                      ? 'text-white'
+                      : 'text-white/40'
                   }`}
                 >
                   {cell.dayNumber}
@@ -254,7 +259,7 @@ export default function DesktopWallpaperCalendar({
                       setQuickInputDate(cell.fullDate)
                     }}
                     title="이 날짜에 새 일정 추가"
-                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-slate-500 hover:text-indigo-600 hover:bg-white/80 dark:hover:bg-slate-800 transition-opacity cursor-pointer"
+                    className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-white/80 hover:text-white bg-white/15 hover:bg-white/30 border border-white/20 transition-opacity cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -278,7 +283,7 @@ export default function DesktopWallpaperCalendar({
                       if (e.key === 'Escape') setQuickInputDate(null)
                     }}
                     onBlur={() => handleQuickAdd(cell.fullDate)}
-                    className="w-full px-1.5 py-1 text-[11px] bg-white dark:bg-slate-800 border border-indigo-500 rounded shadow-md focus:outline-none font-medium text-slate-800 dark:text-slate-100"
+                    className="w-full px-1.5 py-1 text-[11px] bg-slate-900/90 text-white border border-indigo-400 rounded-md shadow-lg focus:outline-none font-medium placeholder-white/50"
                   />
                 </div>
               )}
@@ -300,10 +305,10 @@ export default function DesktopWallpaperCalendar({
                         onOpenDetail?.(todo)
                       }}
                       title={`${todo.title || todo.text} (더블클릭 시 상세/수정)`}
-                      className={`group/todo flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] leading-tight cursor-pointer transition-all select-none ${
+                      className={`group/todo flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[11px] leading-tight cursor-pointer transition-all select-none border ${
                         isCompleted
-                          ? 'bg-slate-200/40 dark:bg-slate-800/30 text-slate-400 dark:text-slate-500 line-through'
-                          : 'bg-white/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 shadow-2xs hover:bg-white dark:hover:bg-slate-700'
+                          ? 'bg-black/25 text-white/50 border-white/5 line-through'
+                          : 'bg-black/35 hover:bg-black/55 text-white border-white/15 backdrop-blur-xs shadow-2xs'
                       }`}
                     >
                       {/* Priority Dot */}
@@ -311,23 +316,23 @@ export default function DesktopWallpaperCalendar({
                         <span
                           className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                             todo.priority === 'high'
-                              ? 'bg-rose-500'
+                              ? 'bg-rose-400'
                               : todo.priority === 'low'
-                              ? 'bg-emerald-500'
-                              : 'bg-amber-500'
+                              ? 'bg-emerald-400'
+                              : 'bg-amber-400'
                           }`}
                         />
                       )}
 
                       {/* Checkmark Icon */}
                       {isCompleted ? (
-                        <CheckCircle2 className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                        <CheckCircle2 className="w-3 h-3 text-white/50 flex-shrink-0" />
                       ) : (
-                        <Circle className="w-2.5 h-2.5 text-slate-300 dark:text-slate-600 group-hover/todo:text-indigo-500 flex-shrink-0" />
+                        <Circle className="w-2.5 h-2.5 text-white/40 group-hover/todo:text-indigo-400 flex-shrink-0" />
                       )}
 
                       {/* Todo Title (취소선 지원) */}
-                      <span className="truncate flex-1 font-medium">
+                      <span className="truncate flex-1 font-medium drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]">
                         {todo.title || todo.text}
                       </span>
                     </div>

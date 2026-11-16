@@ -98,3 +98,21 @@ body.is-electron-widget *,
 .no-drag-region {
   -webkit-app-region: no-drag;
 }
+
+/* 위젯 모드 전용 유리/아크릴 글래스 효과 (바탕화면이 시원하게 투과됨) */
+body.is-electron-widget .bg-white\/80,
+body.is-electron-widget .bg-white\/90,
+body.is-electron-widget .bg-white {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+body.is-electron-widget.dark .bg-slate-800,
+body.is-electron-widget.dark .bg-slate-800\/80,
+body.is-electron-widget.dark .bg-slate-900,
+body.is-electron-widget.dark .bg-slate-900\/90 {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+  backdrop-filter: blur(12px) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
