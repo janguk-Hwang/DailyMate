@@ -1,7 +1,9 @@
 {
-  "name": "cline-test",
+  "name": "dailymate",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "DailyMate Desktop Calendar Widget",
+  "author": "DailyMate",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -50,17 +52,7 @@
       "public/**/*"
     ],
     "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToRun": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "DailyMate"
+      "target": "nsis"
     }
   }
 }

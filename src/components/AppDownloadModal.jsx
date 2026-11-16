@@ -5,9 +5,8 @@ export default function AppDownloadModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
   const handleDownload = () => {
-    // GitHub Releases 또는 백엔드 /downloads 엔드포인트
-    // 배포 시 GitHub Releases URL로 연결
-    window.open('https://github.com/janguk-Hwang/DailyMate/releases/latest', '_blank')
+    // Google Drive 업로드 설치 파일 다운로드 링크 연동
+    window.open('https://drive.google.com/file/d/1ELtqGxoILf7euZzO13VOADXh4PgNLHX6/view?usp=sharing', '_blank')
   }
 
   return (
