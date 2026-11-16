@@ -1,4 +1,4 @@
-import { Calendar, CheckSquare, LogIn, LogOut, User, UserPlus, Settings as SettingsIcon, Sun, Moon } from 'lucide-react'
+import { Calendar, CheckSquare, LogIn, LogOut, User, UserPlus, Settings as SettingsIcon, Sun, Moon, Monitor } from 'lucide-react'
 
 export default function Navbar({
   user,
@@ -9,6 +9,7 @@ export default function Navbar({
   onOpenSettings,
   isDark = false,
   onToggleDark,
+  onOpenDownload,
 }) {
   const getProviderBadge = (provider) => {
     switch (provider) {
@@ -72,6 +73,19 @@ export default function Navbar({
             className="p-1.5 sm:p-2 text-slate-500 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer border border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50"
           >
             {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+          </button>
+        )}
+
+        {/* PC Desktop Widget Download Button (Web only) */}
+        {onOpenDownload && typeof window !== 'undefined' && !window.electronAPI && (
+          <button
+            type="button"
+            onClick={onOpenDownload}
+            title="바탕화면 캘린더 위젯 다운로드"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 hover:bg-indigo-100 dark:hover:bg-indigo-900 border border-indigo-200/80 dark:border-indigo-800 rounded-xl transition-all shadow-2xs cursor-pointer group"
+          >
+            <Monitor className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform" />
+            <span className="hidden xs:inline">바탕화면 위젯</span>
           </button>
         )}
 

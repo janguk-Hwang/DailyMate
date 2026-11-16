@@ -11,6 +11,7 @@ import MultiScheduleModal from './components/MultiScheduleModal'
 import TodoDetailModal from './components/TodoDetailModal'
 import SettingsAndMyPageModal from './components/SettingsAndMyPageModal'
 import DesktopWidgetBar from './components/DesktopWidgetBar'
+import AppDownloadModal from './components/AppDownloadModal'
 import {
   getMonthSchedules,
   createSchedule,
@@ -115,8 +116,35 @@ export default function App() {
     }
   }, [isElectron, isWidget])
 
-  // Dark Mode Sync Effect
+  // Dark Mode Sync Effect with Silky Smooth Transition
   useEffect(() => {
+    const applyTheme = (dark) => {
+      // 1. 최신 브라우저 View Transitions API (크로스페이드)
+      if (document.startViewTransition) {
+        document.startViewTransition(() => {
+          setIsDark(dark)
+          if (dark) {
+            document.documentElement.classList.add('dark')
+          } else {
+            document.documentElement.classList.remove('dark')
+          }
+        })
+        return
+      }
+
+      // 2. Fallback: 부드러운 CSS 트랜지션 클래스 부여
+      document.documentElement.classList.add('theme-transitioning')
+      setIsDark(dark)
+      if (dark) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+      setTimeout(() => {
+        document.documentElement.classList.remove('theme-transitioning')
+      }, 350)
+    }
+
     const updateTheme = () => {
       const mode = settings.darkMode || 'system'
       let dark = false
@@ -127,12 +155,7 @@ export default function App() {
       } else {
         dark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : false
       }
-      setIsDark(dark)
-      if (dark) {
-        document.documentElement.classList.add('dark')
-      } else {
-        document.documentElement.classList.remove('dark')
-      }
+      applyTheme(dark)
     }
 
     updateTheme()
@@ -157,6 +180,7 @@ export default function App() {
   const [multiModalOpen, setMultiModalOpen] = useState(false)
   const [selectedDetailTodo, setSelectedDetailTodo] = useState(null)
   const [oauthError, setOauthError] = useState(null)
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false)
 
   // 1. Initial OAuth URL check and Auto Login Check
   useEffect(() => {
@@ -254,6 +278,26 @@ export default function App() {
       loadSchedules(currentYearMonth)
     } else {
       setAllMonthTodos([])
+    }
+  }, [user, currentYearMonth, loadSchedules])
+
+  // 3. Real-Time Sync (창 포커스 시 즉시 동기화 & 20초 백그라운드 자동 동기화)
+  useEffect(() => {
+    if (!user) return
+
+    const handleFocus = () => {
+      loadSchedules(currentYearMonth)
+    }
+
+    window.addEventListener('focus', handleFocus)
+
+    const interval = setInterval(() => {
+      loadSchedules(currentYearMonth)
+    }, 20000)
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      clearInterval(interval)
     }
   }, [user, currentYearMonth, loadSchedules])
 
@@ -918,6 +962,7 @@ export default function App() {
           onOpenSettings={handleOpenSettings}
           isDark={isDark}
           onToggleDark={handleToggleDarkMode}
+          onOpenDownload={() => setDownloadModalOpen(true)}
         />
 
         {/* OAuth Error Alert */}
@@ -1226,6 +1271,12 @@ export default function App() {
           settings={settings}
           onUpdateSettings={handleUpdateSettings}
           onRefreshSchedules={() => loadSchedules(currentYearMonth)}
+        />
+
+        {/* Windows Desktop Widget Download Modal */}
+        <AppDownloadModal
+          isOpen={downloadModalOpen}
+          onClose={() => setDownloadModalOpen(false)}
         />
       </div>
     </div>

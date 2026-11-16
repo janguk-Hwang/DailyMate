@@ -25,6 +25,33 @@ body.dark {
   background-color: #020617;
 }
 
+/* 부드럽고 자연스러운 다크/라이트 모드 테마 전환 (Smooth Theme Transition) */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              fill 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-delay: 0s !important;
+}
+
+/* 기본 주요 컨테이너의 부드러운 색상 전환 */
+body, #root, div, nav, header, main, section, footer, button, input, textarea {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 250ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 최신 View Transitions API 크로스페이드 (Silk-smooth) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Electron 바탕화면 위젯 전용 투명 배경 */
 body.is-electron-widget {
   background-color: transparent !important;

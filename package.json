@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "electron": "electron electron/main.cjs",
     "electron:dev": "concurrently -k \"npm run dev\" \"wait-on tcp:5173 && electron electron/main.cjs\"",
-    "electron:prod": "vite build && electron electron/main.cjs"
+    "electron:prod": "vite build && electron electron/main.cjs",
+    "dist": "vite build && electron-builder --win"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.0",
@@ -34,6 +35,32 @@
   "devDependencies": {
     "concurrently": "^10.0.7",
     "electron": "^45.3.2",
+    "electron-builder": "^26.18.0",
     "wait-on": "^9.5.1"
+  },
+  "build": {
+    "appId": "com.dailymate.app",
+    "productName": "DailyMate",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "public/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToRun": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "DailyMate"
+    }
   }
 }

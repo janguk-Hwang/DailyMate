@@ -1,5 +1,14 @@
 const TOKEN_KEY = 'todo_calendar_auth_token'
 
+export const API_BASE = (typeof window !== 'undefined' && window.electronAPI)
+  ? (import.meta.env.VITE_API_BASE_URL || 'https://dailymate.up.railway.app')
+  : (import.meta.env.VITE_API_BASE_URL || '')
+
+export function apiFetch(path, options) {
+  const url = path.startsWith('/') ? `${API_BASE}${path}` : path
+  return fetch(url, options)
+}
+
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY)
 }
@@ -28,7 +37,7 @@ function getAuthHeaders() {
 // ---------------- Database & Server Status ----------------
 export async function getDbStatus() {
   try {
-    const res = await fetch('/api/status')
+    const res = await apiFetch('/api/status')
     if (!res.ok) throw new Error('Status request failed')
     return await res.json()
   } catch (e) {
@@ -37,7 +46,7 @@ export async function getDbStatus() {
 }
 
 export async function reconnectDb() {
-  const res = await fetch('/api/reconnect', { method: 'POST' })
+  const res = await apiFetch('/api/reconnect', { method: 'POST' })
   return res.json()
 }
 
@@ -45,7 +54,7 @@ export async function reconnectDb() {
 
 // 1. Email Verification Code (dailymate Sender)
 export async function sendEmailCode(email) {
-  const res = await fetch('/api/auth/email/send-code', {
+  const res = await apiFetch('/api/auth/email/send-code', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
@@ -57,7 +66,7 @@ export async function sendEmailCode(email) {
 
 // 2. Verify Email Code
 export async function verifyEmailCode(email, code) {
-  const res = await fetch('/api/auth/email/verify-code', {
+  const res = await apiFetch('/api/auth/email/verify-code', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, code }),
@@ -69,7 +78,7 @@ export async function verifyEmailCode(email, code) {
 
 // 3. Phone SMS Code (Mock / Dev - Legacy)
 export async function sendPhoneCode(phoneNumber) {
-  const res = await fetch('/api/auth/phone/send-code', {
+  const res = await apiFetch('/api/auth/phone/send-code', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phoneNumber }),
@@ -81,7 +90,7 @@ export async function sendPhoneCode(phoneNumber) {
 
 // 4. Verify Phone SMS Code (Legacy)
 export async function verifyPhoneCode(phoneNumber, code) {
-  const res = await fetch('/api/auth/phone/verify-code', {
+  const res = await apiFetch('/api/auth/phone/verify-code', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phoneNumber, code }),
@@ -93,7 +102,7 @@ export async function verifyPhoneCode(phoneNumber, code) {
 
 // 5. Check Username Availability
 export async function checkUsernameAvailability(username) {
-  const res = await fetch('/api/auth/check-username', {
+  const res = await apiFetch('/api/auth/check-username', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username }),
@@ -105,7 +114,7 @@ export async function checkUsernameAvailability(username) {
 
 // 6. Local Sign Up (Email Verification)
 export async function signupUser({ username, password, name, email, phoneNumber }) {
-  const res = await fetch('/api/auth/signup', {
+  const res = await apiFetch('/api/auth/signup', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password, name, email, phoneNumber }),
@@ -120,7 +129,7 @@ export async function signupUser({ username, password, name, email, phoneNumber 
 
 // 5. Local Login
 export async function loginUser({ username, password }) {
-  const res = await fetch('/api/auth/login', {
+  const res = await apiFetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
@@ -138,7 +147,7 @@ export async function getCurrentUser() {
   const token = getToken()
   if (!token) return null
 
-  const res = await fetch('/api/auth/me', {
+  const res = await apiFetch('/api/auth/me', {
     headers: getAuthHeaders(),
   })
   if (res.status === 401) {
@@ -152,7 +161,7 @@ export async function getCurrentUser() {
 
 // 7. Get OAuth Login URL
 export async function getOAuthUrl(provider) {
-  const res = await fetch(`/api/auth/${provider}/url`)
+  const res = await apiFetch(`/api/auth/${provider}/url`)
   const data = await res.json()
   return data
 }
@@ -162,7 +171,7 @@ export async function getMonthSchedules(month) {
   const token = getToken()
   if (!token) return []
 
-  const res = await fetch(`/api/schedules?month=${month}`, {
+  const res = await apiFetch(`/api/schedules?month=${month}`, {
     headers: getAuthHeaders(),
   })
   if (res.status === 401) {
@@ -177,7 +186,7 @@ export async function getMonthSchedules(month) {
 }
 
 export async function createSchedule(data) {
-  const res = await fetch('/api/schedules', {
+  const res = await apiFetch('/api/schedules', {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -194,7 +203,7 @@ export async function createSchedule(data) {
 }
 
 export async function updateSchedule(id, updates) {
-  const res = await fetch(`/api/schedules/${id}`, {
+  const res = await apiFetch(`/api/schedules/${id}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify(updates),
@@ -211,7 +220,7 @@ export async function updateSchedule(id, updates) {
 }
 
 export async function deleteSchedule(id) {
-  const res = await fetch(`/api/schedules/${id}`, {
+  const res = await apiFetch(`/api/schedules/${id}`, {
     method: 'DELETE',
     headers: getAuthHeaders(),
   })
@@ -227,7 +236,7 @@ export async function deleteSchedule(id) {
 }
 
 export async function clearCompletedForDate(date) {
-  const res = await fetch(`/api/schedules/completed/${date}`, {
+  const res = await apiFetch(`/api/schedules/completed/${date}`, {
     method: 'DELETE',
     headers: getAuthHeaders(),
   })
@@ -243,7 +252,7 @@ export async function clearCompletedForDate(date) {
 }
 
 export async function reorderSchedules(orderIds) {
-  const res = await fetch('/api/schedules/reorder', {
+  const res = await apiFetch('/api/schedules/reorder', {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify({ orderIds }),
@@ -257,7 +266,7 @@ export async function reorderSchedules(orderIds) {
 }
 
 export async function createBatchSchedules(payload) {
-  const res = await fetch('/api/schedules/batch', {
+  const res = await apiFetch('/api/schedules/batch', {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload),
@@ -274,7 +283,7 @@ export async function createBatchSchedules(payload) {
 }
 
 export async function toggleAllSchedulesForDate(date, completed) {
-  const res = await fetch(`/api/schedules/toggle-all/${date}`, {
+  const res = await apiFetch(`/api/schedules/toggle-all/${date}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify({ completed }),
@@ -291,7 +300,7 @@ export async function toggleAllSchedulesForDate(date, completed) {
 }
 
 export async function updateBatchSchedulesCompleted(ids, completed) {
-  const res = await fetch('/api/schedules/batch-completed', {
+  const res = await apiFetch('/api/schedules/batch-completed', {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify({ ids, completed }),
@@ -308,7 +317,7 @@ export async function updateBatchSchedulesCompleted(ids, completed) {
 }
 
 export async function deleteBatchSchedules(ids) {
-  const res = await fetch('/api/schedules/batch', {
+  const res = await apiFetch('/api/schedules/batch', {
     method: 'DELETE',
     headers: getAuthHeaders(),
     body: JSON.stringify({ ids }),
@@ -326,7 +335,7 @@ export async function deleteBatchSchedules(ids) {
 
 // ---------------- MyPage & Profile APIs ----------------
 export async function updateProfile(payload) {
-  const res = await fetch('/api/auth/profile', {
+  const res = await apiFetch('/api/auth/profile', {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload),
@@ -341,7 +350,7 @@ export async function updateProfile(payload) {
 }
 
 export async function updatePassword({ currentPassword, newPassword }) {
-  const res = await fetch('/api/auth/password', {
+  const res = await apiFetch('/api/auth/password', {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify({ currentPassword, newPassword }),
@@ -356,7 +365,7 @@ export async function updatePassword({ currentPassword, newPassword }) {
 }
 
 export async function deleteAccount({ password }) {
-  const res = await fetch('/api/auth/account', {
+  const res = await apiFetch('/api/auth/account', {
     method: 'DELETE',
     headers: getAuthHeaders(),
     body: JSON.stringify({ password }),
@@ -372,7 +381,7 @@ export async function deleteAccount({ password }) {
 }
 
 export async function getUserStats() {
-  const res = await fetch('/api/auth/stats', {
+  const res = await apiFetch('/api/auth/stats', {
     headers: getAuthHeaders(),
   })
   if (res.status === 401) {
@@ -386,7 +395,7 @@ export async function getUserStats() {
 
 // ---------------- Settings APIs ----------------
 export async function getUserSettings() {
-  const res = await fetch('/api/auth/settings', {
+  const res = await apiFetch('/api/auth/settings', {
     headers: getAuthHeaders(),
   })
   if (!res.ok) return { settings: {} }
@@ -395,7 +404,7 @@ export async function getUserSettings() {
 }
 
 export async function updateUserSettings(settings) {
-  const res = await fetch('/api/auth/settings', {
+  const res = await apiFetch('/api/auth/settings', {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify({ settings }),
@@ -406,7 +415,7 @@ export async function updateUserSettings(settings) {
 
 // ---------------- Data Backup & Maintenance APIs ----------------
 export async function exportSchedules() {
-  const res = await fetch('/api/schedules/export', {
+  const res = await apiFetch('/api/schedules/export', {
     headers: getAuthHeaders(),
   })
   if (res.status === 401) {
@@ -418,7 +427,7 @@ export async function exportSchedules() {
 }
 
 export async function cleanupAllCompletedSchedules() {
-  const res = await fetch('/api/schedules/completed-all', {
+  const res = await apiFetch('/api/schedules/completed-all', {
     method: 'DELETE',
     headers: getAuthHeaders(),
   })
@@ -432,7 +441,7 @@ export async function cleanupAllCompletedSchedules() {
 }
 
 export async function submitFeedback({ category, title, content, contact }) {
-  const res = await fetch('/api/feedback', {
+  const res = await apiFetch('/api/feedback', {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ category, title, content, contact }),
@@ -441,4 +450,3 @@ export async function submitFeedback({ category, title, content, contact }) {
   if (!res.ok) throw new Error(data.error || '제보 접수에 실패했습니다.')
   return data
 }
-
