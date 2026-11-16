@@ -6,7 +6,7 @@ export default function AppDownloadModal({ isOpen, onClose }) {
 
   const handleDownload = () => {
     // Google Drive 업로드 설치 파일 다운로드 링크 연동
-    window.open('https://drive.google.com/file/d/1ELtqGxoILf7euZzO13VOADXh4PgNLHX6/view?usp=sharing', '_blank')
+    window.open('https://drive.google.com/file/d/1pDjBd8tehY9PtJwZe4cTyhCA02DAL05D/view?usp=sharing', '_blank')
   }
 
   return (
