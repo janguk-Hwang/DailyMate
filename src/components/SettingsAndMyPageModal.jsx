@@ -947,6 +947,42 @@ export default function SettingsAndMyPageModal({
                   </label>
                 </div>
               </div>
+
+              {/* 5. Desktop Widget & Auto-Launch Settings (Electron only) */}
+              {window.electronAPI && (
+                <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-900/60">
+                  <label className="text-xs font-bold text-indigo-900 dark:text-indigo-200 mb-1 block flex items-center gap-1.5">
+                    <Monitor className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    <span>바탕화면 위젯 & 자동 실행</span>
+                  </label>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
+                    PC 시작 시 자동 실행 및 바탕화면 위젯 옵션을 관리합니다.
+                  </p>
+
+                  <div className="space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const state = await window.electronAPI.getAppState()
+                        window.electronAPI.setAutoStart(!state.autoStart)
+                      }}
+                      className="w-full flex items-center justify-between p-3 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/50 transition cursor-pointer"
+                    >
+                      <div className="text-left">
+                        <div className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                          윈도우 시작 시 자동 실행
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          PC 부팅 시 백그라운드 트레이로 자동 실행됩니다
+                        </div>
+                      </div>
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300">
+                        설정 토글
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

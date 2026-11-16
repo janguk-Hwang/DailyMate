@@ -24,3 +24,22 @@ body.dark {
   color-scheme: dark;
   background-color: #020617;
 }
+
+/* Electron 바탕화면 위젯 전용 투명 배경 */
+body.is-electron-widget {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+body.is-electron-widget #root {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag-region {
+  -webkit-app-region: no-drag;
+}

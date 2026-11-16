@@ -62,6 +62,13 @@
 - **화면 밀도 (Density)**: 기본 뷰(편안하게) / 컴팩트 뷰(조밀하게)
 - **로컬 & 클라우드 동기화**: 비로그인 게스트는 로컬스토리지 유지, 회원은 DB 영속화
 
+### 8. 🖥️ 데스크톱 바탕화면 위젯 & 트레이 (Electron Desktop Widget)
+- **시스템 트레이 (System Tray)**: 작업표시줄 시계 옆 트레이 아이콘으로 언제든지 위젯 숨김/보이기 및 우클릭 메뉴 제공
+- **부팅 시 자동 시작 (Auto-launch)**: PC 시작 시 백그라운드로 자동 실행되어 바탕화면에서 바로 일정 확인 가능
+- **미니멀 반투명 위젯 뷰 (Minimal Glassmorphism UI)**: 윈도우 테두리 없는 투명/반투명 글래스 디자인으로 바탕화면 배경과 완벽하게 융합
+- **위치 고정 (잠금) & 바탕화면 최하단 고정**: 드래그 이동 잠금 및 다른 창들 방해 없이 바탕화면 레벨로 고정 지원
+- **위젯 / 전체 창 모드 전환**: 클릭 한 번으로 미니멀 위젯과 넓은 전체 창 캘린더 모드 즉시 전환
+
 ---
 
 ## 🛠️ 기술 스택 (Tech Stack)
@@ -69,6 +76,7 @@
 | 영역 | 기술 스택 |
 |---|---|
 | **Frontend** | React 19, Vite, Tailwind CSS v4, Lucide React |
+| **Desktop App** | Electron 40+, Context Isolation IPC, System Tray, Auto-Launch |
 | **Backend** | Node.js, Express 5, jsonwebtoken, bcryptjs, cors |
 | **Database** | MySQL 8.0+ (mysql2 Connection Pool, UTF-8mb4) |
 | **Deployment** | Railway (Fullstack Web App + MySQL Database) |
@@ -165,12 +173,21 @@ NAVER_CLIENT_SECRET=
   ```bash
   npm run server
   ```
+- **🖥️ 바탕화면 캘린더 위젯 실행 (Electron 개발 모드):**
+  ```bash
+  npm run electron:dev
+  ```
 - **프로덕션 빌드 및 통합 실행:**
   ```bash
   npm run build
   npm start
   ```
   *(기본 포트: `http://localhost:3001`에서 프론트엔드와 백엔드가 함께 제공됩니다)*
+
+- **🖥️ 바탕화면 캘린더 위젯 프로덕션 실행:**
+  ```bash
+  npm run electron:prod
+  ```
 
 ---
 

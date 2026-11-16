@@ -10,6 +10,7 @@ import AuthModal from './components/AuthModal'
 import MultiScheduleModal from './components/MultiScheduleModal'
 import TodoDetailModal from './components/TodoDetailModal'
 import SettingsAndMyPageModal from './components/SettingsAndMyPageModal'
+import DesktopWidgetBar from './components/DesktopWidgetBar'
 import {
   getMonthSchedules,
   createSchedule,
@@ -71,6 +72,48 @@ export default function App() {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [settingsModalTab, setSettingsModalTab] = useState('profile')
   const [isDark, setIsDark] = useState(false)
+
+  // Electron Desktop Widget States
+  const [isElectron, setIsElectron] = useState(() => Boolean(window.electronAPI?.isElectron))
+  const [isWidget, setIsWidget] = useState(true)
+  const [isLocked, setIsLocked] = useState(false)
+  const [alwaysOnBottom, setAlwaysOnBottom] = useState(false)
+  const [autoStart, setAutoStart] = useState(false)
+
+  // Electron IPC Listeners
+  useEffect(() => {
+    if (window.electronAPI) {
+      window.electronAPI.getAppState().then((state) => {
+        if (state) {
+          setIsWidget(state.isWidget)
+          setIsLocked(state.isLocked)
+          setAlwaysOnBottom(state.alwaysOnBottom)
+          setAutoStart(state.autoStart)
+        }
+      }).catch(console.error)
+
+      const unbindWidget = window.electronAPI.onWidgetModeChanged?.(setIsWidget)
+      const unbindLocked = window.electronAPI.onLockedChanged?.(setIsLocked)
+      const unbindBottom = window.electronAPI.onAlwaysOnBottomChanged?.(setAlwaysOnBottom)
+      const unbindAuto = window.electronAPI.onAutoStartChanged?.(setAutoStart)
+
+      return () => {
+        unbindWidget?.()
+        unbindLocked?.()
+        unbindBottom?.()
+        unbindAuto?.()
+      }
+    }
+  }, [])
+
+  // Widget Mode Body Class Toggle for Transparency
+  useEffect(() => {
+    if (isElectron && isWidget) {
+      document.body.classList.add('is-electron-widget')
+    } else {
+      document.body.classList.remove('is-electron-widget')
+    }
+  }, [isElectron, isWidget])
 
   // Dark Mode Sync Effect
   useEffect(() => {
@@ -617,9 +660,254 @@ export default function App() {
     }
   }
 
+  // Electron Action Handlers
+  const handleToggleLock = () => {
+    const next = !isLocked
+    setIsLocked(next)
+    window.electronAPI?.setLocked(next)
+  }
+
+  const handleToggleWidgetMode = () => {
+    const next = !isWidget
+    setIsWidget(next)
+    window.electronAPI?.setWidgetMode(next)
+  }
+
+  const handleToggleAlwaysOnBottom = () => {
+    const next = !alwaysOnBottom
+    setAlwaysOnBottom(next)
+    window.electronAPI?.setAlwaysOnBottom(next)
+  }
+
+  const handleMinimizeToTray = () => {
+    window.electronAPI?.minimizeToTray()
+  }
+
+  const handleCloseApp = () => {
+    window.electronAPI?.minimizeToTray()
+  }
+
+  // 1. Electron 바탕화면 미니멀 위젯 모드
+  if (isElectron && isWidget) {
+    return (
+      <div className="w-full min-h-screen p-2 select-none flex flex-col justify-start bg-transparent">
+        <div className="w-full max-w-md mx-auto bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border border-white/50 dark:border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300">
+          {/* Top Window Drag & Controller Bar */}
+          <DesktopWidgetBar
+            isWidget={isWidget}
+            isLocked={isLocked}
+            alwaysOnBottom={alwaysOnBottom}
+            onToggleLock={handleToggleLock}
+            onToggleWidgetMode={handleToggleWidgetMode}
+            onToggleAlwaysOnBottom={handleToggleAlwaysOnBottom}
+            onMinimizeToTray={handleMinimizeToTray}
+            onClose={handleCloseApp}
+            onOpenSettings={() => {
+              setSettingsModalTab('settings')
+              setSettingsModalOpen(true)
+            }}
+          />
+
+          <div className="p-3 sm:p-4 space-y-3 overflow-y-auto max-h-[calc(100vh-50px)] no-scrollbar">
+            {/* Header & Date status */}
+            <Header
+              selectedDate={selectedDate}
+              totalCount={totalCount}
+              completedCount={completedCount}
+              progressPercent={progressPercent}
+            />
+
+            {/* Schedule Input */}
+            <TodoInput
+              onAdd={handleAddTodo}
+              onOpenMulti={() => (user ? setMultiModalOpen(true) : handleOpenAuth('login'))}
+              selectedDate={selectedDate}
+              defaultPriority={settings.defaultPriority}
+            />
+
+            {/* Calendar View */}
+            <CalendarView
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+              currentYearMonth={currentYearMonth}
+              onChangeYearMonth={setCurrentYearMonth}
+              monthlyScheduleCounts={monthlyCounts}
+              startOfWeek={settings.startOfWeek}
+            />
+
+            {/* Filters */}
+            <TodoFilter
+              filter={filter}
+              onFilterChange={setFilter}
+              search={search}
+              onSearchChange={setSearch}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              counts={{ total: totalCount, active: activeCount, completed: completedCount }}
+            />
+
+            {/* Selected Date Actions Header */}
+            {user && totalCount > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-1 text-xs">
+                <button
+                  type="button"
+                  onClick={handleToggleSelectAll}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    isAllSelected
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                      : 'bg-white/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  {isAllSelected ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+                  <span>{isAllSelected ? '전체 해제' : '모두 선택'}</span>
+                </button>
+
+                {selectedIds.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleBatchToggleCompleted(true)}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
+                    >
+                      <Check className="w-3 h-3" />
+                      <span>완료</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleBatchDelete}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700 cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>삭제</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Schedules List */}
+            <main className="space-y-2">
+              {!user ? (
+                <div className="bg-white/50 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4 text-center">
+                  <div className="mx-auto w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-500 mb-2">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <p className="text-slate-700 dark:text-slate-200 font-bold text-xs mb-1">
+                    로그인 후 일정을 관리해보세요
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAuth('login')}
+                    className="mt-2 inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                  >
+                    <LogIn className="w-3 h-3" />
+                    <span>로그인</span>
+                  </button>
+                </div>
+              ) : sortedTodos.length === 0 ? (
+                <div className="bg-white/50 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center">
+                  <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">
+                    {search ? `'${search}' 검색 결과 없음` : `${selectedDate} 일정 없음`}
+                  </p>
+                </div>
+              ) : (
+                sortedTodos.map((todo, index) => (
+                  <TodoItem
+                    key={todo.id}
+                    index={index}
+                    todo={{
+                      id: todo.id,
+                      title: todo.title,
+                      text: todo.title || todo.text,
+                      description: todo.description,
+                      completed: todo.completed,
+                      priority: todo.priority,
+                      date: todo.date,
+                      createdAt: todo.date,
+                    }}
+                    onToggle={handleToggle}
+                    onDelete={handleDelete}
+                    onEdit={handleEdit}
+                    onOpenDetail={handleOpenDetail}
+                    isDraggable={Boolean(user)}
+                    onDragStart={handleDragStart}
+                    onDragOverItem={handleDragOverItem}
+                    onDragLeaveItem={handleDragLeaveItem}
+                    onDragEnd={handleDragEnd}
+                    onDrop={handleDrop}
+                    isDragging={draggedIndex === index}
+                    isDragOver={dragOverInfo?.index === index && draggedIndex !== index}
+                    dragOverPosition={dragOverInfo?.index === index ? dragOverInfo?.position : null}
+                    isSelected={selectedIds.includes(todo.id)}
+                    onSelect={handleToggleSelect}
+                  />
+                ))
+              )}
+            </main>
+          </div>
+        </div>
+
+        {/* Modals */}
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onAuthSuccess={handleAuthSuccess}
+          initialMode={authModalMode}
+        />
+        <MultiScheduleModal
+          isOpen={multiModalOpen}
+          onClose={() => setMultiModalOpen(false)}
+          initialDate={selectedDate}
+          onSubmitBatch={handleBatchAddTodo}
+        />
+        <TodoDetailModal
+          isOpen={Boolean(selectedDetailTodo)}
+          onClose={() => setSelectedDetailTodo(null)}
+          todo={selectedDetailTodo}
+          onSave={handleSaveDetail}
+          onDelete={handleDelete}
+          onToggle={handleDetailToggle}
+        />
+        <SettingsAndMyPageModal
+          isOpen={settingsModalOpen}
+          initialTab={settingsModalTab}
+          onClose={() => setSettingsModalOpen(false)}
+          user={user}
+          onUserUpdated={handleUserUpdated}
+          onLogout={handleLogout}
+          onOpenAuth={handleOpenAuth}
+          settings={settings}
+          onUpdateSettings={handleUpdateSettings}
+          onRefreshSchedules={() => loadSchedules(currentYearMonth)}
+        />
+      </div>
+    )
+  }
+
+  // 2. 일반 웹 브라우저 & Electron 일반 창 모드
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/40 to-slate-200 dark:bg-none dark:bg-slate-950 py-3.5 sm:py-10 px-3 sm:px-6 transition-colors duration-300">
       <div className="max-w-2xl mx-auto">
+        {/* Electron일 경우 상단 위젯 바 표시 */}
+        {isElectron && (
+          <div className="mb-3 rounded-2xl overflow-hidden shadow-md">
+            <DesktopWidgetBar
+              isWidget={isWidget}
+              isLocked={isLocked}
+              alwaysOnBottom={alwaysOnBottom}
+              onToggleLock={handleToggleLock}
+              onToggleWidgetMode={handleToggleWidgetMode}
+              onToggleAlwaysOnBottom={handleToggleAlwaysOnBottom}
+              onMinimizeToTray={handleMinimizeToTray}
+              onClose={handleCloseApp}
+              onOpenSettings={() => {
+                setSettingsModalTab('settings')
+                setSettingsModalOpen(true)
+              }}
+            />
+          </div>
+        )}
+
         {/* Top Navbar with Brand Logo Button & Settings */}
         <Navbar
           user={user}
